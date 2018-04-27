@@ -1,5 +1,5 @@
 //
-//  CPCWeek.swift
+//  CPCCompoundCalendarUnit.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,44 +23,28 @@
 
 import Foundation
 
-public struct CPCWeek: CPCCompoundCalendarUnit {
-	public typealias Element = CPCDay;
-	
-	internal typealias UnitBackingType = Date;
-
-	internal static let representedUnit = Calendar.Component.weekOfYear;
-	internal static let requiredComponents: Set <Calendar.Component> = [.weekOfYear, .year];
-	
-	public let calendar: Calendar;
-	public let startDate: Date;
-	
-	internal var backingValue: Date {
-		return self.startDate;
-	}
-	
-	internal let smallerUnitRange: Range <Int>;
-
-	internal init (backedBy value: Date, calendar: Calendar) {
-		self.calendar = calendar;
-		self.startDate = value;
-		self.smallerUnitRange = CPCWeek.smallerUnitRange (date: value, calendar: calendar);
-	}
+internal protocol CPCCompoundCalendarUnit: CPCCalendarUnit, Collection where Element: CPCCalendarUnit, Index == Int {
+	var smallerUnitRange: Range <Int> { get };
 }
-	
-public extension CPCWeek {
-	public static var current: CPCWeek {
-		return self.init (containing: Date (), calendar: .current);
+
+extension CPCCompoundCalendarUnit {
+	internal static func smallerUnitRange (date: Date, calendar: Calendar) -> Range <Int> {
+		return guarantee (calendar.range (of: Element.representedUnit, in: Self.representedUnit, for: date));
 	}
 	
-	public static var next: CPCWeek {
-		return self.current.next;
+	public var startIndex: Int {
+		return self.smallerUnitRange.lowerBound;
 	}
 	
-	public static var prev: CPCWeek {
-		return self.current.prev;
+	public var endIndex: Int {
+		return self.smallerUnitRange.upperBound;
 	}
 	
-	public init (weeksSinceNow: Int) {
-		self = CPCWeek.current.advanced (by: weeksSinceNow);
+	public func index (after i: Int) -> Int {
+		return i + 1;
+	}
+	
+	public subscript (position: Int) -> Element {
+		return Element (containing: self.startDate, calendar: self.calendar).advanced (by: position - self.smallerUnitRange.lowerBound);
 	}
 }

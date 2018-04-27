@@ -1,5 +1,5 @@
 //
-//  CPCWeek.swift
+//  CPCCalendarUnitSymbol.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,44 +23,41 @@
 
 import Foundation
 
-public struct CPCWeek: CPCCompoundCalendarUnit {
-	public typealias Element = CPCDay;
+public enum CPCCalendarUnitSymbolStyle {
+	case normal;
+	case short;
+	case veryShort;
 	
-	internal typealias UnitBackingType = Date;
+	public static let `default` = normal;
+}
 
-	internal static let representedUnit = Calendar.Component.weekOfYear;
-	internal static let requiredComponents: Set <Calendar.Component> = [.weekOfYear, .year];
-	
-	public let calendar: Calendar;
-	public let startDate: Date;
-	
-	internal var backingValue: Date {
-		return self.startDate;
+public protocol CPCCalendarUnitSymbol {
+	func symbol (style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> String;
+}
+
+public extension CPCCalendarUnitSymbol {
+	public func symbol () -> String {
+		return self.symbol (style: .default, standalone: false);
 	}
 	
-	internal let smallerUnitRange: Range <Int>;
+	func symbol (standalone: Bool) -> String {
+		return self.symbol (style: .default, standalone: standalone);
 
-	internal init (backedBy value: Date, calendar: Calendar) {
-		self.calendar = calendar;
-		self.startDate = value;
-		self.smallerUnitRange = CPCWeek.smallerUnitRange (date: value, calendar: calendar);
+	}
+	
+	func symbol (style: CPCCalendarUnitSymbolStyle) -> String {
+		return self.symbol (style: style, standalone: false);
 	}
 }
+
+internal protocol CPCCalendarUnitSymbolImpl: CPCCalendarUnit, CPCCalendarUnitSymbol {
+	static func unitSymbols (calendar: Calendar, style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> [String];
 	
-public extension CPCWeek {
-	public static var current: CPCWeek {
-		return self.init (containing: Date (), calendar: .current);
-	}
-	
-	public static var next: CPCWeek {
-		return self.current.next;
-	}
-	
-	public static var prev: CPCWeek {
-		return self.current.prev;
-	}
-	
-	public init (weeksSinceNow: Int) {
-		self = CPCWeek.current.advanced (by: weeksSinceNow);
+	var unitOrdinalValue: Int { get };
+}
+
+extension CPCCalendarUnitSymbolImpl {
+	public func symbol (style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> String {
+		return Self.unitSymbols (calendar: self.calendar, style: style, standalone: standalone) [self.unitOrdinalValue];
 	}
 }

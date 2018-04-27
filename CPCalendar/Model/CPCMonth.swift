@@ -23,7 +23,8 @@
 
 import Foundation
 
-public struct CPCMonth: CPCCalendarUnit {
+public struct CPCMonth: CPCCompoundCalendarUnit {
+	public typealias Element = CPCWeek;
 	internal typealias UnitBackingType = [Calendar.Component: Int];
 	
 	internal static let representedUnit = Calendar.Component.month;
@@ -32,7 +33,7 @@ public struct CPCMonth: CPCCalendarUnit {
 	public let calendar: Calendar;
 	public let year: Int;
 	public let month: Int;
-	private let weeksRange: Range <Int>;
+	internal let smallerUnitRange: Range<Int>;
 
 	internal var backingValue: [Calendar.Component: Int] {
 		return [
@@ -45,7 +46,7 @@ public struct CPCMonth: CPCCalendarUnit {
 		self.calendar = calendar;
 		self.year = guarantee (value [.year]);
 		self.month = guarantee (value [.month]);
-		self.weeksRange = guarantee (calendar.range (of: .weekOfYear, in: .month, for: value.date (using: calendar)));
+		self.smallerUnitRange = CPCMonth.smallerUnitRange (date: value.date (using: calendar), calendar: calendar);
 	}
 }
 
@@ -67,23 +68,25 @@ public extension CPCMonth {
 	}
 }
 
-extension CPCMonth: Collection {
-	public typealias Element = CPCWeek;
-	public typealias Index = Int;
-
-	public var startIndex: Int {
-		return self.weeksRange.lowerBound
+extension CPCMonth: CPCCalendarUnitSymbolImpl {
+	internal static func unitSymbols (calendar: Calendar, style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> [String] {
+		switch (style, standalone) {
+		case (.normal, false):
+			return calendar.monthSymbols;
+		case (.short, false):
+			return calendar.shortMonthSymbols;
+		case (.veryShort, false):
+			return calendar.veryShortMonthSymbols;
+		case (.normal, true):
+			return calendar.standaloneMonthSymbols;
+		case (.short, true):
+			return calendar.shortStandaloneMonthSymbols;
+		case (.veryShort, true):
+			return calendar.veryShortStandaloneMonthSymbols;
+		}
 	}
 	
-	public var endIndex: Index {
-		return self.weeksRange.upperBound
-	}
-
-	public func index (after i: Int) -> Int {
-		return i + 1
-	}
-
-	public subscript (position: Int) -> CPCWeek {
-		return CPCWeek (containing: self.startDate, calendar: self.calendar).advanced (by: position - self.weeksRange.lowerBound);
+	internal var unitOrdinalValue: Int {
+		return self.month - 1;
 	}
 }

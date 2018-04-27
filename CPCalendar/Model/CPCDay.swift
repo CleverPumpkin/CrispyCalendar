@@ -75,3 +75,27 @@ public extension CPCDay {
 		self = CPCDay.today.advanced (by: daysSinceNow);
 	}
 }
+
+extension CPCDay: CPCCalendarUnitSymbolImpl {
+	internal static func unitSymbols (calendar: Calendar, style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> [String] {
+		switch (style, standalone) {
+		case (.normal, false):
+			return calendar.weekdaySymbols;
+		case (.short, false):
+			return calendar.shortWeekdaySymbols;
+		case (.veryShort, false):
+			return calendar.veryShortWeekdaySymbols;
+		case (.normal, true):
+			return calendar.standaloneWeekdaySymbols;
+		case (.short, true):
+			return calendar.shortStandaloneWeekdaySymbols;
+		case (.veryShort, true):
+			return calendar.veryShortStandaloneWeekdaySymbols;
+		}
+	}
+	
+	internal var unitOrdinalValue: Int {
+		return self.weekday - 1;
+	}
+}
+

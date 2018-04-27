@@ -23,83 +23,6 @@
 
 import Foundation
 
-internal protocol CPCCalendarUnitBackingType {
-	static func getDistanceAs (_ component: Calendar.Component, from: Self, to: Self, using calendar: Calendar) -> Int;
-	static func advance (_ backingValue: Self, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> Self;
-	
-	init (date: Date, calendar: Calendar, components: Set <Calendar.Component>);
-	func date (using calendar: Calendar) -> Date;
-}
-
-extension Date: CPCCalendarUnitBackingType {
-	internal static func getDistanceAs (_ component: Calendar.Component, from: Date, to: Date, using calendar: Calendar) -> Int {
-		return guarantee (calendar.dateComponents ([component], from: from, to: to).value (for: component));
-	}
-	
-	internal static func advance (_ backingValue: Date, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> Date {
-		return guarantee (calendar.date (byAdding: component, value: value, to: backingValue));
-	}
-	
-	internal init (date: Date, calendar: Calendar, components: Set <Calendar.Component>) {
-		self = date;
-	}
-	
-	internal func date (using calendar: Calendar) -> Date {
-		return self;
-	}
-}
-
-extension Int: CPCCalendarUnitBackingType {
-	internal static func getDistanceAs (_ component: Calendar.Component, from: Int, to: Int, using calendar: Calendar) -> Int {
-		return to - from;
-	}
-	
-	internal static func advance (_ backingValue: Int, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> Int {
-		return backingValue + value;
-	}
-
-	internal init (date: Date, calendar: Calendar, components: Set <Calendar.Component>) {
-		self = calendar.component (guarantee (components.first), from: date);
-	}
-	
-	internal func date (using calendar: Calendar) -> Date {
-		return guarantee (DateComponents (calendar: calendar, year: self).date);
-	}
-}
-
-extension Dictionary: CPCCalendarUnitBackingType where Key == Calendar.Component, Value == Int {
-	private func dateComponents (for calendar: Calendar) -> DateComponents {
-		var result = DateComponents ();
-		result.calendar = calendar;
-		for (unit, value) in self {
-			result.setValue (value, for: unit);
-		}
-		return result;
-	}
-	
-	internal static func getDistanceAs (_ component: Calendar.Component, from: Dictionary, to: Dictionary, using calendar: Calendar) -> Int {
-		let fromComponents = from.dateComponents (for: calendar), toComponents = to.dateComponents (for: calendar);
-		return guarantee (calendar.dateComponents ([component], from: fromComponents, to: toComponents).value (for: component));
-	}
-	
-	internal static func advance (_ backingValue: Dictionary, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> Dictionary {
-		var advancedValue = backingValue;
-		advancedValue [component] = guarantee (backingValue [component]) + value;
-		
-		let advancedDate = guarantee (advancedValue.dateComponents (for: calendar).date);
-		return Dictionary (date: advancedDate, calendar: calendar, components: Set (backingValue.keys));
-	}
-	
-	internal init (date: Date, calendar: Calendar, components: Set <Calendar.Component>) {
-		let advancedDateComponents = calendar.dateComponents (components, from: date);
-		self.init (uniqueKeysWithValues: components.map { ($0, guarantee (advancedDateComponents.value (for: $0))) });
-	}
-	
-	internal func date (using calendar: Calendar) -> Date {
-		return guarantee (self.dateComponents (for: calendar).date);
-	}
-}
-
 internal protocol CPCCalendarUnit: CPCDatesRange {
 	associatedtype UnitBackingType where UnitBackingType: CPCCalendarUnitBackingType;
 	
@@ -142,6 +65,7 @@ extension CPCCalendarUnit {
 	public init (containing date: Date, timeZone: TimeZone = .current, calendarIdentifier: Calendar.Identifier) {
 		var calendar = Calendar (identifier: calendarIdentifier);
 		calendar.timeZone = timeZone;
+		calendar.locale = .current;
 		self.init (containing: date, calendar: calendar);
 	}
 }
@@ -165,3 +89,4 @@ extension CPCCalendarUnit {
 		return Self (backedBy: UnitBackingType.advance (self.backingValue, byAdding: Self.representedUnit, value: n, using: self.calendar), calendar: self.calendar);
 	}
 }
+
