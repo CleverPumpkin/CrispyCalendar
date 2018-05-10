@@ -1,5 +1,5 @@
 //
-//  CPCDatesRange.swift
+//  CPCFunctions.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,32 +21,11 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
+import Swift
 
-public protocol CPCDatesRange: Strideable, Hashable {
-	var startDate: Date { get }
-	var endDate: Date { get }
-	
-	var duration: TimeInterval { get }
-	var interval: DateInterval { get };
-	var prev: Self { get }
-	var next: Self { get }
-}
-
-public extension CPCDatesRange {
-	public var duration: TimeInterval {
-		return self.endDate.timeIntervalSince (self.startDate);
+internal func guarantee <T> (_ value: T?, file: StaticString = #file, line: Int = #line, function: String = #function) -> T {
+	guard let result = value else {
+		preconditionFailure ("\(file):\(line) (\(function)): non-nil guarantee failed, aborting");
 	}
-	
-	public var interval: DateInterval {
-		return DateInterval (start: self.startDate, end: self.endDate);
-	}
-
-	public var prev: Self {
-		return self.advanced (by: -1);
-	}
-	
-	public var next: Self {
-		return self.advanced (by: 1);
-	}
+	return result;
 }

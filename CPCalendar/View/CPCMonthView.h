@@ -1,5 +1,5 @@
 //
-//  CPCDatesRange.swift
+//  CPCMonthView.h
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,32 +21,15 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
+#import <Foundation/Foundation.h>
 
-public protocol CPCDatesRange: Strideable, Hashable {
-	var startDate: Date { get }
-	var endDate: Date { get }
-	
-	var duration: TimeInterval { get }
-	var interval: DateInterval { get };
-	var prev: Self { get }
-	var next: Self { get }
-}
+typedef NS_ENUM (uint8_t, CPCMonthViewDayCellBackgroundState) {
+	CPCMonthViewDayCellBackgroundStateNormal,
+	CPCMonthViewDayCellBackgroundStateHighlighted,
+	CPCMonthViewDayCellBackgroundStateSelected,
+} NS_REFINED_FOR_SWIFT;
 
-public extension CPCDatesRange {
-	public var duration: TimeInterval {
-		return self.endDate.timeIntervalSince (self.startDate);
-	}
-	
-	public var interval: DateInterval {
-		return DateInterval (start: self.startDate, end: self.endDate);
-	}
-
-	public var prev: Self {
-		return self.advanced (by: -1);
-	}
-	
-	public var next: Self {
-		return self.advanced (by: 1);
-	}
-}
+typedef struct {
+	CPCMonthViewDayCellBackgroundState const backgroundState;
+	BOOL const isToday;
+} CPCMonthViewDayCellState NS_REFINED_FOR_SWIFT;

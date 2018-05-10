@@ -39,6 +39,10 @@ public struct CPCWeek: CPCCompoundCalendarUnit {
 	}
 	
 	internal let smallerUnitRange: Range <Int>;
+	
+	internal static func smallerUnitRange (date: Date, calendar: Calendar) -> Range <Int> {
+		return guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: date));
+	}
 
 	internal init (backedBy value: Date, calendar: Calendar) {
 		self.calendar = calendar;

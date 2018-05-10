@@ -44,6 +44,10 @@ extension CPCCalendarUnit {
 		return guarantee (self.calendar.date (byAdding: Self.representedUnit, value: 1, to: self.startDate));
 	}
 	
+	public var hashValue: Int {
+		return self.backingValue.hashValue;
+	}
+	
 	public init (containing date: Date, calendar: Calendar) {
 		let startDate = guarantee (calendar.dateInterval (of: Self.representedUnit, for: date)).start;
 		let backingValue = UnitBackingType (date: startDate, calendar: calendar, components: Self.requiredComponents);
@@ -70,18 +74,17 @@ extension CPCCalendarUnit {
 	}
 }
 
-extension CPCCalendarUnit {
-	private static func resultingCalendarForOperation (on firstValue: Self, _ otherValues: Self...) -> Calendar {
-		let calendar = firstValue.calendar;
-		guard !otherValues.contains (where: { $0.calendar != calendar }) else {
-			let calendars = Set (([firstValue] + otherValues).map { $0.calendar }).sorted { "\($0.identifier)" < "\($1.identifier)"};
-			fatalError ("Cannot decide on resulting calendar for operation on \(Self.self) values: incompatible calendars \(calendars)");
-		}
-		return calendar;
+internal func resultingCalendarForOperation <T, U> (for first: T, _ second: U) -> Calendar where T: CPCCalendarUnit, U: CPCCalendarUnit {
+	let calendar = first.calendar;
+	guard second.calendar == calendar else {
+		fatalError ("Cannot decide on resulting calendar for operation on \(T.self) and \(U.self) values: incompatible calendars \(calendar, second.calendar)");
 	}
-	
+	return calendar;
+}
+
+extension CPCCalendarUnit {
 	public func distance (to other: Self) -> Int {
-		let calendar = Self.resultingCalendarForOperation (on: self, other);
+		let calendar = resultingCalendarForOperation (for: self, other);
 		return UnitBackingType.getDistanceAs (Self.representedUnit, from: self.backingValue, to: other.backingValue, using: calendar);
 	}
 	

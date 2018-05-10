@@ -23,7 +23,7 @@
 
 import Foundation
 
-internal protocol CPCCalendarUnitBackingType {
+internal protocol CPCCalendarUnitBackingType: Hashable {
 	static func getDistanceAs (_ component: Calendar.Component, from: Self, to: Self, using calendar: Calendar) -> Int;
 	static func advance (_ backingValue: Self, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> Self;
 	
@@ -64,6 +64,23 @@ extension Int: CPCCalendarUnitBackingType {
 	
 	internal func date (using calendar: Calendar) -> Date {
 		return guarantee (DateComponents (calendar: calendar, year: self).date);
+	}
+}
+
+extension Dictionary: Hashable where Key == Calendar.Component, Value == Int {
+	public var hashValue: Int {
+		guard !self.isEmpty else {
+			return 0;
+		}
+		
+		let sortedKeys = self.keys.sorted { $0.hashValue > $1.hashValue };
+		var values = Array (repeating: 0, count: self.count * 2);
+		for i in sortedKeys.indices {
+			let key = sortedKeys [i];
+			values [i] = self [key]!;
+			values [i * 2] = key.hashValue;
+		}
+		return hashIntegers (values);
 	}
 }
 

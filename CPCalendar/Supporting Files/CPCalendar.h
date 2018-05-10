@@ -1,5 +1,5 @@
 //
-//  CPCFunctions.swift
+//  CPCalendar.h
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,11 +21,8 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
+#import <CPCalendar/CPCMonthView.h>
 
-internal func guarantee <T> (_ value: T?, file: StaticString = #file, line: Int = #line, function: String = #function) -> T {
-	guard let result = value else {
-		preconditionFailure ("\(file):\(line) (\(function)): non-nil guarantee failed, aborting");
-	}
-	return result;
-}
+#if __has_include(<CPCalendar/CPCalendar-Swift.h>)
+#	import <CPCalendar/CPCalendar-Swift.h>
+#endif

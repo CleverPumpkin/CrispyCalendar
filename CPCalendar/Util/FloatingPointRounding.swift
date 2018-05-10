@@ -1,5 +1,5 @@
 //
-//  CPCDatesRange.swift
+//  FloatingPointRounding.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,32 +21,19 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
 
-public protocol CPCDatesRange: Strideable, Hashable {
-	var startDate: Date { get }
-	var endDate: Date { get }
+internal extension FloatingPoint {
+	internal func rounded (scale: Self) -> Self {
+		return self.rounded (.toNearestOrAwayFromZero, scale: scale);
+	}
 	
-	var duration: TimeInterval { get }
-	var interval: DateInterval { get };
-	var prev: Self { get }
-	var next: Self { get }
+	internal func rounded (_ rule: FloatingPointRoundingRule, scale: Self) -> Self {
+		return (self / scale).rounded (rule) * scale;
+	}
 }
 
-public extension CPCDatesRange {
-	public var duration: TimeInterval {
-		return self.endDate.timeIntervalSince (self.startDate);
-	}
-	
-	public var interval: DateInterval {
-		return DateInterval (start: self.startDate, end: self.endDate);
-	}
-
-	public var prev: Self {
-		return self.advanced (by: -1);
-	}
-	
-	public var next: Self {
-		return self.advanced (by: 1);
+internal extension BinaryFloatingPoint where IntegerLiteralType: BinaryInteger {
+	internal func integerRounded (_ rule: FloatingPointRoundingRule) -> IntegerLiteralType {
+		return IntegerLiteralType (self.rounded (rule));
 	}
 }
