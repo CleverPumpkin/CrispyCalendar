@@ -38,12 +38,20 @@ private final class CPCCalendarUnitElementsCache {
 	
 	private final class UnitSpecificCache <Unit>: UnitSpecificCacheProtocol where Unit: CPCCompoundCalendarUnit {
 		private struct UnusedItemsPurgingCache <Key, Value> where Key: Hashable {
+			private struct ValueWrapper {
+				fileprivate let value: Value;
+				fileprivate let usageCount: Int;
+			}
+			
 			fileprivate var count: Int {
 				return self.values.count;
 			}
 			
-			private var values = [Key: Value] ();
-			private var keysUsage = [Key] ();
+			private var values: [Key: ValueWrapper] = {
+				var result = [Key: ValueWrapper] ();
+				result.reserveCapacity (CPCCalendarUnitElementsCache.cacheSizeThreshold);
+				return result;
+			} ();
 			
 			fileprivate init () {}
 			
@@ -53,25 +61,25 @@ private final class CPCCalendarUnitElementsCache {
 						return nil;
 					}
 					
-					if let keyIdx = self.keysUsage.index (of: key) {
-						self.keysUsage.remove (at: keyIdx);
-					}
-					self.keysUsage.append (key);
-					return value;
+					self.values [key] = ValueWrapper (value: value.value, usageCount: value.usageCount + 1);
+					return value.value;
 				}
 				set {
-					self.values [key] = newValue;
-					if newValue == nil, let keyIdx = self.keysUsage.index (of: key) {
-						self.keysUsage.remove (at: keyIdx);
+					if let newValue = newValue {
+						self.values [key] = ValueWrapper (value: newValue, usageCount: 0);
+					} else {
+						self.values [key] = nil;
 					}
 				}
 			}
 			
 			fileprivate mutating func purge (factor: Double) {
-				let removedKeysRange = ..<Int (floor (Double (self.keysUsage.count) * factor));
-				let keysToRemove = Set (self.keysUsage [removedKeysRange]);
-				self.keysUsage.removeSubrange (removedKeysRange);
-				self.values = self.values.filter { !keysToRemove.contains ($0.key) };
+				guard let maxUsageCount = self.values.max (by: { $0.value.usageCount < $1.value.usageCount })?.value.usageCount else {
+					return;
+				}
+				
+				let threshold = (Double (maxUsageCount) * factor).integerRounded (.down);
+				self.values = self.values.filter { $0.value.usageCount >= threshold };
 			}
 		}
 		
@@ -151,7 +159,7 @@ private final class CPCCalendarUnitElementsCache {
 	}
 
 	fileprivate static let shared = CPCCalendarUnitElementsCache ();
-	private static let cacheSizeThreshold = 2048;
+	private static let cacheSizeThreshold = 20480;
 	private static let cachePurgeFactor = 0.5;
 	
 	private var unitSpecificCaches = UnfairThreadsafeStorage ([ObjectIdentifier: UnitSpecificCacheProtocol] ());
@@ -186,8 +194,8 @@ private final class CPCCalendarUnitElementsCache {
 }
 
 extension CPCCompoundCalendarUnit {
-	internal static func smallerUnitRange (date: Date, calendar: Calendar) -> Range <Int> {
-		return guarantee (calendar.range (of: Element.representedUnit, in: self.representedUnit, for: date));
+	internal static func smallerUnitRange (for value: UnitBackingType, using calendar: Calendar) -> Range <Int> {
+		return guarantee (calendar.range (of: Element.representedUnit, in: self.representedUnit, for: value.date (using: calendar)));
 	}
 	
 	public var startIndex: Int {

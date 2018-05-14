@@ -21,7 +21,7 @@
 //  THE SOFTWARE.
 //
 
-#import <CPCalendar/CPCMonthView.h>
+#import <CPCalendar/CPCDayCellState.h>
 
 #if __has_include(<CPCalendar/CPCalendar-Swift.h>)
 #	import <CPCalendar/CPCalendar-Swift.h>

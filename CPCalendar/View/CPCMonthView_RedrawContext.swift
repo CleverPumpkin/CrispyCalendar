@@ -32,13 +32,13 @@ fileprivate extension CGRect {
 	fileprivate func slice (atDistance distance: CGSize, from corner: UIRectCorner) -> CGRect {
 		precondition ([.topLeft, .topRight, .bottomLeft, .bottomRight].contains (corner), "Cannot slice rectangle from multiple corners");
 		
-		let x: CGFloat, width: CGFloat;
+		let x: CGFloat;
 		if ([.topLeft, .bottomLeft].contains (corner)) {
 			x = self.minX;
 		} else {
 			x = self.maxX - distance.width;
 		}
-		let y: CGFloat, height: CGFloat;
+		let y: CGFloat;
 		if ([.topLeft, .topRight].contains (corner)) {
 			y = self.minY;
 		} else {
@@ -135,7 +135,7 @@ extension CPCMonthView {
 			}
 			ctx.clip (using: .evenOdd);
 			
-			if let normalBackgroundColor = self.effectiveDayCellBackgroundColor (for: .normal) {
+			if let normalBackgroundColor = self.view.cellBackgroundColors.effectiveColor (for: .normal) {
 				ctx.setFillColor (normalBackgroundColor.cgColor);
 				ctx.fill (frame);
 			}
@@ -163,7 +163,7 @@ extension CPCMonthView {
 			let day = self.month [ordinal: index.row] [ordinal: index.column];
 			let state = self.dayCellState (for: day, at: index), frame = self.layoutInfo.cellFrames [index];
 
-			if state != .normal, let backgroundColor = self.effectiveDayCellBackgroundColor (for: state) {
+			if state != .normal, let backgroundColor = self.view.cellBackgroundColors.effectiveColor (for: state) {
 				context.setFillColor (backgroundColor.cgColor);
 				context.fill (frame);
 			}
@@ -178,35 +178,11 @@ extension CPCMonthView {
 			));
 		}
 		
-		private func dayCellState (for day: CPCDay, at index: CellIndex) -> DayCellState {
+		private func dayCellState (for day: CPCDay, at index: CellIndex) -> CPCDayCellState {
 			if let selectedIndices = self.cellIndices.selected, selectedIndices.contains (index) {
 				return .selected;
 			}
-			return DayCellState (backgroundState: (self.cellIndices.highlighted == index) ? .highlighted : .normal, isToday: day == .today);
-		}
-		
-		private func effectiveDayCellBackgroundColor (for state: DayCellState) -> UIColor? {
-			for state in sequence (first: state, next: { $0.parent }) {
-				if let backgroundColor = self.view.dayCellBackgroundColors [state] {
-					return backgroundColor;
-				}
-			}
-			return nil;
-		}
-	}
-}
-
-fileprivate extension CPCMonthView.DayCellState {
-	fileprivate var parent: CPCMonthView.DayCellState? {
-		if self.isToday {
-			return CPCMonthView.DayCellState (backgroundState: self.backgroundState, isToday: false);
-		}
-		
-		switch (self.backgroundState) {
-		case .selected, .highlighted:
-			return CPCMonthView.DayCellState (backgroundState: .normal, isToday: false);
-		case .normal:
-			return nil;
+			return CPCDayCellState (backgroundState: (self.cellIndices.highlighted == index) ? .highlighted : .normal, isToday: day == .today);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 //
-//  CPCYear.swift
+//  UnownedStorage.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,44 +21,49 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
+import Swift
 
-public struct CPCYear: CPCCompoundCalendarUnit {
-	public typealias Element = CPCMonth;
-	internal typealias UnitBackingType = Int;
-	
-	internal static let representedUnit = Calendar.Component.year;
-	internal static let requiredComponents: Set <Calendar.Component> = [.year];
-	
-	public let calendar: Calendar;
-	public let year: Int;
-	internal let smallerUnitRange: Range <Int>;
-
-	internal var backingValue: Int {
-		return self.year;
+internal struct UnownedArray <Element> where Element: AnyObject {
+	private struct UnownedStorage {
+		fileprivate unowned let value: Element;
 	}
 	
-	internal init (backedBy value: Int, calendar: Calendar) {
-		self.calendar = calendar;
-		self.year = value;
-		self.smallerUnitRange = CPCYear.smallerUnitRange (for: value, using: calendar);
-	}
+	private var storage: [UnownedStorage];
 }
 
-public extension CPCYear {
-	public static var current: CPCYear {
-		return self.init (containing: Date (), calendar: .current);
+extension UnownedArray: MutableCollection, RangeReplaceableCollection {
+	internal typealias Index = Array <Element>.Index;
+
+	internal var startIndex: Index {
+		return self.storage.startIndex;
 	}
 	
-	public static var next: CPCYear {
-		return self.current.next;
+	internal var endIndex: Index {
+		return self.storage.endIndex;
+	}
+
+	internal subscript (position: Index) -> Element {
+		get {
+			return self.storage [position].value;
+		}
+		set (newValue) {
+			self.storage [position] = UnownedStorage (value: newValue);
+		}
 	}
 	
-	public static var prev: CPCYear {
-		return self.current.prev;
+	internal init () {
+		self.storage = [];
 	}
 	
-	public init (yearsSinceNow: Int) {
-		self = CPCYear.current.advanced (by: yearsSinceNow);
+	internal func index (after i: Index) -> Index {
+		return self.storage.index (after: i);
+	}
+	
+	internal func index (before i: Index) -> Index {
+		return self.storage.index (before: i);
+	}
+	
+	internal mutating func replaceSubrange <C, R> (_ subrange: R, with newElements: C) where C: Collection, C.Element == Element, R: RangeExpression, R.Bound == Index {
+		self.storage.replaceSubrange (subrange, with: newElements.map { UnownedStorage (value: $0) });
 	}
 }

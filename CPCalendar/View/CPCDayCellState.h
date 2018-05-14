@@ -23,13 +23,17 @@
 
 #import <Foundation/Foundation.h>
 
-typedef NS_ENUM (uint8_t, CPCMonthViewDayCellBackgroundState) {
-	CPCMonthViewDayCellBackgroundStateNormal,
-	CPCMonthViewDayCellBackgroundStateHighlighted,
-	CPCMonthViewDayCellBackgroundStateSelected,
+typedef NS_ENUM (uint8_t, CPCDayCellBackgroundState) {
+	CPCDayCellBackgroundStateNormal,
+	CPCDayCellBackgroundStateHighlighted,
+	CPCDayCellBackgroundStateSelected,
 } NS_REFINED_FOR_SWIFT;
 
 typedef struct {
-	CPCMonthViewDayCellBackgroundState const backgroundState;
+	CPCDayCellBackgroundState const backgroundState;
 	BOOL const isToday;
-} CPCMonthViewDayCellState NS_REFINED_FOR_SWIFT;
+} CPCDayCellState NS_REFINED_FOR_SWIFT;
+
+NS_INLINE NS_REFINED_FOR_SWIFT CPCDayCellState CPCDayCellStateMake (CPCDayCellBackgroundState const backgroundState, BOOL const isToday) {
+	return (CPCDayCellState) { .backgroundState = backgroundState, .isToday = isToday };
+}

@@ -64,7 +64,7 @@ internal func hashIntegers <S> (_ values: S) -> Int where S: Sequence, S.Element
 private func hashIntegers <S> (_ first: S.Element, _ other: S) -> Int where S: Sequence, S.Element: FixedWidthInteger {
 	let resultWidth = Int.bitWidth;
 	
-	func mix (values: [Int]) -> Int {
+	func mix (values: inout [Int]) {
 		let valuesCount = values.count;
 		
 		var result = 0;
@@ -79,18 +79,22 @@ private func hashIntegers <S> (_ first: S.Element, _ other: S) -> Int where S: S
 		for valueIdx in 0 ..< remainingBits {
 			result |= (values [valueIdx] & valueMask) << valueIdx;
 		}
-		return result;
+		values.removeAll (keepingCapacity: true);
+		values.append (result);
 	}
 	
-	var result = Int (first);
-	var values: AnyRandomAccessCollection = AnyRandomAccessCollection (Array (other));
-	while !values.isEmpty {
-		let slice: AnyRandomAccessCollection <S.Element>;
-		(slice, values) = values.divide (maxLength: resultWidth - 1);
-		let prefix = [result] + slice.map { Int ($0) };
-		result = mix (values: prefix);
+	var values = [Int] ();
+	values.reserveCapacity (resultWidth);
+	values.append (Int (first));
+	
+	for nextValue in other {
+		values.append (Int (nextValue));
+		if (values.count == resultWidth) {
+			mix (values: &values);
+		}
 	}
-	return result;
+
+	return values [0];
 }
 
 fileprivate extension Collection {

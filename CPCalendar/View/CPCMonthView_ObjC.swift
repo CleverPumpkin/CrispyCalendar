@@ -23,47 +23,12 @@
 
 import UIKit
 
-extension CPCMonthView.DayCellState.BackgroundState {
-	public var cState: __CPCMonthViewDayCellBackgroundState {
-		switch (self) {
-		case .normal:
-			return .normal;
-		case .highlighted:
-			return .highlighted;
-		case .selected:
-			return .selected;
-		}
-	}
-	
-	public init (_ cState: __CPCMonthViewDayCellBackgroundState) {
-		switch cState {
-		case .normal:
-			self = .normal;
-		case .highlighted:
-			self = .highlighted;
-		case .selected:
-			self = .selected;
-		}
-	}
-}
-
-extension CPCMonthView.DayCellState {
-	public var cState: __CPCMonthViewDayCellState {
-		return __CPCMonthViewDayCellState (backgroundState: self.backgroundState.cState, isToday: ObjCBool (self.isToday));
-	}
-	
-	public init (_ cState: __CPCMonthViewDayCellState) {
-		self.backgroundState = BackgroundState (cState.backgroundState);
-		self.isToday = cState.isToday.boolValue;
-	}
-}
-
 extension CPCMonthView {
-	@objc open func dayCellBackgroundColor (for state: __CPCMonthViewDayCellState) -> UIColor? {
-		return self.dayCellBackgroundColor (for: DayCellState (state));
+	@objc open func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
+		return self.dayCellBackgroundColor (for: CPCDayCellState (state));
 	}
 	
-	@objc open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCMonthViewDayCellState) {
-		self.setDayCellBackgroundColor (backgroundColor, for: DayCellState (state));
+	@objc open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
+		self.setDayCellBackgroundColor (backgroundColor, for: CPCDayCellState (state));
 	}
 }

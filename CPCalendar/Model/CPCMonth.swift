@@ -46,7 +46,7 @@ public struct CPCMonth: CPCCompoundCalendarUnit {
 		self.calendar = calendar;
 		self.year = guarantee (value [.year]);
 		self.month = guarantee (value [.month]);
-		self.smallerUnitRange = CPCMonth.smallerUnitRange (date: value.date (using: calendar), calendar: calendar);
+		self.smallerUnitRange = CPCMonth.smallerUnitRange (for: value, using: calendar);
 	}
 }
 

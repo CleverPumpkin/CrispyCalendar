@@ -30,7 +30,7 @@ internal protocol CPCMonthViewSelectionHandler {
 	mutating func dayCellTapped (_ day: CPCDay) -> Bool;
 }
 
-fileprivate extension CPCMonthView.Selection {
+fileprivate extension CPCViewSelection {
 	fileprivate var builtinHandler: CPCMonthView.SelectionHandler {
 		switch (self) {
 		case .none:

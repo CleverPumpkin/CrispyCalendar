@@ -27,6 +27,50 @@ fileprivate extension NSLayoutConstraint {
 	fileprivate static let placeholder = UIView ().widthAnchor.constraint (equalToConstant: 0.0);
 }
 
+fileprivate extension CGSize {
+	fileprivate enum Constraint {
+		case none;
+		case width (CGFloat);
+		case height (CGFloat);
+		case full (width: CGFloat, height: CGFloat);
+	}
+	
+	private static let unconstrainedDimensionValues: Set <CGFloat> = [
+		CGFloat (Float.greatestFiniteMagnitude),
+		CGFloat (Double.greatestFiniteMagnitude),
+		CGFloat.greatestFiniteMagnitude,
+		CGFloat (Int.max),
+		CGFloat (UInt.max),
+		CGFloat (Int32.max),
+		CGFloat (UInt32.max),
+		UIViewNoIntrinsicMetric,
+		UITableViewAutomaticDimension,
+		0.0,
+	];
+	private static let saneAspectRatiosRange = CGFloat (1e-3) ... CGFloat (1e3);
+	
+	private static func isDimensionConstrained (_ value: CGFloat, relativeTo other: CGFloat) -> Bool {
+		return (value.isFinite && !CGSize.unconstrainedDimensionValues.contains (value) && CGSize.saneAspectRatiosRange.contains (value / other));
+	}
+	
+	fileprivate var constraint: Constraint {
+		let width = self.width, height = self.height;
+		if (CGSize.isDimensionConstrained (width, relativeTo: height)) {
+			if (CGSize.isDimensionConstrained (height, relativeTo: width)) {
+				return .full (width: width, height: height);
+			} else {
+				return .width (width);
+			}
+		} else {
+			if (CGSize.isDimensionConstrained (height, relativeTo: width)) {
+				return .height (height);
+			} else {
+				return .none;
+			}
+		}
+	}
+}
+
 public protocol CPCMonthViewSelectionDelegate: AnyObject {
 	var selection: CPCMonthView.Selection { get set };
 	
@@ -35,79 +79,8 @@ public protocol CPCMonthViewSelectionDelegate: AnyObject {
 	func monthView (_ monthView: CPCMonthView, deselect day: CPCDay) -> Bool;
 }
 
-public extension CPCMonthView {
+open class CPCMonthView: UIControl, CPCViewProtocol {
 	public typealias SelectionDelegate = CPCMonthViewSelectionDelegate;
-	
-	public enum Selection: Equatable {
-		case none;
-		case single (CPCDay?);
-		case range (CountableRange <CPCDay>);
-		case unordered (Set <CPCDay>);
-		case ordered ([CPCDay]);
-	}
-
-	public struct DayCellState: Hashable {
-		public enum BackgroundState: Int {
-			case normal;
-			case highlighted;
-			case selected;
-		}
-		
-		public let backgroundState: BackgroundState;
-		public let isToday: Bool;
-
-
-		public init (backgroundState: BackgroundState = .normal, isToday: Bool = false) {
-			self.backgroundState = backgroundState;
-			self.isToday = isToday;
-		}
-	}
-}
-
-public extension CPCMonthView.Selection {
-	public func isDaySelected (_ day: CPCDay) -> Bool {
-		switch (self) {
-		case .none:
-			return false;
-		case .single (let selectedDay):
-			return (selectedDay == day);
-		case .range (let selectedDays):
-			return (selectedDays ~= day);
-		case .unordered (let selectedDays):
-			return selectedDays.contains (day);
-		case .ordered (let selectedDays):
-			return selectedDays.contains (day);
-		}
-	}
-	
-	private var selectedDays: Set <CPCDay> {
-		switch (self) {
-		case .none, .single (nil):
-			return [];
-		case .single (.some (let selectedDay)):
-			return [selectedDay];
-		case .range (let selectedDays):
-			return Set (selectedDays);
-		case .unordered (let selectedDays):
-			return selectedDays;
-		case .ordered (let selectedDays):
-			return Set (selectedDays);
-		}
-	}
-	
-	public func difference (_ other: CPCMonthView.Selection) -> Set <CPCDay> {
-		return self.selectedDays.symmetricDifference (other.selectedDays);
-	}
-}
-
-public extension CPCMonthView.DayCellState {
-	public static let normal = CPCMonthView.DayCellState ();
-	public static let highlighted = CPCMonthView.DayCellState (backgroundState: .highlighted);
-	public static let selected = CPCMonthView.DayCellState (backgroundState: .selected);
-	public static let today = CPCMonthView.DayCellState (isToday: true);
-}
-
-open class CPCMonthView: UIControl {
 	internal typealias SelectionHandler = CPCMonthViewSelectionHandler;
 	
 	open class override var requiresConstraintBasedLayout: Bool {
@@ -120,9 +93,9 @@ open class CPCMonthView: UIControl {
 		}
 	}
 	
-	@IBInspectable open var font: UIFont = .systemFont (ofSize: UIFont.systemFontSize);
-	@IBInspectable open var titleColor = UIColor.darkText;
-	@IBInspectable open var separatorColor = UIColor.gray;
+	@IBInspectable open var font = CPCMonthView.defaultFont;
+	@IBInspectable open var titleColor = CPCMonthView.defaultTitleColor;
+	@IBInspectable open var separatorColor = CPCMonthView.defaultSeparatorColor;
 	
 	internal var selectionHandler = CPCMonthView.defaultSelectionHandler {
 		didSet {
@@ -146,15 +119,48 @@ open class CPCMonthView: UIControl {
 		}
 	}
 	
-	internal var dayCellBackgroundColors: [DayCellState: UIColor] = [
-		.normal: .white,
-		.highlighted: UIColor.yellow.withAlphaComponent (0.125),
-		.selected: UIColor.yellow.withAlphaComponent (0.25),
-		.today: .lightGray,
-	];
+	internal var cellBackgroundColors = DayCellStateBackgroundColors ();
 	
 	private unowned var aspectRatioConstraint: NSLayoutConstraint;
-
+	
+	/// Computes coefficients of equation ViewHeight = K x ViewWidth + C to maintain square-ish day cells
+	///
+	/// - Parameter month: Month to perform calculations for.
+	/// - Parameter separatorWidth: Intercell separators width/height.
+	/// - Returns: multiplier K and constant C.
+	open class func aspectRatioComponents (for month: CPCMonth?, separatorWidth: CGFloat) -> (multiplier: CGFloat, constant: CGFloat)? {
+		guard let month = month, !month.isEmpty else {
+			return nil;
+		}
+		
+		/// | height = rowN * cellSize + (rowN + 1) * sepW      | height = rowN * (cellSize + sepW) + sepW      | height - sepW = rowN * (cellSize + sepW)
+		/// {                                               <=> {                                           <=> {                                          <=>
+		/// | width = colN * cellSize + (colsN - 1) * sepW      | width = colN * (cellSize + colsN) - sepW      | width + sepW = colN * (cellSize + colsN)
+		///
+		/// <=> (height - sepW) / (width + sepW) = rowN / colN
+		/// let R = rowN / colN, then (height - sepW) / (width + sepW) = R <=> height - sepW = width * R + sepW * R <=> height = width * R + (sepW + 1) * R
+		let aspectRatio = CGFloat (month.count) / CGFloat ( month [0].count);
+		return (multiplier: aspectRatio, constant: (separatorWidth + 1.0) * aspectRatio);
+	}
+		
+	open class func sizeThatFits (_ size: CGSize, for month: CPCMonth?, with separatorWidth: CGFloat) -> CGSize {
+		guard let (multiplier, constant) = self.aspectRatioComponents (for: month, separatorWidth: separatorWidth) else {
+			return size;
+		}
+		
+		let fittingWidth: CGFloat;
+		switch (size.constraint) {
+		case .none:
+			fittingWidth = UIScreen.main.bounds.width;
+		case .width (let width), .full (let width, _):
+			fittingWidth = width;
+		case let .height (height):
+			return CGSize (width: ((height - constant) / multiplier).rounded (scale: separatorWidth), height: height.rounded (scale: separatorWidth));
+		}
+		
+		return CGSize (width: fittingWidth.rounded (scale: separatorWidth), height: (fittingWidth * multiplier + constant).rounded (scale: separatorWidth));
+	}
+	
 	public override init (frame: CGRect) {
 		self.aspectRatioConstraint = .placeholder;
 		super.init (frame: frame);
@@ -190,25 +196,11 @@ open class CPCMonthView: UIControl {
 	}
 	
 	open override func updateConstraints () {
-		if self.aspectRatioConstraint != .placeholder {
-			self.aspectRatioConstraint.isActive = false;
-		}
+		self.aspectRatioConstraint.isActive = false;
 		
 		let aspectRatioConstraint: NSLayoutConstraint;
-		if let layoutInfo = self.gridLayoutInfo {
-			// | height = rowN * cellSize + (rowN + 1) * sepW      | height = rowN * (cellSize + sepW) + sepW      | height - sepW = rowN * (cellSize + sepW)
-			// {                                               <=> {                                           <=> {                                          <=>
-			// | width = colN * cellSize + (colsN - 1) * sepW      | width = colN * (cellSize + colsN) - sepW      | width + sepW = colN * (cellSize + colsN)
-			//
-			// <=> (height - sepW) / (width + sepW) = rowN / colN
-			// let R = rowN / colN, then (height - sepW) / (width + sepW) = R <=> height - sepW = width * R + sepW * R <=> height = width * R + (sepW + 1) * R
-			let cellIndices = layoutInfo.cellFrames.indices;
-			let aspectRatio = CGFloat (cellIndices.rows.count) / CGFloat (cellIndices.columns.count);
-			aspectRatioConstraint = self.heightAnchor.constraint (
-				equalTo: self.widthAnchor,
-				multiplier: aspectRatio,
-				constant: (aspectRatio + 1.0) * layoutInfo.separatorWidth
-			);
+		if let (multiplier, constant) = type (of: self).aspectRatioComponents (for: self.month, separatorWidth: self.separatorWidth) {
+			aspectRatioConstraint = self.heightAnchor.constraint (equalTo: self.widthAnchor, multiplier: multiplier, constant: constant);
 		} else {
 			aspectRatioConstraint = self.heightAnchor.constraint (equalToConstant: 0.0);
 		}
@@ -218,8 +210,15 @@ open class CPCMonthView: UIControl {
 		
 		super.updateConstraints ();
 	}
+	
+	open override func sizeThatFits (_ size: CGSize) -> CGSize {
+		return type (of: self).sizeThatFits (size, for: self.month, with: self.separatorWidth);
+	}
 
 	open override func draw (_ rect: CGRect) {
+		if let month = self.month {
+			print ("[\(Date.timeIntervalSinceReferenceDate.remainder (dividingBy: 86400.0))]: Drawing \(month.month)/\(month.year)");
+		}
 		super.draw (rect);
 		RedrawContext (redrawing: rect, in: self)?.run ();
 	}
@@ -296,11 +295,11 @@ extension CPCMonthView {
 
 extension CPCMonthView {
 	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
-		return self.dayCellBackgroundColors [state];
+		return self.cellBackgroundColors.color (for: state);
 	}
 	
 	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
-		self.dayCellBackgroundColors [state] = backgroundColor;
+		self.cellBackgroundColors.setColor (backgroundColor, for: state);
 		
 		switch (state.backgroundState) {
 		case .highlighted:

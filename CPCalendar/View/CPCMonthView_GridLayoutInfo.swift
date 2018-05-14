@@ -23,8 +23,8 @@
 
 import UIKit
 
-fileprivate extension UIView {
-	fileprivate var separatorWidth: CGFloat {
+internal extension UIView {
+	internal var separatorWidth: CGFloat {
 		guard let window = self.window else {
 			return 1.0;
 		}
@@ -37,9 +37,11 @@ internal extension CPCMonthView {
 	internal typealias CellIndex = CellIndices.Element;
 
 	internal struct GridLayoutInfo {
+		internal typealias SeparatorOrigins = (horizontal: ComputedArray <Int, CGFloat>, vertical: ComputedArray <Int, CGFloat>);
+		
 		internal let separatorWidth: CGFloat;
 		internal let cellFrames: ComputedCollection <CellIndex, CGRect, CellIndices>;
-		internal let separatorOrigins: (horizontal: ComputedArray <Int, CGFloat>, vertical: ComputedArray <Int, CGFloat>);
+		internal let separatorOrigins: SeparatorOrigins;
 		
 		private let month: CPCMonth;
 		private let boundsSize: CGSize;
