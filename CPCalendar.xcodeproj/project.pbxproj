@@ -23,6 +23,8 @@
 		43101BA0209D0C8700904529 /* CPCMonthView_ObjC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101B9E209D0C6E00904529 /* CPCMonthView_ObjC.swift */; };
 		43101BA2209D0D0600904529 /* CPCMonthView_BuiltinSelectionHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101BA1209D0D0600904529 /* CPCMonthView_BuiltinSelectionHandlers.swift */; };
 		43101BA3209D0D0D00904529 /* CPCMonthView_BuiltinSelectionHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101BA1209D0D0600904529 /* CPCMonthView_BuiltinSelectionHandlers.swift */; };
+		4318950220A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4318950120A9B77900D29AA8 /* CPCCalendarUnitCaching.swift */; };
+		4318950320A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4318950120A9B77900D29AA8 /* CPCCalendarUnitCaching.swift */; };
 		43584B1120A4F18E00035A81 /* FloatingPointRounding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43584B1020A4F18D00035A81 /* FloatingPointRounding.swift */; };
 		43584B1220A4F1A000035A81 /* FloatingPointRounding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43584B1020A4F18D00035A81 /* FloatingPointRounding.swift */; };
 		43584B1320A4F1B500035A81 /* CPCDayCellState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436F53BE20A4DA1800ACE40A /* CPCDayCellState.swift */; };
@@ -84,6 +86,7 @@
 		43101B9B209D037500904529 /* hash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = hash.swift; sourceTree = "<group>"; };
 		43101B9E209D0C6E00904529 /* CPCMonthView_ObjC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMonthView_ObjC.swift; sourceTree = "<group>"; };
 		43101BA1209D0D0600904529 /* CPCMonthView_BuiltinSelectionHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMonthView_BuiltinSelectionHandlers.swift; sourceTree = "<group>"; };
+		4318950120A9B77900D29AA8 /* CPCCalendarUnitCaching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarUnitCaching.swift; sourceTree = "<group>"; };
 		43584B1020A4F18D00035A81 /* FloatingPointRounding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FloatingPointRounding.swift; sourceTree = "<group>"; };
 		43689DAD2093507700052C7A /* CPCYear.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCYear.swift; sourceTree = "<group>"; };
 		43689DB4209364BF00052C7A /* CPCCalendarUnitBackingType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarUnitBackingType.swift; sourceTree = "<group>"; };
@@ -189,6 +192,7 @@
 				43C070052092EDC700202ED8 /* CPCDatesRange.swift */,
 				43689DB4209364BF00052C7A /* CPCCalendarUnitBackingType.swift */,
 				43C0700B2092F49D00202ED8 /* CPCCalendarUnit.swift */,
+				4318950120A9B77900D29AA8 /* CPCCalendarUnitCaching.swift */,
 				43689DBA2093681100052C7A /* CPCCalendarUnitSymbol.swift */,
 				43689DB72093656000052C7A /* CPCCompoundCalendarUnit.swift */,
 				43C07000209259B900202ED8 /* CPCDay.swift */,
@@ -321,6 +325,7 @@
 				43101B9C209D037500904529 /* hash.swift in Sources */,
 				43C070102092F85200202ED8 /* guarantee.swift in Sources */,
 				436F53B820A4C14900ACE40A /* UnownedArray.swift in Sources */,
+				4318950220A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */,
 				43B6E72120A0615400A7403B /* ThreadsafeStorage.swift in Sources */,
 				43584B1120A4F18E00035A81 /* FloatingPointRounding.swift in Sources */,
 				43101B93209CDFBD00904529 /* GridIndices.swift in Sources */,
@@ -354,6 +359,7 @@
 				43101B9D209D037A00904529 /* hash.swift in Sources */,
 				43C070112092F85700202ED8 /* guarantee.swift in Sources */,
 				436F53B920A4C5E100ACE40A /* UnownedArray.swift in Sources */,
+				4318950320A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */,
 				43B6E72220A062CF00A7403B /* ThreadsafeStorage.swift in Sources */,
 				43B6E71F20A02BB100A7403B /* GridIndices.swift in Sources */,
 				430492AE2094B61000A4F1F1 /* RangeExpressionInitialization.swift in Sources */,

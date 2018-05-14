@@ -67,52 +67,81 @@ extension Int: CPCCalendarUnitBackingType {
 	}
 }
 
-extension Dictionary: Hashable where Key == Calendar.Component, Value == Int {
-	public var hashValue: Int {
-		guard !self.isEmpty else {
-			return 0;
-		}
-		
-		let sortedKeys = self.keys.sorted { $0.hashValue > $1.hashValue };
-		var values = Array (repeating: 0, count: self.count * 2);
-		for i in sortedKeys.indices {
-			let key = sortedKeys [i];
-			values [i] = self [key]!;
-			values [i * 2] = key.hashValue;
-		}
-		return hashIntegers (values);
+fileprivate extension DateComponents {
+	fileprivate var dayBackingValues: DayBackingValues {
+		return DayBackingValues (year: guarantee (self.year), month: guarantee (self.month), day: guarantee (self.day));
+	}
+	
+	fileprivate var monthBackingValues: MonthBackingValues {
+		return MonthBackingValues (year: guarantee (self.year), month: guarantee (self.month));
+	}
+	
+	fileprivate init (_ dayBackingValues: DayBackingValues, calendar: Calendar) {
+		self.init (calendar: calendar, year: dayBackingValues.year, month: dayBackingValues.month, day: dayBackingValues.day);
+	}
+	
+	fileprivate init (_ monthBackingValues: MonthBackingValues, calendar: Calendar) {
+		self.init (calendar: calendar, year: monthBackingValues.year, month: monthBackingValues.month);
 	}
 }
 
-extension Dictionary: CPCCalendarUnitBackingType where Key == Calendar.Component, Value == Int {
-	private func dateComponents (for calendar: Calendar) -> DateComponents {
-		var result = DateComponents ();
-		result.calendar = calendar;
-		for (unit, value) in self {
-			result.setValue (value, for: unit);
-		}
-		return result;
+internal struct DayBackingValues: Equatable {
+	internal let year: Int;
+	internal let month: Int;
+	internal let day: Int;
+}
+
+extension DayBackingValues: CPCCalendarUnitBackingType {
+	public var hashValue: Int {
+		return hashIntegers (self.day, self.month, self.year);
 	}
 	
-	internal static func getDistanceAs (_ component: Calendar.Component, from: Dictionary, to: Dictionary, using calendar: Calendar) -> Int {
-		let fromComponents = from.dateComponents (for: calendar), toComponents = to.dateComponents (for: calendar);
-		return guarantee (calendar.dateComponents ([component], from: fromComponents, to: toComponents).value (for: component));
+	static func getDistanceAs (_ component: Calendar.Component, from: DayBackingValues, to: DayBackingValues, using calendar: Calendar) -> Int {
+		let fromComps = DateComponents (from, calendar: calendar), toComps = DateComponents (to, calendar: calendar);
+		return guarantee (calendar.dateComponents ([component], from: fromComps, to: toComps).value (for: component));
 	}
 	
-	internal static func advance (_ backingValue: Dictionary, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> Dictionary {
-		var advancedValue = backingValue;
-		advancedValue [component] = guarantee (backingValue [component]) + value;
-		
-		let advancedDate = guarantee (advancedValue.dateComponents (for: calendar).date);
-		return Dictionary (date: advancedDate, calendar: calendar, components: Set (backingValue.keys));
+	static func advance (_ backingValue: DayBackingValues, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> DayBackingValues {
+		var denormalizedComps = DateComponents (backingValue, calendar: calendar);
+		denormalizedComps.setValue (guarantee (denormalizedComps.value (for: component)) + value, for: component);
+		return calendar.dateComponents (CPCDay.requiredComponents, from: guarantee (denormalizedComps.date)).dayBackingValues;
 	}
 	
 	internal init (date: Date, calendar: Calendar, components: Set <Calendar.Component>) {
-		let advancedDateComponents = calendar.dateComponents (components, from: date);
-		self.init (uniqueKeysWithValues: components.map { ($0, guarantee (advancedDateComponents.value (for: $0))) });
+		self = calendar.dateComponents (components, from: date).dayBackingValues;
 	}
 	
 	internal func date (using calendar: Calendar) -> Date {
-		return guarantee (self.dateComponents (for: calendar).date);
+		return guarantee (DateComponents (self, calendar: calendar).date);
+	}
+}
+
+internal struct MonthBackingValues: Equatable {
+	internal let year: Int;
+	internal let month: Int;
+}
+
+extension MonthBackingValues: CPCCalendarUnitBackingType {
+	public var hashValue: Int {
+		return hashIntegers (self.month, self.year);
+	}
+	
+	static func getDistanceAs (_ component: Calendar.Component, from: MonthBackingValues, to: MonthBackingValues, using calendar: Calendar) -> Int {
+		let fromComps = DateComponents (from, calendar: calendar), toComps = DateComponents (to, calendar: calendar);
+		return guarantee (calendar.dateComponents ([component], from: fromComps, to: toComps).value (for: component));
+	}
+	
+	static func advance (_ backingValue: MonthBackingValues, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> MonthBackingValues {
+		var denormalizedComps = DateComponents (backingValue, calendar: calendar);
+		denormalizedComps.setValue (guarantee (denormalizedComps.value (for: component)) + value, for: component);
+		return calendar.dateComponents (CPCMonth.requiredComponents, from: guarantee (denormalizedComps.date)).monthBackingValues;
+	}
+	
+	internal init (date: Date, calendar: Calendar, components: Set <Calendar.Component>) {
+		self = calendar.dateComponents (components, from: date).monthBackingValues;
+	}
+	
+	internal func date (using calendar: Calendar) -> Date {
+		return guarantee (DateComponents (self, calendar: calendar).date);
 	}
 }

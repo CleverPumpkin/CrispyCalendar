@@ -25,27 +25,25 @@ import Foundation
 
 public struct CPCMonth: CPCCompoundCalendarUnit {
 	public typealias Element = CPCWeek;
-	internal typealias UnitBackingType = [Calendar.Component: Int];
+	internal typealias UnitBackingType = MonthBackingValues;
 	
 	internal static let representedUnit = Calendar.Component.month;
 	internal static let requiredComponents: Set <Calendar.Component> = [.month, .year];
 	
 	public let calendar: Calendar;
-	public let year: Int;
-	public let month: Int;
-	internal let smallerUnitRange: Range<Int>;
-
-	internal var backingValue: [Calendar.Component: Int] {
-		return [
-			.year: self.year,
-			.month: self.month,
-		];
+	public var year: Int {
+		return self.backingValue.year;
+	}
+	public var month: Int {
+		return self.backingValue.month;
 	}
 	
-	internal init (backedBy value: [Calendar.Component: Int], calendar: Calendar) {
+	internal let smallerUnitRange: Range<Int>;
+	internal let backingValue: MonthBackingValues;
+	
+	internal init (backedBy value: MonthBackingValues, calendar: Calendar) {
 		self.calendar = calendar;
-		self.year = guarantee (value [.year]);
-		self.month = guarantee (value [.month]);
+		self.backingValue = value;
 		self.smallerUnitRange = CPCMonth.smallerUnitRange (for: value, using: calendar);
 	}
 }

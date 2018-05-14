@@ -24,29 +24,27 @@
 import Foundation
 
 public struct CPCDay: CPCCalendarUnit {
-	internal typealias UnitBackingType = [Calendar.Component: Int];
+	internal typealias UnitBackingType = DayBackingValues;
 	
 	internal static let representedUnit = Calendar.Component.day;
 	internal static let requiredComponents: Set <Calendar.Component> = [.day, .month, .year];
 	
 	public let calendar: Calendar;
-	public let year: Int;
-	public let month: Int;
-	public let day: Int;
-	
-	internal var backingValue: [Calendar.Component: Int] {
-		return [
-			.year: self.year,
-			.month: self.month,
-			.day: self.day,
-		];
+	public var year: Int {
+		return self.backingValue.year;
+	}
+	public var month: Int {
+		return self.backingValue.month;
+	}
+	public var day: Int {
+		return self.backingValue.day;
 	}
 	
-	internal init (backedBy value: [Calendar.Component: Int], calendar: Calendar) {
+	internal let backingValue: DayBackingValues;
+	
+	internal init (backedBy value: DayBackingValues, calendar: Calendar) {
 		self.calendar = calendar;
-		self.year = guarantee (value [.year]);
-		self.month = guarantee (value [.month]);
-		self.day = guarantee (value [.day]);
+		self.backingValue = value;
 	}
 }
 

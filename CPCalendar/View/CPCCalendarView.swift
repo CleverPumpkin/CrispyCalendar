@@ -42,8 +42,13 @@ open class CPCCalendarView: CPCMultiMonthsView {
 		private var reusableMonthViews = [CPCMonthView] ();
 		private var prevOffset: CGFloat;
 		private var layoutStorage = Layout ();
-		private var presentedPageIndex = 0;
-		
+		private var presentedPageIndex = 0 {
+			didSet {
+				self.precalculateNextPageIfNeeed ();
+			}
+		}
+		private var pendingPageCalculations = UnfairThreadsafeStorage ([Int: DispatchWorkItem] ());
+
 		fileprivate init (_ calendarView: CPCCalendarView) {
 			self.calendarView = calendarView;
 			self.prevOffset = calendarView.scrollView.contentOffset.y;
@@ -92,7 +97,7 @@ open class CPCCalendarView: CPCMultiMonthsView {
 			contentView.topAnchor.constraint (equalTo: scrollView.topAnchor),
 			scrollView.bottomAnchor.constraint (equalTo: contentView.bottomAnchor),
 			contentView.widthAnchor.constraint (equalTo: scrollView.widthAnchor),
-			contentView.heightAnchor.constraint (equalTo: scrollView.heightAnchor, multiplier: 3.0),
+			contentView.heightAnchor.constraint (equalTo: scrollView.heightAnchor, multiplier: CPCCalendarView.columnHeightMultiplier),
 		]);
 		
 		scrollView.contentOffset = CGPoint (x: 0.0, y: bounds.height * (CPCCalendarView.columnHeightMultiplier - 1.0) / 2);
@@ -142,14 +147,23 @@ extension CPCCalendarView.ScrollViewController {
 
 	fileprivate struct Layout {
 		fileprivate let columnSize: CGSize;
+		
 		private let columnCount: Int;
 		private let firstInset: CGFloat, otherInsets: CGFloat;
 		private let separatorWidth: CGFloat;
-		
+
 		private var calculatedPages = [Page] ();
 		private var firstPageIndex = 0;
 		
 		fileprivate func isValid (for controller: ScrollViewController) -> Bool {
+			if (!Thread.isMainThread) {
+				var result: Bool!;
+				DispatchQueue.main.sync {
+					result = self.isValid (for: controller);
+				}
+				return result;
+			}
+			
 			guard
 				(self.columnSize.width - controller.columnSize.width).magnitude < 1e-3,
 				(self.columnSize.height - controller.columnSize.height).magnitude < 1e-3,
@@ -171,6 +185,9 @@ extension CPCCalendarView.ScrollViewController {
 		}
 	}
 	
+	private static let sharedQueue = DispatchQueue (label: "CPCCalendarView.ScrollViewController.sharedQueue", qos: .userInitiated, attributes: .concurrent);
+	private static let maxPrecalculatedPages = 5;
+
 	private var columnSize: CGSize {
 		let insets = self.columnContentInsets, columnCount = CGFloat (self.columnCount), bounds = self.calendarView.bounds;
 		return CGSize (
@@ -222,7 +239,7 @@ extension CPCCalendarView.ScrollViewController {
 		if ((offset < boundsHeight) && (offsetDiff < -1e-3)) {
 			self.presentedPageIndex -= 1;
 			self.prevOffset = offset + columnHeight - boundsHeight;
-		} else if ((offset > columnHeight - boundsHeight) && (offsetDiff > 1e-3)) {
+		} else if ((offset > columnHeight - 2 * boundsHeight) && (offsetDiff > 1e-3)) {
 			self.presentedPageIndex += 1;
 			self.prevOffset = offset - columnHeight + boundsHeight;
 		} else {
@@ -237,7 +254,9 @@ extension CPCCalendarView.ScrollViewController {
 		if self.reusableMonthViews.isEmpty {
 			return CPCMonthView (frame: .zero, month: month);
 		} else {
-			return self.reusableMonthViews.removeLast ();
+			let result = self.reusableMonthViews.removeLast ();
+			result.month = month;
+			return result;
 		}
 	}
 
@@ -255,6 +274,51 @@ extension CPCCalendarView.ScrollViewController {
 				monthView.frame = row.viewFrame (for: month);
 				contentView.addMonthView (monthView);
 			}
+		}
+	}
+	
+	private func precalculateNextPageIfNeeed () {
+		if !Thread.isMainThread {
+			return DispatchQueue.main.async { self.precalculateNextPageIfNeeed () };
+		}
+		
+		let currentPage = self.presentedPageIndex, maxPages = ScrollViewController.maxPrecalculatedPages, currentOffset = self.calendarView.scrollView.contentOffset.y;
+		let pagesSkew = ((currentOffset > self.prevOffset) ? 1 : ((currentOffset < self.prevOffset) ? -1 : 0));
+		for i in 1 ... maxPages {
+			let workItems = [
+				self.ensurePageCalculated (currentPage + pagesSkew + i),
+				self.ensurePageCalculated (currentPage + 2 * pagesSkew + i),
+				self.ensurePageCalculated (currentPage - (pagesSkew + i)),
+			].flatMap { $0 };
+			
+			let queue = ScrollViewController.sharedQueue;
+			if let first = workItems.first {
+				queue.async (execute: first);
+				for j in 1 ..< workItems.count {
+					workItems [j - 1].notify (queue: queue, execute: workItems [j]);
+				}
+			}
+		}
+	}
+	
+	private func ensurePageCalculated (_ index: Int) -> DispatchWorkItem? {
+		return self.pendingPageCalculations.withMutableStoredValue {
+			if $0.keys.contains (index) {
+				return nil;
+			}
+			
+			let result = DispatchWorkItem { [weak self] in
+				self?.layout.ensurePageCalculated (index);
+				self?.completePageCalculation (index);
+			};
+			$0 [index] = result;
+			return result;
+		}
+	}
+	
+	private func completePageCalculation (_ index: Int) {
+		self.pendingPageCalculations.withMutableStoredValue {
+			$0 [index] = nil;
 		}
 	}
 }
@@ -275,7 +339,7 @@ extension CPCCalendarView.ScrollViewController.Layout {
 		self.separatorWidth = controller.calendarView.separatorWidth;
 	}
 	
-	private mutating func ensurePageCalculated (_ index: Int) {
+	fileprivate mutating func ensurePageCalculated (_ index: Int) {
 		if self.calculatedPages.isEmpty {
 			self.calculatedPages.append (Page (startPageFor: self));
 		}

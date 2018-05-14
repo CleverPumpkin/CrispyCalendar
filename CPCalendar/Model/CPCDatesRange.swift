@@ -23,7 +23,7 @@
 
 import Foundation
 
-public protocol CPCDatesRange: Strideable, Hashable {
+public protocol CPCDatesRange: Strideable, Hashable where Stride == Int {
 	var startDate: Date { get }
 	var endDate: Date { get }
 	

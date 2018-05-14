@@ -83,13 +83,28 @@ internal func resultingCalendarForOperation <T, U> (for first: T, _ second: U) -
 }
 
 extension CPCCalendarUnit {
+	public static func == (lhs: Self, rhs: Self) -> Bool {
+		return lhs.backingValue == rhs.backingValue;
+	}
+	
 	public func distance (to other: Self) -> Int {
+		if let cachedResult = self.cachedDistance (to: other) {
+			return cachedResult;
+		}
+		
 		let calendar = resultingCalendarForOperation (for: self, other);
-		return UnitBackingType.getDistanceAs (Self.representedUnit, from: self.backingValue, to: other.backingValue, using: calendar);
+		let result = UnitBackingType.getDistanceAs (Self.representedUnit, from: self.backingValue, to: other.backingValue, using: calendar);
+		self.cacheDistance (result, to: other);
+		return result;
 	}
 	
 	public func advanced (by n: Int) -> Self {
-		return Self (backedBy: UnitBackingType.advance (self.backingValue, byAdding: Self.representedUnit, value: n, using: self.calendar), calendar: self.calendar);
+		if let cachedResult = self.cachedAdvancedUnit (by: n) {
+			return cachedResult;
+		}
+		
+		let result = Self (backedBy: UnitBackingType.advance (self.backingValue, byAdding: Self.representedUnit, value: n, using: self.calendar), calendar: self.calendar);
+		self.cacheUnitValue (result, advancedBy: n);
+		return result;
 	}
 }
-
