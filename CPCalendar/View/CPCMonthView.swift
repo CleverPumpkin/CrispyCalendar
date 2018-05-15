@@ -227,7 +227,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		guard super.beginTracking (touch, with: event) else {
 			return false;
 		}
-		self.highlightedDayIndex = self.gridLayoutInfo?.cellIndex (at: touch.location (in: self));
+		self.highlightedDayIndex = self.gridCellIndex (for: touch);
 		return true;
 	}
 	
@@ -235,13 +235,13 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		guard super.continueTracking (touch, with: event) else {
 			return false;
 		}
-		self.highlightedDayIndex = self.gridLayoutInfo?.cellIndex (at: touch.location (in: self));
+		self.highlightedDayIndex = self.gridCellIndex (for: touch);
 		return true;
 	}
 	
 	open override func endTracking (_ touch: UITouch?, with event: UIEvent?) {
 		self.highlightedDayIndex = nil;
-		guard let touch = touch, let month = self.month, let touchUpCellIndex = self.gridLayoutInfo?.cellIndex (at: touch.location (in: self)) else {
+		guard let touch = touch, let month = self.month, let touchUpCellIndex = self.gridCellIndex (for: touch) else {
 			return;
 		}
 		
@@ -253,6 +253,18 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	open override func cancelTracking (with event: UIEvent?) {
 		self.highlightedDayIndex = nil;
+	}
+	
+	private func gridCellIndex (for touch: UITouch?) -> CellIndex? {
+		guard
+			let layoutInfo = self.gridLayoutInfo,
+			let point = touch?.location (in: self),
+			let index = layoutInfo.cellIndex (at: point),
+			layoutInfo.cellFrames.indices.contains (index) else {
+			return nil;
+		}
+		
+		return index;
 	}
 }
 
