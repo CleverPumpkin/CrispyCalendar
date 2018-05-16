@@ -23,31 +23,6 @@
 
 import Foundation
 
-private struct DatesRangeExpressionUnwrap: RandomAccessCollection {
-	fileprivate typealias Index = Date;
-	fileprivate typealias Element = Date;
-
-	fileprivate var startIndex: Date {
-		return Date.distantPast;
-	}
-	
-	fileprivate var endIndex: Date {
-		return Date.distantFuture;
-	}
-
-	fileprivate subscript (position: Date) -> Date {
-		return position;
-	}
-
-	fileprivate func index (after i: Date) -> Date {
-		return Date (timeIntervalSinceReferenceDate: i.timeIntervalSinceReferenceDate.nextUp);
-	}
-
-	fileprivate func index (before i: Date) -> Date {
-		return Date (timeIntervalSinceReferenceDate: i.timeIntervalSinceReferenceDate.nextDown);
-	}
-}
-
 public protocol CPCDateInterval: RangeExpression where Bound == Date {
 	var start: Date { get }
 	var end: Date { get }
@@ -81,7 +56,7 @@ public extension CPCDateInterval {
 	}
 
 	public func contains <R> (_ dateInterval: R) -> Bool where R: RangeExpression, R.Bound == Date {
-		return self.contains (dateInterval.relative (to: DatesRangeExpressionUnwrap ()));
+		return self.contains (dateInterval.unwrapped);
 	}
 
 	public func contains <R> (_ dateInterval: R) -> Bool where R: CPCDateInterval {
@@ -89,7 +64,7 @@ public extension CPCDateInterval {
 	}
 }
 
-public extension CPCDateInterval where Self: Strideable, Self.Stride: ExpressibleByIntegerLiteral {
+public extension CPCDateInterval where Self: Strideable {
 	public var prev: Self {
 		return self.advanced (by: -1);
 	}
@@ -105,11 +80,11 @@ public extension CPCDateIntervalInitializable {
 	}
 	
 	public init <R> (_ other: R) where R: RangeExpression, R.Bound == Date {
-		self.init (other.relative (to: DatesRangeExpressionUnwrap ()));
+		self.init (other.unwrapped);
 	}
 	
 	public func clamped <R> (to other: R) -> Self where R: RangeExpression, R.Bound == Date {
-		return self.clamped (to: other.relative (to: DatesRangeExpressionUnwrap ()));
+		return self.clamped (to: other.unwrapped);
 	}
 	
 	public func clamped <R> (to other: R) -> Self where R: CPCDateInterval {

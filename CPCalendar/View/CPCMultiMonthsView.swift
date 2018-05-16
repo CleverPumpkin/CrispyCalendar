@@ -29,6 +29,13 @@ fileprivate extension RangeReplaceableCollection {
 	}
 }
 
+public protocol CPCMultiMonthsViewSelectionDelegate: AnyObject {
+	var selection: CPCViewSelection { get set };
+	
+	func multiMonthView (_ multiMonthView: CPCMultiMonthsView, shouldSelect day: CPCDay) -> Bool;
+	func multiMonthView (_ multiMonthView: CPCMultiMonthsView, shouldDeselect day: CPCDay) -> Bool;
+}
+
 open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 	@IBInspectable open var font = CPCMultiMonthsView.defaultFont {
 		didSet {
@@ -48,19 +55,13 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 		}
 	}
 	
-	open var selection: Selection {
-		get {
-			return self.selectionManager.selection;
-		}
-		set {
-			self.selectionManager.selection = newValue;
+	internal var selectionHandler = CPCViewDefaultSelectionHandler {
+		didSet {
 			self.selectionDidChange ();
 		}
 	}
-	
 	internal private (set) var monthViews = UnownedArray <CPCMonthView> ();
 	
-	private let selectionManager = SelectionManager ();
 	private var cellBackgroundColors = DayCellStateBackgroundColors ();
 }
 
@@ -118,60 +119,56 @@ extension CPCMultiMonthsView {
 	}
 }
 
-extension CPCMultiMonthsView {
-	private final class SelectionManager {
-		private struct MonthViewHandler: SelectionHandler {
-			fileprivate var selection: Selection {
-				return self.monthView.month.map { self.manager.selection.clamped (to: $0) } ?? .none;
-			}
-			
-			private unowned let manager: SelectionManager;
-			private unowned let monthView: CPCMonthView;
-			
-			fileprivate init (_ manager: SelectionManager, for monthView: CPCMonthView) {
-				self.manager = manager;
-				self.monthView = monthView;
-			}
-			
-			fileprivate func clearSelection () {
-				self.manager.clearSelection (in: self.monthView);
-			}
-			
-			fileprivate func dayCellTapped (_ day: CPCDay) -> Bool {
-				return self.manager.dayCellTapped (day, in: self.monthView);
-			}
-		}
-		
+extension CPCMultiMonthsView: CPCViewDelegatingSelectionHandling {
+	public typealias SelectionDelegateType = CPCMultiMonthsViewSelectionDelegate;
+	
+	private struct MonthViewHandler: SelectionHandler {
 		fileprivate var selection: Selection {
-			get {
-				return self.selectionHandler.selection;
-			}
-			set {
-				self.selectionHandler = selection.builtinHandler;
-			}
+			return self.monthView.month.map { self.parent.selection.clamped (to: $0) } ?? .none;
 		}
-		private var selectionHandler: SelectionHandler = CPCMultiMonthsView.defaultSelectionHandler;
 		
-		fileprivate func selectionHandler (for monthView: CPCMonthView) -> SelectionHandler {
-			return MonthViewHandler (self, for: monthView);
+		private unowned let parent: CPCMultiMonthsView;
+		private unowned let monthView: CPCMonthView;
+		
+		fileprivate init (_ parent: CPCMultiMonthsView, for monthView: CPCMonthView) {
+			self.parent = parent;
+			self.monthView = monthView;
 		}
+		
+		fileprivate func clearSelection () {
+			self.monthView.selection = .none;
+		}
+		
+		fileprivate func dayCellTapped (_ day: CPCDay) -> Bool {
+			return self.parent.selectionHandler.dayCellTapped (day);
+		}
+	}
+	
+	fileprivate func selectionHandler (for monthView: CPCMonthView) -> SelectionHandler {
+		return MonthViewHandler (self, for: monthView);
+	}
 
-		fileprivate func clearSelection (in monthView: CPCMonthView) {
-			monthView.selectionHandler = self.selectionHandler (for: monthView);
-		}
-
-		fileprivate func dayCellTapped (_ day: CPCDay, in monthView: CPCMonthView) -> Bool {
-			return true; // TODO
-		}
+	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
+		return delegate.selection;
+	}
+	
+	internal func setSelectionValue (_ selection: Selection, in delegate: SelectionDelegateType) {
+		delegate.selection = selection;
+	}
+	
+	internal func resetSelection (in delegate: SelectionDelegateType) {}
+	
+	internal func handlerShouldSelectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+		return delegate.multiMonthView (self, shouldSelect: day);
+	}
+	
+	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+		return delegate.multiMonthView (self, shouldDeselect: day);
 	}
 	
 	private func selectionDidChange () {
 		for monthView in self.monthViews {
 			monthView.selectionHandler = self.selectionHandler (for: monthView);
 		}
-	}
-	
-	private func selectionHandler (for monthView: CPCMonthView) -> SelectionHandler {
-		return self.selectionManager.selectionHandler (for: monthView);
 	}
 }

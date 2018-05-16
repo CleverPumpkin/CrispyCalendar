@@ -67,7 +67,6 @@ public extension CPCViewSelection {
 	}
 	
 	public func clamped <R> (to datesRange: R) -> CPCViewSelection where R: CPCDateInterval {
-		let startDate = datesRange.start, endDate = datesRange.end;
 		switch (self) {
 		case .single (.some (let day)) where !datesRange.contains (day):
 			return .single (nil)
@@ -75,7 +74,7 @@ public extension CPCViewSelection {
 			return self;
 		case .range (let range):
 			let lowerBound = range.lowerBound, upperBound = range.upperBound, calendar = lowerBound.calendar;
-			let clampedRange = (lowerBound.start ..< range.upperBound.end).clamped (to: datesRange);
+			let clampedRange = (lowerBound.start ..< upperBound.end).clamped (to: datesRange);
 			return .range (CPCDay (containing: clampedRange.lowerBound, calendar: calendar) ..< CPCDay (containing: clampedRange.upperBound, calendar: calendar));
 		case .unordered (let days):
 			return .unordered (days.filter { datesRange.contains ($0) });
@@ -151,7 +150,6 @@ public protocol CPCViewProtocol: AnyObject {
 
 extension CPCViewProtocol {
 	internal typealias DayCellStateBackgroundColors = CPCViewDayCellStateBackgroundColors;
-	internal typealias SelectionHandler = CPCMonthViewSelectionHandler;
 	
 	internal static var defaultFont: UIFont {
 		return .systemFont (ofSize: UIFont.systemFontSize);

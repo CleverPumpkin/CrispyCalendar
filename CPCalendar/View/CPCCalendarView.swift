@@ -23,87 +23,17 @@
 
 import UIKit
 
-open class CPCCalendarView: CPCMultiMonthsView {
-	fileprivate final class ScrollViewController: NSObject, UIScrollViewDelegate {
-		fileprivate var columnCount = 1 {
-			didSet {
-				self.calendarView.setNeedsLayout ();
-			}
-		}
-		
-		fileprivate var columnContentInsets = UIEdgeInsets.zero {
-			didSet {
-				self.calendarView.setNeedsLayout ();
-			}
-		}
-		
-		private unowned let calendarView: CPCCalendarView;
+public protocol CPCCalendarViewSelectionDelegate: AnyObject {
+	var selection: CPCViewSelection { get set };
+	
+	func calendarView (_ calendarView: CPCCalendarView, shouldSelect day: CPCDay) -> Bool;
+	func calendarView (_ calendarView: CPCCalendarView, shouldDeselect day: CPCDay) -> Bool;
+}
 
-		private var reusableMonthViews = [CPCMonthView] ();
-		private var prevOffset: CGFloat;
-		private var layoutStorage = Layout ();
-		private var presentedPageIndex = 0 {
-			didSet {
-				self.precalculateNextPageIfNeeed ();
-			}
-		}
-		private var pendingPageCalculations = UnfairThreadsafeStorage ([Int: DispatchWorkItem] ());
-
-		fileprivate init (_ calendarView: CPCCalendarView) {
-			self.calendarView = calendarView;
-			self.prevOffset = calendarView.scrollView.contentOffset.y;
-			super.init ();
-			
-			calendarView.scrollView.delegate = self;
-		}
-	}
-	
-	private static let columnHeightMultiplier = CGFloat (5.0);
-	
-	open var columnCount: Int {
-		get {
-			return self.scrollViewController.columnCount;
-		}
-		set {
-			self.scrollViewController.columnCount = max (1, newValue);
-		}
-	}
-	
-	open var columnContentInsets: UIEdgeInsets {
-		get {
-			return self.scrollViewController.columnContentInsets;
-		}
-		set {
-			self.scrollViewController.columnContentInsets = newValue;
-		}
-	}
-	
+open class CPCCalendarView: UIView {
 	private var scrollViewController: ScrollViewController!;
 	private unowned let scrollView: UIScrollView;
 	private unowned let contentView: CPCMultiMonthsView;
-
-	private static func makeSubviews (_ frame: CGRect) -> (scrollView: UIScrollView, contentView: CPCMultiMonthsView) {
-		let bounds = CGRect (origin: .zero, size: frame.standardized.size);
-		let scrollView = UIScrollView (frame: bounds);
-		scrollView.translatesAutoresizingMaskIntoConstraints = false;
-		
-		let contentView = CPCMultiMonthsView (frame: CGRect (x: 0.0, y: 0.0, width: bounds.width, height: bounds.height * CPCCalendarView.columnHeightMultiplier));
-		contentView.translatesAutoresizingMaskIntoConstraints = false;
-		scrollView.addSubview (contentView);
-		
-		NSLayoutConstraint.activate ([
-			contentView.leadingAnchor.constraint (equalTo: scrollView.leadingAnchor),
-			scrollView.trailingAnchor.constraint (equalTo: contentView.trailingAnchor),
-			contentView.topAnchor.constraint (equalTo: scrollView.topAnchor),
-			scrollView.bottomAnchor.constraint (equalTo: contentView.bottomAnchor),
-			contentView.widthAnchor.constraint (equalTo: scrollView.widthAnchor),
-			contentView.heightAnchor.constraint (equalTo: scrollView.heightAnchor, multiplier: CPCCalendarView.columnHeightMultiplier),
-		]);
-		
-		scrollView.contentOffset = CGPoint (x: 0.0, y: bounds.height * (CPCCalendarView.columnHeightMultiplier - 1.0) / 2);
-		
-		return (scrollView: scrollView, contentView: contentView);
-	}
 	
 	public override init (frame: CGRect) {
 		let (scrollView, contentView) = CPCCalendarView.makeSubviews (frame);
@@ -139,6 +69,116 @@ open class CPCCalendarView: CPCMultiMonthsView {
 	open override func layoutSubviews () {
 		super.layoutSubviews ();
 		self.scrollViewController.reloadMonthViewsIfNeeded ();
+	}
+}
+
+extension CPCCalendarView {
+	fileprivate final class ScrollViewController: NSObject, UIScrollViewDelegate {
+		fileprivate var columnCount = 1 {
+			didSet {
+				self.calendarView.setNeedsLayout ();
+			}
+		}
+		
+		fileprivate var columnContentInsets = UIEdgeInsets.zero {
+			didSet {
+				self.calendarView.setNeedsLayout ();
+			}
+		}
+		
+		private unowned let calendarView: CPCCalendarView;
+		
+		private var reusableMonthViews = [CPCMonthView] ();
+		private var prevOffset: CGFloat;
+		private var layoutStorage = Layout ();
+		private var presentedPageIndex = 0 {
+			didSet {
+				self.precalculateNextPageIfNeeed ();
+			}
+		}
+		private var pendingPageCalculations = UnfairThreadsafeStorage ([Int: DispatchWorkItem] ());
+		
+		fileprivate init (_ calendarView: CPCCalendarView) {
+			self.calendarView = calendarView;
+			self.prevOffset = calendarView.scrollView.contentOffset.y;
+			super.init ();
+			
+			calendarView.scrollView.delegate = self;
+		}
+	}
+	
+	private static let columnHeightMultiplier = CGFloat (5.0);
+
+	open var columnCount: Int {
+		get {
+			return self.scrollViewController.columnCount;
+		}
+		set {
+			self.scrollViewController.columnCount = max (1, newValue);
+		}
+	}
+	
+	open var columnContentInsets: UIEdgeInsets {
+		get {
+			return self.scrollViewController.columnContentInsets;
+		}
+		set {
+			self.scrollViewController.columnContentInsets = newValue;
+		}
+	}
+
+	private static func makeSubviews (_ frame: CGRect) -> (scrollView: UIScrollView, contentView: CPCMultiMonthsView) {
+		let bounds = CGRect (origin: .zero, size: frame.standardized.size);
+		let scrollView = UIScrollView (frame: bounds);
+		scrollView.translatesAutoresizingMaskIntoConstraints = false;
+		
+		let contentView = CPCMultiMonthsView (frame: CGRect (x: 0.0, y: 0.0, width: bounds.width, height: bounds.height * CPCCalendarView.columnHeightMultiplier));
+		contentView.translatesAutoresizingMaskIntoConstraints = false;
+		scrollView.addSubview (contentView);
+		
+		NSLayoutConstraint.activate ([
+			contentView.leadingAnchor.constraint (equalTo: scrollView.leadingAnchor),
+			scrollView.trailingAnchor.constraint (equalTo: contentView.trailingAnchor),
+			contentView.topAnchor.constraint (equalTo: scrollView.topAnchor),
+			scrollView.bottomAnchor.constraint (equalTo: contentView.bottomAnchor),
+			contentView.widthAnchor.constraint (equalTo: scrollView.widthAnchor),
+			contentView.heightAnchor.constraint (equalTo: scrollView.heightAnchor, multiplier: CPCCalendarView.columnHeightMultiplier),
+			]);
+		
+		scrollView.contentOffset = CGPoint (x: 0.0, y: bounds.height * (CPCCalendarView.columnHeightMultiplier - 1.0) / 2);
+		
+		return (scrollView: scrollView, contentView: contentView);
+	}
+}
+
+extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
+	public typealias SelectionDelegateType = CPCCalendarViewSelectionDelegate;
+	
+	internal var selectionHandler: CPCViewSelectionHandling.SelectionHandler {
+		get {
+			return self.contentView.selectionHandler;
+		}
+		set {
+			self.contentView.selectionHandler = newValue;
+		}
+	}
+
+	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
+		return delegate.selection;
+	}
+	
+	internal func setSelectionValue (_ selection: Selection, in delegate: SelectionDelegateType) {
+		delegate.selection = selection;
+	}
+	
+	internal func resetSelection (in delegate: SelectionDelegateType) {}
+	
+	internal func handlerShouldSelectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+		return delegate.calendarView (self, shouldSelect: day);
+	}
+	
+	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+		return delegate.calendarView (self, shouldDeselect: day);
 	}
 }
 
@@ -289,7 +329,7 @@ extension CPCCalendarView.ScrollViewController {
 				self.ensurePageCalculated (currentPage + pagesSkew + i),
 				self.ensurePageCalculated (currentPage + 2 * pagesSkew + i),
 				self.ensurePageCalculated (currentPage - (pagesSkew + i)),
-			].flatMap { $0 };
+			].compactMap { $0 };
 			
 			let queue = ScrollViewController.sharedQueue;
 			if let first = workItems.first {

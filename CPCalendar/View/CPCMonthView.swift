@@ -72,17 +72,14 @@ fileprivate extension CGSize {
 }
 
 public protocol CPCMonthViewSelectionDelegate: AnyObject {
-	var selection: CPCMonthView.Selection { get set };
+	var selection: CPCViewSelection { get set };
 	
-	func monthViewDidResetSelection (_ monthView: CPCMonthView);
-	func monthView (_ monthView: CPCMonthView, select day: CPCDay) -> Bool;
-	func monthView (_ monthView: CPCMonthView, deselect day: CPCDay) -> Bool;
+	func monthViewDidClearSelection (_ monthView: CPCMonthView);
+	func monthView (_ monthView: CPCMonthView, shouldSelect day: CPCDay) -> Bool;
+	func monthView (_ monthView: CPCMonthView, shouldDeselect day: CPCDay) -> Bool;
 }
 
 open class CPCMonthView: UIControl, CPCViewProtocol {
-	public typealias SelectionDelegate = CPCMonthViewSelectionDelegate;
-	internal typealias SelectionHandler = CPCMonthViewSelectionHandler;
-	
 	open class override var requiresConstraintBasedLayout: Bool {
 		return true;
 	}
@@ -97,7 +94,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	@IBInspectable open var titleColor = CPCMonthView.defaultTitleColor;
 	@IBInspectable open var separatorColor = CPCMonthView.defaultSeparatorColor;
 	
-	internal var selectionHandler = CPCMonthView.defaultSelectionHandler {
+	internal var selectionHandler = CPCViewDefaultSelectionHandler {
 		didSet {
 			self.selectionDidChange (oldValue: oldValue.selection);
 		}
@@ -265,6 +262,30 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 		
 		return index;
+	}
+}
+
+extension CPCMonthView: CPCViewDelegatingSelectionHandling {
+	public typealias SelectionDelegateType = CPCMonthViewSelectionDelegate;
+
+	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
+		return delegate.selection;
+	}
+	
+	internal func setSelectionValue (_ selection: Selection, in delegate: SelectionDelegateType) {
+		delegate.selection = selection;
+	}
+	
+	internal func resetSelection (in delegate: SelectionDelegateType) {
+		delegate.monthViewDidClearSelection (self);
+	}
+	
+	internal func handlerShouldSelectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+		return delegate.monthView (self, shouldSelect: day);
+	}
+	
+	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+		return delegate.monthView (self, shouldDeselect: day);
 	}
 }
 

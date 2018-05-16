@@ -23,27 +23,6 @@
 
 import Swift
 
-private struct RangeExpressionBoundsCollection <Bound>: Collection where Bound: FixedWidthInteger {
-	fileprivate typealias Index = Bound;
-	fileprivate typealias Element = Bound;
-	
-	fileprivate var startIndex: Bound {
-		return Bound.min;
-	}
-	
-	fileprivate var endIndex: Bound {
-		return Bound.max;
-	}
-	
-	fileprivate subscript (position: Bound) -> Bound {
-		return position;
-	}
-
-	fileprivate func index (after i: Bound) -> Bound {
-		return i + 1;
-	}
-}
-
 internal protocol BoundedRangeProtocol {
 	associatedtype Bound where Bound: Comparable;
 	
@@ -122,9 +101,9 @@ internal extension RangeBaseProtocol where Bound: BinaryInteger {
 	}
 }
 
-internal extension RangeBaseProtocol where Bound: FixedWidthInteger {
+internal extension RangeBaseProtocol where Bound: FixedWidthInteger, Bound.Stride: SignedInteger {
 	internal init <R> (_ range: R) where R: RangeExpression, R.Bound == Bound {
-		self.init (range.relative (to: RangeExpressionBoundsCollection ()));
+		self.init (range.unwrapped);
 	}
 }
 
@@ -134,8 +113,8 @@ internal extension ClosedRangeBaseProtocol where Bound: BinaryInteger {
 	}
 }
 
-internal extension ClosedRangeBaseProtocol where Bound: FixedWidthInteger {
+internal extension ClosedRangeBaseProtocol where Bound: FixedWidthInteger, Bound.Stride: SignedInteger {
 	internal init <R> (_ range: R) where R: RangeExpression, R.Bound == Bound {
-		self.init (range.relative (to: RangeExpressionBoundsCollection ()));
+		self.init (range.unwrapped);
 	}
 }
