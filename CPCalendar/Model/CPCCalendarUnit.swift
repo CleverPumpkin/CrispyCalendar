@@ -23,7 +23,7 @@
 
 import Foundation
 
-internal protocol CPCCalendarUnit: CPCDatesRange {
+internal protocol CPCCalendarUnit: Strideable, Hashable, CPCDateInterval where Stride == Int {
 	associatedtype UnitBackingType where UnitBackingType: CPCCalendarUnitBackingType;
 	
 	static var representedUnit: Calendar.Component { get };
@@ -36,12 +36,12 @@ internal protocol CPCCalendarUnit: CPCDatesRange {
 }
 
 extension CPCCalendarUnit {
-	public var startDate: Date {
+	public var start: Date {
 		return self.backingValue.date (using: self.calendar);
 	}
 	
-	public var endDate: Date {
-		return guarantee (self.calendar.date (byAdding: Self.representedUnit, value: 1, to: self.startDate));
+	public var end: Date {
+		return guarantee (self.calendar.date (byAdding: Self.representedUnit, value: 1, to: self.start));
 	}
 	
 	public var hashValue: Int {

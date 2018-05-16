@@ -62,11 +62,11 @@ public extension CPCDay {
 	}
 	
 	public var weekday: Int {
-		return self.calendar.component (.weekday, from: self.startDate);
+		return self.calendar.component (.weekday, from: self.start);
 	}
 	
 	public var isWeekend: Bool {
-		return self.calendar.isDateInWeekend (self.startDate);
+		return self.calendar.isDateInWeekend (self.start);
 	}
 
 	public init (daysSinceNow: Int) {

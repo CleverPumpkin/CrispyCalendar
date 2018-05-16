@@ -30,8 +30,8 @@ internal protocol CPCMonthViewSelectionHandler {
 	mutating func dayCellTapped (_ day: CPCDay) -> Bool;
 }
 
-fileprivate extension CPCViewSelection {
-	fileprivate var builtinHandler: CPCMonthView.SelectionHandler {
+internal extension CPCViewSelection {
+	internal var builtinHandler: CPCMonthView.SelectionHandler {
 		switch (self) {
 		case .none:
 			return CPCMonthView.DisabledSelectionHandler ();
@@ -44,6 +44,12 @@ fileprivate extension CPCViewSelection {
 		case .ordered (let days):
 			return CPCMonthView.OrderedDaysSelectionHandler (days);
 		}
+	}
+}
+
+internal extension CPCViewProtocol {
+	internal static var defaultSelectionHandler: SelectionHandler {
+		return CPCMonthView.DisabledSelectionHandler ();
 	}
 }
 
@@ -79,8 +85,6 @@ extension CPCMonthView {
 }
 
 internal extension CPCMonthView {
-	internal static let defaultSelectionHandler: SelectionHandler = DisabledSelectionHandler ();
-	
 	fileprivate struct DisabledSelectionHandler {
 		fileprivate init () {}
 	}

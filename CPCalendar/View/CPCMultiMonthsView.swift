@@ -23,6 +23,12 @@
 
 import UIKit
 
+fileprivate extension RangeReplaceableCollection {
+	fileprivate mutating func remove (where predicate: (Element) throws -> Bool) rethrows -> Element? {
+		return try self.index (where: predicate).map { self.remove (at: $0) };
+	}
+}
+
 open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 	@IBInspectable open var font = CPCMultiMonthsView.defaultFont {
 		didSet {
@@ -42,11 +48,23 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 		}
 	}
 	
-	open var selection = Selection.none;
+	open var selection: Selection {
+		get {
+			return self.selectionManager.selection;
+		}
+		set {
+			self.selectionManager.selection = newValue;
+			self.selectionDidChange ();
+		}
+	}
 	
 	internal private (set) var monthViews = UnownedArray <CPCMonthView> ();
+	
+	private let selectionManager = SelectionManager ();
 	private var cellBackgroundColors = DayCellStateBackgroundColors ();
+}
 
+extension CPCMultiMonthsView {
 	open func addMonthView (_ monthView: CPCMonthView) {
 		self.insertMonthView (monthView, at: self.monthViews.count);
 	}
@@ -64,14 +82,15 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 		monthView.titleColor = self.titleColor;
 		monthView.separatorColor = self.separatorColor;
 		monthView.cellBackgroundColors = self.cellBackgroundColors;
+		monthView.selectionHandler = self.selectionHandler (for: monthView);
 		monthView.setNeedsDisplay ();
 	}
 	
 	open func removeMonthView (_ monthView: CPCMonthView) {
-		guard let viewIndex = self.monthViews.index (where: { $0 === monthView }) else {
+		guard let removedView = self.monthViews.remove (where: { $0 === monthView }) else {
 			return;
 		}
-		self.monthViews.remove (at: viewIndex);
+		removedView.selection = .none;
 	}
 	
 	open override func willRemoveSubview (_ subview: UIView) {
@@ -94,7 +113,65 @@ extension CPCMultiMonthsView {
 		self.updateManagedMonthViews { $0.setDayCellBackgroundColor (backgroundColor, for: state) };
 	}
 	
-	private func updateManagedMonthViews (using block: (CPCViewProtocol) -> ()) {
+	private func updateManagedMonthViews (using block: (CPCMonthView) -> ()) {
 		self.monthViews.forEach (block);
+	}
+}
+
+extension CPCMultiMonthsView {
+	private final class SelectionManager {
+		private struct MonthViewHandler: SelectionHandler {
+			fileprivate var selection: Selection {
+				return self.monthView.month.map { self.manager.selection.clamped (to: $0) } ?? .none;
+			}
+			
+			private unowned let manager: SelectionManager;
+			private unowned let monthView: CPCMonthView;
+			
+			fileprivate init (_ manager: SelectionManager, for monthView: CPCMonthView) {
+				self.manager = manager;
+				self.monthView = monthView;
+			}
+			
+			fileprivate func clearSelection () {
+				self.manager.clearSelection (in: self.monthView);
+			}
+			
+			fileprivate func dayCellTapped (_ day: CPCDay) -> Bool {
+				return self.manager.dayCellTapped (day, in: self.monthView);
+			}
+		}
+		
+		fileprivate var selection: Selection {
+			get {
+				return self.selectionHandler.selection;
+			}
+			set {
+				self.selectionHandler = selection.builtinHandler;
+			}
+		}
+		private var selectionHandler: SelectionHandler = CPCMultiMonthsView.defaultSelectionHandler;
+		
+		fileprivate func selectionHandler (for monthView: CPCMonthView) -> SelectionHandler {
+			return MonthViewHandler (self, for: monthView);
+		}
+
+		fileprivate func clearSelection (in monthView: CPCMonthView) {
+			monthView.selectionHandler = self.selectionHandler (for: monthView);
+		}
+
+		fileprivate func dayCellTapped (_ day: CPCDay, in monthView: CPCMonthView) -> Bool {
+			return true; // TODO
+		}
+	}
+	
+	private func selectionDidChange () {
+		for monthView in self.monthViews {
+			monthView.selectionHandler = self.selectionHandler (for: monthView);
+		}
+	}
+	
+	private func selectionHandler (for monthView: CPCMonthView) -> SelectionHandler {
+		return self.selectionManager.selectionHandler (for: monthView);
 	}
 }

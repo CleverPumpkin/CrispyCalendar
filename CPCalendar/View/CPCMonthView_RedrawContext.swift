@@ -168,7 +168,7 @@ extension CPCMonthView {
 				context.fill (frame);
 			}
 			
-			let dayString = NSAttributedString (string: self.dayFormatter.string (from: day.startDate), attributes: self.dayCellTitleAttributes);
+			let dayString = NSAttributedString (string: self.dayFormatter.string (from: day.start), attributes: self.dayCellTitleAttributes);
 			let separatorWidth = self.layoutInfo.separatorWidth;
 			dayString.draw (in: CGRect (
 				x: frame.minX + separatorWidth / 2.0,

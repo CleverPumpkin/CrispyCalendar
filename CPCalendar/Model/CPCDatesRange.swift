@@ -23,30 +23,150 @@
 
 import Foundation
 
-public protocol CPCDatesRange: Strideable, Hashable where Stride == Int {
-	var startDate: Date { get }
-	var endDate: Date { get }
+private struct DatesRangeExpressionUnwrap: RandomAccessCollection {
+	fileprivate typealias Index = Date;
+	fileprivate typealias Element = Date;
+
+	fileprivate var startIndex: Date {
+		return Date.distantPast;
+	}
 	
-	var duration: TimeInterval { get }
-	var interval: DateInterval { get };
-	var prev: Self { get }
-	var next: Self { get }
+	fileprivate var endIndex: Date {
+		return Date.distantFuture;
+	}
+
+	fileprivate subscript (position: Date) -> Date {
+		return position;
+	}
+
+	fileprivate func index (after i: Date) -> Date {
+		return Date (timeIntervalSinceReferenceDate: i.timeIntervalSinceReferenceDate.nextUp);
+	}
+
+	fileprivate func index (before i: Date) -> Date {
+		return Date (timeIntervalSinceReferenceDate: i.timeIntervalSinceReferenceDate.nextDown);
+	}
 }
 
-public extension CPCDatesRange {
+public protocol CPCDateInterval: RangeExpression where Bound == Date {
+	var start: Date { get }
+	var end: Date { get }
+	var duration: TimeInterval { get }
+	
+	func contains (_ date: Date) -> Bool;
+	func contains <R> (_ dateInterval: R) -> Bool where R: RangeExpression, R.Bound == Date;
+	func contains <R> (_ dateInterval: R) -> Bool where R: CPCDateInterval;
+}
+
+public protocol CPCDateIntervalInitializable: CPCDateInterval {
+	init (_ date: Date);
+	init <R> (_ other: R) where R: RangeExpression, R.Bound == Date;
+	init <R> (_ other: R) where R: CPCDateInterval;
+	
+	func clamped <R> (to: R) -> Self where R: RangeExpression, R.Bound == Date;
+	func clamped <R> (to: R) -> Self where R: CPCDateInterval;
+}
+
+public extension CPCDateInterval {
 	public var duration: TimeInterval {
-		return self.endDate.timeIntervalSince (self.startDate);
+		return self.end.timeIntervalSince (self.start);
 	}
 	
-	public var interval: DateInterval {
-		return DateInterval (start: self.startDate, end: self.endDate);
+	public func relative <C> (to collection: C) -> Range <Date> where C: Collection, C.Index == Date {
+		return self.start ..< self.end;
+	}
+	
+	public func contains (_ date: Date) -> Bool {
+		return !((date < self.start) || (date >= self.end));
 	}
 
+	public func contains <R> (_ dateInterval: R) -> Bool where R: RangeExpression, R.Bound == Date {
+		return self.contains (dateInterval.relative (to: DatesRangeExpressionUnwrap ()));
+	}
+
+	public func contains <R> (_ dateInterval: R) -> Bool where R: CPCDateInterval {
+		return ((dateInterval.start >= self.start) && (dateInterval.end <= self.end));
+	}
+}
+
+public extension CPCDateInterval where Self: Strideable, Self.Stride: ExpressibleByIntegerLiteral {
 	public var prev: Self {
 		return self.advanced (by: -1);
 	}
 	
 	public var next: Self {
 		return self.advanced (by: 1);
+	}
+}
+
+public extension CPCDateIntervalInitializable {
+	public init (_ date: Date) {
+		self.init (date ..< date);
+	}
+	
+	public init <R> (_ other: R) where R: RangeExpression, R.Bound == Date {
+		self.init (other.relative (to: DatesRangeExpressionUnwrap ()));
+	}
+	
+	public func clamped <R> (to other: R) -> Self where R: RangeExpression, R.Bound == Date {
+		return self.clamped (to: other.relative (to: DatesRangeExpressionUnwrap ()));
+	}
+	
+	public func clamped <R> (to other: R) -> Self where R: CPCDateInterval {
+		let selfStart = self.start, selfEnd = self.end, otherStart = other.start, otherEnd = other.end;
+		if (selfStart >= otherEnd) {
+			return Self (otherEnd ..< otherEnd);
+		} else if (selfEnd <= otherStart) {
+			return Self (otherStart ..< otherStart);
+		}
+		
+		switch (selfStart < otherStart, selfEnd > otherEnd) {
+		case (false, false):
+			return self;
+		case (true, false):
+			return Self (otherStart ..< selfEnd);
+		case (false, true):
+			return Self (selfStart ..< otherEnd);
+		case (true, true):
+			return Self (other);
+		}
+	}
+}
+
+extension Range: CPCDateInterval where Bound == Date {
+	public var start: Date {
+		return self.lowerBound;
+	}
+	
+	public var end: Date {
+		return self.upperBound;
+	}
+}
+
+extension Range: CPCDateIntervalInitializable where Bound == Date {
+	public init <R> (_ other: R) where R: CPCDateInterval {
+		self.init (uncheckedBounds: (lower: other.start, upper: other.end));
+	}
+}
+
+extension ClosedRange: CPCDateInterval where Bound == Date {
+	public var start: Date {
+		return self.lowerBound;
+	}
+	
+	public var end: Date {
+		return Date (timeIntervalSinceReferenceDate: self.upperBound.timeIntervalSinceReferenceDate.nextUp);
+	}
+}
+
+extension ClosedRange: CPCDateIntervalInitializable where Bound == Date {
+	public init <R> (_ other: R) where R: CPCDateInterval {
+		self.init (uncheckedBounds: (lower: other.start, upper:  Date (timeIntervalSinceReferenceDate: other.end.timeIntervalSinceReferenceDate.nextDown)));
+	}
+}
+
+extension DateInterval: CPCDateIntervalInitializable {
+	public init <R> (_ other: R) where R: CPCDateInterval {
+		self.init (start: other.start, end: other.end);
 	}
 }
