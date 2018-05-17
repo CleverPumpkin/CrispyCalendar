@@ -55,11 +55,8 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 		}
 	}
 	
-	internal var selectionHandler = CPCViewDefaultSelectionHandler {
-		didSet {
-			self.selectionDidChange ();
-		}
-	}
+	private var multiSelectionHandler = CPCViewDefaultSelectionHandler;
+	
 	internal private (set) var monthViews = UnownedArray <CPCMonthView> ();
 	
 	private var cellBackgroundColors = DayCellStateBackgroundColors ();
@@ -91,7 +88,7 @@ extension CPCMultiMonthsView {
 		guard let removedView = self.monthViews.remove (where: { $0 === monthView }) else {
 			return;
 		}
-		removedView.selection = .none;
+		removedView.selectionHandler = CPCViewDefaultSelectionHandler;
 	}
 	
 	open override func willRemoveSubview (_ subview: UIView) {
@@ -122,30 +119,54 @@ extension CPCMultiMonthsView {
 extension CPCMultiMonthsView: CPCViewDelegatingSelectionHandling {
 	public typealias SelectionDelegateType = CPCMultiMonthsViewSelectionDelegate;
 	
-	private struct MonthViewHandler: SelectionHandler {
-		fileprivate var selection: Selection {
-			return self.monthView.month.map { self.parent.selection.clamped (to: $0) } ?? .none;
-		}
-		
+	private struct MonthViewHandler: CPCViewSelectionHandlerProtocol {
+		fileprivate let selection: Selection;
+		fileprivate unowned let monthView: CPCMonthView;
+
 		private unowned let parent: CPCMultiMonthsView;
-		private unowned let monthView: CPCMonthView;
-		
+
 		fileprivate init (_ parent: CPCMultiMonthsView, for monthView: CPCMonthView) {
 			self.parent = parent;
 			self.monthView = monthView;
+			self.selection = monthView.month.map { parent.selection.clamped (to: $0) } ?? .none;
 		}
 		
-		fileprivate func clearSelection () {
-			self.monthView.selection = .none;
+		fileprivate func clearingSelection () -> CPCMultiMonthsView.MonthViewHandler {
+			return self;
 		}
 		
-		fileprivate func dayCellTapped (_ day: CPCDay) -> Bool {
-			return self.parent.selectionHandler.dayCellTapped (day);
+		fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
+			return self.parent.selectionHandler (self, handleTapOn: day);
+		}
+	}
+	
+	internal var selectionHandler: SelectionHandler {
+		get {
+			return self.multiSelectionHandler;
+		}
+		set {
+			self.setMultiSelectionHandler (newValue);
 		}
 	}
 	
 	fileprivate func selectionHandler (for monthView: CPCMonthView) -> SelectionHandler {
 		return MonthViewHandler (self, for: monthView);
+	}
+	
+	private func setMultiSelectionHandler (_ multiSelectionHandler: SelectionHandler, sender: CPCMonthView? = nil) {
+		self.multiSelectionHandler = multiSelectionHandler;
+		for monthView in self.monthViews where monthView !== sender {
+			monthView.selectionHandler = self.selectionHandler (for: monthView);
+		}
+	}
+
+	private func selectionHandler (_ handler: MonthViewHandler, handleTapOn day: CPCDay) -> SelectionHandler? {
+		guard let newHandler = self.selectionHandler.handleTap (day: day) else {
+			return nil;
+		}
+		let monthView = handler.monthView;
+		self.setMultiSelectionHandler (newHandler, sender: monthView);
+		return self.selectionHandler (for: monthView);
 	}
 
 	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
@@ -164,11 +185,5 @@ extension CPCMultiMonthsView: CPCViewDelegatingSelectionHandling {
 	
 	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
 		return delegate.multiMonthView (self, shouldDeselect: day);
-	}
-	
-	private func selectionDidChange () {
-		for monthView in self.monthViews {
-			monthView.selectionHandler = self.selectionHandler (for: monthView);
-		}
 	}
 }

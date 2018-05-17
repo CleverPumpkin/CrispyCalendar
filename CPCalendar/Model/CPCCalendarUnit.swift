@@ -23,11 +23,12 @@
 
 import Foundation
 
-internal protocol CPCCalendarUnit: Strideable, Hashable, CPCDateInterval where Stride == Int {
+internal protocol CPCCalendarUnit: CustomStringConvertible, CustomDebugStringConvertible, Strideable, Hashable, CPCDateInterval where Stride == Int {
 	associatedtype UnitBackingType where UnitBackingType: CPCCalendarUnitBackingType;
 	
 	static var representedUnit: Calendar.Component { get };
 	static var requiredComponents: Set <Calendar.Component> { get };
+	static var descriptionDateFormatTemplate: String { get };
 	
 	var calendar: Calendar { get };
 	var backingValue: UnitBackingType { get };
@@ -106,5 +107,41 @@ extension CPCCalendarUnit {
 		let result = Self (backedBy: UnitBackingType.advance (self.backingValue, byAdding: Self.representedUnit, value: n, using: self.calendar), calendar: self.calendar);
 		self.cacheUnitValue (result, advancedBy: n);
 		return result;
+	}
+}
+
+fileprivate extension DateIntervalFormatter {
+	private static var calendarUnitIntervalFormatters = UnfairThreadsafeStorage ([ObjectIdentifier: DateIntervalFormatter] ());
+	
+	fileprivate static func calendarUnitIntervalFormatter <Unit> (for unitType: Unit.Type = Unit.self) -> DateIntervalFormatter where Unit: CPCCalendarUnit {
+		let key = ObjectIdentifier (unitType);
+		return self.calendarUnitIntervalFormatters.withMutableStoredValue {
+			if let storedValue = $0 [key] {
+				return storedValue;
+			}
+			
+			let formatter = DateIntervalFormatter ();
+			formatter.dateTemplate = Unit.descriptionDateFormatTemplate;
+			$0 [key] = formatter;
+			return formatter;
+		};
+	}
+}
+
+extension CPCCalendarUnit {
+	private var dateIntervalFormatter: DateIntervalFormatter {
+		let result = DateIntervalFormatter.calendarUnitIntervalFormatter (for: Self.self).copy () as! DateIntervalFormatter;
+		result.calendar = self.calendar;
+		return result;
+	}
+	
+	public var description: String {
+		let intervalFormatter = self.dateIntervalFormatter;
+		return "<\(Self.self): \(intervalFormatter.string (from: self.start, to: self.end))>";
+	}
+	
+	public var debugDescription: String {
+		let intervalFormatter = self.dateIntervalFormatter, calendar = self.calendar, calendarID = calendar.identifier, locale = calendar.locale ?? .current;
+		return "<\(Self.self): \(intervalFormatter.string (from: self.start, to: self.end)); backing: \(self.backingValue); calendar: \(locale.localizedString (for: calendarID) ?? "\(calendarID)"); locale: \(locale.identifier)>";
 	}
 }

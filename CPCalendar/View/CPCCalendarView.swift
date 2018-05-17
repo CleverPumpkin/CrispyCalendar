@@ -143,7 +143,7 @@ extension CPCCalendarView {
 			scrollView.bottomAnchor.constraint (equalTo: contentView.bottomAnchor),
 			contentView.widthAnchor.constraint (equalTo: scrollView.widthAnchor),
 			contentView.heightAnchor.constraint (equalTo: scrollView.heightAnchor, multiplier: CPCCalendarView.columnHeightMultiplier),
-			]);
+		]);
 		
 		scrollView.contentOffset = CGPoint (x: 0.0, y: bounds.height * (CPCCalendarView.columnHeightMultiplier - 1.0) / 2);
 		
@@ -154,7 +154,7 @@ extension CPCCalendarView {
 extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
 	public typealias SelectionDelegateType = CPCCalendarViewSelectionDelegate;
 	
-	internal var selectionHandler: CPCViewSelectionHandling.SelectionHandler {
+	internal var selectionHandler: SelectionHandler {
 		get {
 			return self.contentView.selectionHandler;
 		}
@@ -454,7 +454,7 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 		let bottomRows = Page.makeRows (for: layout, after: middleRow, startingAt: middleRow.frame.maxY);
 		let topRows = Page.makeRows (for: layout, before: middleRow, startingAt: middleRow.frame.minY);
 		
-		self.rows = topRows + [middleRow] + bottomRows;
+		self.rows = topRows + CollectionOfOne (middleRow) + bottomRows;
 	}
 
 	fileprivate init (previousFor page: Page, of layout: Layout) {
@@ -497,8 +497,10 @@ extension CPCCalendarView.ScrollViewController.Layout.Page: RandomAccessCollecti
 
 extension CPCCalendarView.ScrollViewController.Layout.Page {
 	private static func makeRows (for layout: Layout, after row: Row, startingAt yPosition: CGFloat) -> [Row] {
-		var lastBottomMonth = row.months.upperBound, columnHeight = layout.columnSize.height;
-		return Array (sequence (state: yPosition) { minY -> Row? in
+		let columnHeight = layout.columnSize.height;
+		return Array (sequence (state: (yPosition, row.months.upperBound)) { state -> Row? in
+			let (minY, lastBottomMonth) = state;
+			
 			guard minY < columnHeight else {
 				return nil;
 			}
@@ -509,16 +511,16 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 			} else {
 				lastRowMonth = CPCYear (backedBy: firstRowMonth.year, calendar: firstRowMonth.calendar).last!;
 			}
+			
 			let row = Page.makeRow (months: firstRowMonth ... lastRowMonth, layout: layout, constraint: .minY (minY));
-			lastBottomMonth = lastRowMonth;
-			minY = row.frame.maxY;
+			state = (row.frame.maxY, lastRowMonth);
 			return row;
 		});
 	}
 	
 	fileprivate static func makeRows (for layout: Layout, before row: Row, startingAt yPosition: CGFloat) -> [Row] {
-		var lastTopMonth = row.months.lowerBound;
-		return sequence (state: yPosition) { maxY -> Row? in
+		return sequence (state: (yPosition, row.months.lowerBound)) { state -> Row? in
+			let (maxY, lastTopMonth) = state;
 			guard maxY > 0.0 else {
 				return nil;
 			}
@@ -531,9 +533,9 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 				rowSize = (yearSize - 1) % layout.columnCount + 1;
 			}
 			let firstRowMonth = lastTopMonth.advanced (by: -rowSize);
+			
 			let row = Page.makeRow (months: firstRowMonth ... lastRowMonth, layout: layout, constraint: .maxY (maxY));
-			lastTopMonth = firstRowMonth;
-			maxY = row.frame.minY;
+			state = (row.frame.minY, firstRowMonth)
 			return row;
 		}.reversed ();
 	}

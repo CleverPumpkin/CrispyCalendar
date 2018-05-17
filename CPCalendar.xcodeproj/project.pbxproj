@@ -25,6 +25,7 @@
 		4318950320A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4318950120A9B77900D29AA8 /* CPCCalendarUnitCaching.swift */; };
 		4318950520AC80DE00D29AA8 /* CPCViewSelectionHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4318950420AC80DE00D29AA8 /* CPCViewSelectionHandling.swift */; };
 		4318950720AC80F200D29AA8 /* RangeExpressionUnwrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4318950620AC80F200D29AA8 /* RangeExpressionUnwrap.swift */; };
+		435802C320ADD0AD002FFE83 /* CPCViewSelectionConvenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 435802C220ADD0AC002FFE83 /* CPCViewSelectionConvenience.swift */; };
 		43584B1120A4F18E00035A81 /* FloatingPointRounding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43584B1020A4F18D00035A81 /* FloatingPointRounding.swift */; };
 		43584B1220A4F1A000035A81 /* FloatingPointRounding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43584B1020A4F18D00035A81 /* FloatingPointRounding.swift */; };
 		43584B1320A4F1B500035A81 /* CPCDayCellState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436F53BE20A4DA1800ACE40A /* CPCDayCellState.swift */; };
@@ -88,6 +89,7 @@
 		4318950120A9B77900D29AA8 /* CPCCalendarUnitCaching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarUnitCaching.swift; sourceTree = "<group>"; };
 		4318950420AC80DE00D29AA8 /* CPCViewSelectionHandling.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCViewSelectionHandling.swift; sourceTree = "<group>"; };
 		4318950620AC80F200D29AA8 /* RangeExpressionUnwrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeExpressionUnwrap.swift; sourceTree = "<group>"; };
+		435802C220ADD0AC002FFE83 /* CPCViewSelectionConvenience.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCViewSelectionConvenience.swift; sourceTree = "<group>"; };
 		43584B1020A4F18D00035A81 /* FloatingPointRounding.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FloatingPointRounding.swift; sourceTree = "<group>"; };
 		43689DAD2093507700052C7A /* CPCYear.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCYear.swift; sourceTree = "<group>"; };
 		43689DB4209364BF00052C7A /* CPCCalendarUnitBackingType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarUnitBackingType.swift; sourceTree = "<group>"; };
@@ -211,6 +213,7 @@
 				43689DC920937AF200052C7A /* CPCDayCellState.h */,
 				436F53BE20A4DA1800ACE40A /* CPCDayCellState.swift */,
 				436F53BA20A4C86B00ACE40A /* CPCViewProtocol.swift */,
+				435802C220ADD0AC002FFE83 /* CPCViewSelectionConvenience.swift */,
 				4318950420AC80DE00D29AA8 /* CPCViewSelectionHandling.swift */,
 				43689DBD20936F2500052C7A /* CPCMonthView.swift */,
 				43101B94209CFBB400904529 /* CPCMonthView_GridLayoutInfo.swift */,
@@ -345,6 +348,7 @@
 				43C070042092ED9C00202ED8 /* CPCMonth.swift in Sources */,
 				43689DAE2093507700052C7A /* CPCYear.swift in Sources */,
 				4318950720AC80F200D29AA8 /* RangeExpressionUnwrap.swift in Sources */,
+				435802C320ADD0AD002FFE83 /* CPCViewSelectionConvenience.swift in Sources */,
 				436F53BF20A4DA1800ACE40A /* CPCDayCellState.swift in Sources */,
 				43689DBF20936F2600052C7A /* CPCMonthView.swift in Sources */,
 				43101B95209CFBB400904529 /* CPCMonthView_GridLayoutInfo.swift in Sources */,

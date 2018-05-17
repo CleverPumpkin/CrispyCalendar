@@ -31,55 +31,21 @@ public enum CPCViewSelection: Equatable {
 	case ordered ([CPCDay]);
 }
 
-public extension CPCViewSelection {
-	public func isDaySelected (_ day: CPCDay) -> Bool {
+extension CPCViewSelection: CustomStringConvertible {
+	public var description: String {
 		switch (self) {
 		case .none:
-			return false;
-		case .single (let selectedDay):
-			return (selectedDay == day);
-		case .range (let selectedDays):
-			return (selectedDays ~= day);
-		case .unordered (let selectedDays):
-			return selectedDays.contains (day);
-		case .ordered (let selectedDays):
-			return selectedDays.contains (day);
-		}
-	}
-	
-	private var selectedDays: Set <CPCDay> {
-		switch (self) {
-		case .none, .single (nil):
-			return [];
-		case .single (.some (let selectedDay)):
-			return [selectedDay];
-		case .range (let selectedDays):
-			return Set (selectedDays);
-		case .unordered (let selectedDays):
-			return selectedDays;
-		case .ordered (let selectedDays):
-			return Set (selectedDays);
-		}
-	}
-	
-	public func difference (_ other: CPCViewSelection) -> Set <CPCDay> {
-		return self.selectedDays.symmetricDifference (other.selectedDays);
-	}
-	
-	public func clamped <R> (to datesRange: R) -> CPCViewSelection where R: CPCDateInterval {
-		switch (self) {
-		case .single (.some (let day)) where !datesRange.contains (day):
-			return .single (nil)
-		case .none, .single:
-			return self;
+			return "none";
+		case .single (nil):
+			return "nil";
+		case .single (.some (let day)):
+			return "\(day.description)";
 		case .range (let range):
-			let lowerBound = range.lowerBound, upperBound = range.upperBound, calendar = lowerBound.calendar;
-			let clampedRange = (lowerBound.start ..< upperBound.end).clamped (to: datesRange);
-			return .range (CPCDay (containing: clampedRange.lowerBound, calendar: calendar) ..< CPCDay (containing: clampedRange.upperBound, calendar: calendar));
+			return "<Range: \(range.isEmpty ? "empty" : "\(range.lowerBound.description) ..< \(range.upperBound.description)")>";
 		case .unordered (let days):
-			return .unordered (days.filter { datesRange.contains ($0) });
+			return "<Unordered: \(days.isEmpty ? "empty" : "\(days.sorted ().map { $0.description }.joined (separator: ", "))")>";
 		case .ordered (let days):
-			return .ordered (days.filter { datesRange.contains ($0) });
+			return "<Ordered: \(days.isEmpty ? "empty" : "\(days.sorted ().map { $0.description }.joined (separator: ", "))")>";
 		}
 	}
 }
@@ -123,8 +89,8 @@ internal struct CPCViewDayCellStateBackgroundColors {
 	
 	internal func effectiveColor (for state: CPCDayCellState) -> UIColor? {
 		for state in sequence (first: state, next: { $0.parent }) {
-			if let backgroundColor = self.colors [state] {
-				return backgroundColor;
+			if let result = self.colors [state] {
+				return result;
 			}
 		}
 		return nil;

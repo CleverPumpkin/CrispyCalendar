@@ -29,7 +29,8 @@ public struct CPCYear: CPCCompoundCalendarUnit {
 	
 	internal static let representedUnit = Calendar.Component.year;
 	internal static let requiredComponents: Set <Calendar.Component> = [.year];
-	
+	internal static let descriptionDateFormatTemplate = "yyyy";
+
 	public let calendar: Calendar;
 	public let year: Int;
 	internal let smallerUnitRange: Range <Int>;

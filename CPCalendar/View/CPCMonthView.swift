@@ -80,6 +80,8 @@ public protocol CPCMonthViewSelectionDelegate: AnyObject {
 }
 
 open class CPCMonthView: UIControl, CPCViewProtocol {
+	private typealias CPCViewSelectionHandlerObject = AnyObject & CPCViewSelectionHandlerProtocol;
+	
 	open class override var requiresConstraintBasedLayout: Bool {
 		return true;
 	}
@@ -213,9 +215,6 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 
 	open override func draw (_ rect: CGRect) {
-		if let month = self.month {
-			print ("[\(Date.timeIntervalSinceReferenceDate.remainder (dividingBy: 86400.0))]: Drawing \(month.month)/\(month.year)");
-		}
 		super.draw (rect);
 		RedrawContext (redrawing: rect, in: self)?.run ();
 	}
@@ -243,7 +242,8 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 		
 		let oldSelection = self.selectionHandler.selection;
-		if (self.selectionHandler.dayCellTapped (month [ordinal: touchUpCellIndex.row] [ordinal: touchUpCellIndex.column])) {
+		if let updatedhandler = self.selectionHandler.handleTap (day: month [ordinal: touchUpCellIndex.row] [ordinal: touchUpCellIndex.column]) {
+			self.selectionHandler = updatedhandler;
 			self.selectionDidChange (oldValue: oldSelection);
 		}
 	}
@@ -292,7 +292,7 @@ extension CPCMonthView: CPCViewDelegatingSelectionHandling {
 extension CPCMonthView {
 	private func monthDidChange () {
 		self.highlightedDayIndex = nil;
-		self.selectionHandler.clearSelection ();
+		self.selectionHandler = self.selectionHandler.clearingSelection ();
 		self.setNeedsUpdateConstraints ();
 		self.setNeedsDisplay ();
 	}

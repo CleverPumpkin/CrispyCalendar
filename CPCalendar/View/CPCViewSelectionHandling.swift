@@ -28,8 +28,18 @@ internal protocol CPCViewSelectionHandlerProtocol {
 	
 	var selection: Selection { get };
 	
-	mutating func clearSelection ();
-	mutating func dayCellTapped (_ day: CPCDay) -> Bool;
+	func clearingSelection () -> Self;
+	func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol?;
+}
+
+internal protocol CPCPrimitiveSelectionHandler: CPCViewSelectionHandlerProtocol {
+	init ();
+}
+
+internal extension CPCPrimitiveSelectionHandler {
+	internal func clearingSelection () -> Self {
+		return Self ();
+	}
 }
 
 internal let CPCViewDefaultSelectionHandler: CPCViewSelectionHandlerProtocol = CPCViewSelectionHandler.primitive (for: .none);
@@ -38,13 +48,6 @@ internal protocol CPCViewSelectionHandling: AnyObject {
 	typealias SelectionHandler = CPCViewSelectionHandlerProtocol;
 	
 	var selectionHandler: SelectionHandler { get set };
-	var isSelectionEnabled: Bool { get };
-	
-	func select (_ day: CPCDay?);
-	func select <R> (_ range: R) where R: CPCDateInterval;
-	func select <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay;
-	func select <C> (_ ordered: C) where C: RandomAccessCollection, C.Element == CPCDay;
-	func select <C> (_ unordered: C) where C: Collection, C: SetAlgebra, C.Element == CPCDay;
 }
 
 extension CPCViewSelectionHandling {
@@ -55,157 +58,117 @@ extension CPCViewSelectionHandling {
 			return self.selectionHandler.selection;
 		}
 		set {
-			self.selectionHandler = CPCViewSelectionHandler.primitive (for: selection);
+			self.selectionHandler = CPCViewSelectionHandler.primitive (for: newValue);
 		}
-	}
-	
-	public var isSelectionEnabled: Bool {
-		return self.selection != .none;
-	}
-	
-	public func select (_ day: CPCDay?) {
-		self.selection = .single (day);
-	}
-	
-	public func select <R> (_ range: R) where R: CPCDateInterval {
-		let unwrappedRange = range.unwrapped;
-		let daysRange: Range <CPCDay> = CPCDay (containing: unwrappedRange.lowerBound) ..< CPCDay (containing: unwrappedRange.upperBound)
-		self.select (daysRange);
-	}
-	
-	public func select <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay {
-		
-	}
-	
-	public func select <C> (_ ordered: C) where C: RandomAccessCollection, C.Element == CPCDay {
-		self.selection = .ordered (Array (ordered));
-	}
-	
-	public func select <C> (_ unordered: C) where C: Collection, C: SetAlgebra, C.Element == CPCDay {
-		self.selection = .unordered (Set (unordered));
-	}
+	}	
 }
 
 fileprivate enum CPCViewSelectionHandler {}
 
 extension CPCViewSelectionHandler {
 	fileprivate static func primitive (for selection: CPCViewSelection) -> CPCViewSelectionHandlerProtocol {
-		struct Disabled: CPCViewSelectionHandlerProtocol {
+		struct Disabled: CPCPrimitiveSelectionHandler {
 			fileprivate var selection: Selection {
 				return .none;
 			}
 			
-			fileprivate mutating func dayCellTapped (_ day: CPCDay) -> Bool {
-				return false;
-			}
-			
 			fileprivate init () {}
 
+			fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
+				return nil;
+			}
+			
 			fileprivate mutating func clearSelection () {}
 		}
 		
-		struct Single: CPCViewSelectionHandlerProtocol {
+		struct Single: CPCPrimitiveSelectionHandler {
 			fileprivate var selection: Selection {
 				return .single (self.selectedDay);
 			}
 			
-			private var selectedDay: CPCDay?;
+			private let selectedDay: CPCDay?;
+			
+			fileprivate init () {
+				self.init (nil);
+			}
 			
 			fileprivate init (_ selectedDay: CPCDay?) {
 				self.selectedDay = selectedDay;
 			}
 
-			fileprivate mutating func dayCellTapped (_ day: CPCDay) -> Bool {
-				if (day == self.selectedDay) {
-					self.selectedDay = nil;
-				} else {
-					self.selectedDay = day;
-				}
-				return true;
-			}
-			
-			fileprivate mutating func clearSelection () {
-				self.selectedDay = nil;
+			fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
+				return Single ((day == self.selectedDay) ? nil : day);
 			}
 		}
 		
-		struct Range: CPCViewSelectionHandlerProtocol {
+		struct Range: CPCPrimitiveSelectionHandler {
 			fileprivate var selection: Selection {
 				return .range (self.selectedDays);
 			}
 			
-			private var selectedDays: CountableRange <CPCDay>;
+			private let selectedDays: CountableRange <CPCDay>;
 			
-			fileprivate init (_ selectedDays: CountableRange <CPCDay> = .today ..< .today) {
+			fileprivate init () {
+				self.init (.today ..< .today);
+			}
+			
+			fileprivate init (_ selectedDays: CountableRange <CPCDay>) {
 				self.selectedDays = selectedDays;
 			}
 
-			fileprivate mutating func dayCellTapped (_ day: CPCDay) -> Bool {
+			fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
+				let newRange: CountableRange <CPCDay>;
 				if (self.selectedDays.count == 1) {
 					let selectedDay = self.selectedDays.lowerBound;
 					if (day < selectedDay) {
-						self.selectedDays = day ..< selectedDay.next;
+						newRange = day ..< selectedDay.next;
 					} else {
-						self.selectedDays = selectedDay ..< day.next;
+						newRange = selectedDay ..< day.next;
 					}
 				} else {
-					self.selectedDays = day ..< day.next;
+					newRange = day ..< day.next;
 				}
-				return true;
-			}
-			
-			fileprivate mutating func clearSelection () {
-				self.selectedDays = .today ..< .today;
+				return Range (newRange);
 			}
 		}
 		
-		struct Unordered: CPCViewSelectionHandlerProtocol {
+		struct Unordered: CPCPrimitiveSelectionHandler {
 			fileprivate var selection: Selection {
 				return .unordered (self.selectedDays);
 			}
 			
 			private var selectedDays: Set <CPCDay>;
-			
+
+			fileprivate init () {
+				self.init ([]);
+			}
+
 			fileprivate init (_ selectedDays: Set <CPCDay> = Set ()) {
 				self.selectedDays = selectedDays;
 			}
 
-			fileprivate mutating func dayCellTapped (_ day: CPCDay) -> Bool {
-				if (self.selectedDays.contains (day)) {
-					self.selectedDays.remove (day);
-				} else {
-					self.selectedDays.insert (day);
-				}
-				return true;
-			}
-			
-			fileprivate mutating func clearSelection () {
-				self.selectedDays.removeAll ();
+			fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
+				return Unordered (self.selectedDays.contains (day) ? self.selectedDays.filter { $0 != day } : self.selectedDays.union (CollectionOfOne (day)));
 			}
 		}
 		
-		struct Ordered: CPCViewSelectionHandlerProtocol {
+		struct Ordered: CPCPrimitiveSelectionHandler {
 			fileprivate var selection: Selection {
 				return .ordered (self.selectedDays);
 			}
 			
 			private var selectedDays: [CPCDay];
-			
+
+			fileprivate init () {
+				self.init ([]);
+			}
+
 			fileprivate init (_ selectedDays: [CPCDay] = []) {
 				self.selectedDays = selectedDays;
 			}
 
-			fileprivate mutating func dayCellTapped (_ day: CPCDay) -> Bool {
-				if let dayIndex = self.selectedDays.index (of: day) {
-					self.selectedDays.remove (at: dayIndex);
-				} else {
-					self.selectedDays.append (day);
-				}
-				return true;
-			}
-			
-			fileprivate mutating func clearSelection () {
-				self.selectedDays.removeAll ();
+			fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
+				return Ordered (self.selectedDays.contains (day) ? self.selectedDays.filter { $0 != day } : self.selectedDays + CollectionOfOne (day));
 			}
 		}
 		
@@ -270,7 +233,7 @@ extension CPCViewDelegatingSelectionHandling {
 }
 
 extension CPCViewSelectionHandler {
-	fileprivate struct Delegating <View>: CPCViewSelectionHandlerProtocol where View: CPCViewDelegatingSelectionHandling {
+	fileprivate final class Delegating <View>: CPCViewSelectionHandlerProtocol where View: CPCViewDelegatingSelectionHandling {
 		fileprivate weak var delegate: AnyObject?;
 		
 		fileprivate var selection: Selection {
@@ -289,12 +252,14 @@ extension CPCViewSelectionHandler {
 			self.view = view;
 		}
 		
-		fileprivate func clearSelection () {
+		fileprivate func clearingSelection () -> Self {
 			self.performWithDelegate { self.view.resetSelection (in: $0) };
+			return self;
 		}
 		
-		fileprivate func dayCellTapped (_ day: CPCDay) -> Bool {
-			return self.performWithDelegate { (self.selection.isDaySelected (day) ? self.view.handlerShouldDeselectDayCell : self.view.handlerShouldSelectDayCell) (day, $0) } ?? false;
+		fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
+			let method = (self.selection.isDaySelected (day) ? self.view.handlerShouldDeselectDayCell : self.view.handlerShouldSelectDayCell);
+			return self.performWithDelegate { method (day, $0) }.map { _ in self };
 		}
 		
 		private func performWithDelegate <T> (_ block: (View.SelectionDelegateType) -> T) -> T? {

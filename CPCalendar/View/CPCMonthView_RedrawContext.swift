@@ -78,7 +78,8 @@ extension CPCMonthView {
 				highlighted = nil;
 			}
 			
-			let selected = affected.indices { view.selection.isDaySelected (month [ordinal: $0.row] [ordinal: $0.column]) };
+			let selection = view.selection;
+			let selected = affected.indices { selection.isDaySelected (month [ordinal: $0.row] [ordinal: $0.column]) };
 	
 			return (affected: affected, highlighted: highlighted, selected: selected);
 		}

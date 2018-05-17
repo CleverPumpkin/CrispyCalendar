@@ -28,6 +28,7 @@ public struct CPCDay: CPCCalendarUnit {
 	
 	internal static let representedUnit = Calendar.Component.day;
 	internal static let requiredComponents: Set <Calendar.Component> = [.day, .month, .year];
+	internal static let descriptionDateFormatTemplate = "ddMMyyyy";
 	
 	public let calendar: Calendar;
 	public var year: Int {
@@ -71,6 +72,24 @@ public extension CPCDay {
 
 	public init (daysSinceNow: Int) {
 		self = CPCDay.today.advanced (by: daysSinceNow);
+	}
+}
+
+public extension CPCDay {
+	private static let dateFormatter: DateFormatter = {
+		let result = DateFormatter ();
+		result.setLocalizedDateFormatFromTemplate (CPCDay.descriptionDateFormatTemplate);
+		return result;
+	} ();
+	
+	private var dateFormatter: DateFormatter {
+		let result = CPCDay.dateFormatter.copy () as! DateFormatter;
+		result.calendar = self.calendar;
+		return result;
+	}
+	
+	public var description: String {
+		return "<\(CPCDay.self): \(self.dateFormatter.string (from: self.start))>";
 	}
 }
 
