@@ -37,21 +37,51 @@ public protocol CPCMultiMonthsViewSelectionDelegate: AnyObject {
 }
 
 open class CPCMultiMonthsView: UIView, CPCViewProtocol {
-	@IBInspectable open var font = CPCMultiMonthsView.defaultFont {
+	@IBInspectable open var titleFont = UIFont.defaultMonthTitle {
 		didSet {
-			self.updateManagedMonthViews { $0.font = self.font };
+			self.updateManagedMonthViews { $0.titleFont = self.titleFont };
 		}
 	}
 	
-	@IBInspectable open var titleColor = CPCMultiMonthsView.defaultTitleColor {
+	@IBInspectable open var titleColor = UIColor.defaultMonthTitle {
 		didSet {
 			self.updateManagedMonthViews { $0.titleColor = self.titleColor };
 		}
 	}
 	
-	@IBInspectable open var separatorColor = CPCMonthView.defaultSeparatorColor {
+	open var titleStyle = TitleStyle.default {
+		didSet {
+			self.updateManagedMonthViews { $0.titleStyle = self.titleStyle };
+		}
+	}
+	
+	@IBInspectable open var titleMargins = UIEdgeInsets.defaultMonthTitle {
+		didSet {
+			self.updateManagedMonthViews { $0.titleMargins = self.titleMargins };
+		}
+	}
+	
+	@IBInspectable open var dayCellFont = UIFont.defaultDayCellText {
+		didSet {
+			self.updateManagedMonthViews { $0.titleFont = self.titleFont };
+		}
+	}
+	
+	@IBInspectable open var dayCellTextColor = UIColor.defaultDayCellText {
+		didSet {
+			self.updateManagedMonthViews { $0.titleColor = self.titleColor };
+		}
+	}
+	
+	@IBInspectable open var separatorColor = UIColor.defaultSeparator {
 		didSet {
 			self.updateManagedMonthViews { $0.separatorColor = self.separatorColor };
+		}
+	}
+	
+	open var adjustsFontForContentSizeCategory = false {
+		didSet {
+			self.updateManagedMonthViews { $0.adjustsFontForContentSizeCategory = self.adjustsFontForContentSizeCategory };
 		}
 	}
 	
@@ -59,8 +89,21 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 	
 	internal private (set) var monthViews = UnownedArray <CPCMonthView> ();
 	
-	private var cellBackgroundColors = DayCellStateBackgroundColors ();
+	internal var cellBackgroundColors = DayCellStateBackgroundColors ();
 }
+
+extension CPCMultiMonthsView: CPCViewDayCellBackgroundColorsStorage {
+	private func updateManagedMonthViews (using block: (CPCMonthView) -> ()) {
+		self.monthViews.forEach (block);
+	}
+	
+	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
+		self.cellBackgroundColors [state] = backgroundColor;
+		self.updateManagedMonthViews { $0.setDayCellBackgroundColor (backgroundColor, for: state) };
+	}
+}
+
+extension CPCMultiMonthsView: UIContentSizeCategoryAdjusting {}
 
 extension CPCMultiMonthsView {
 	open func addMonthView (_ monthView: CPCMonthView) {
@@ -75,12 +118,9 @@ extension CPCMultiMonthsView {
 			self.insertSubview (monthView, belowSubview: self.monthViews [index]);
 			self.monthViews.insert (monthView, at: index);
 		}
-		
-		monthView.font = self.font;
-		monthView.titleColor = self.titleColor;
-		monthView.separatorColor = self.separatorColor;
-		monthView.cellBackgroundColors = self.cellBackgroundColors;
+		monthView.copyStyle (from: self);
 		monthView.selectionHandler = self.selectionHandler (for: monthView);
+		monthView.adjustsFontForContentSizeCategory = self.adjustsFontForContentSizeCategory;
 		monthView.setNeedsDisplay ();
 	}
 	
@@ -98,21 +138,6 @@ extension CPCMultiMonthsView {
 			return;
 		}
 		self.removeMonthView (monthView);
-	}
-}
-
-extension CPCMultiMonthsView {
-	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
-		return self.cellBackgroundColors.color (for: state);
-	}
-	
-	open func setDayCellBackgroundColor(_ backgroundColor: UIColor?, for state: DayCellState) {
-		self.cellBackgroundColors.setColor (backgroundColor, for: state);
-		self.updateManagedMonthViews { $0.setDayCellBackgroundColor (backgroundColor, for: state) };
-	}
-	
-	private func updateManagedMonthViews (using block: (CPCMonthView) -> ()) {
-		self.monthViews.forEach (block);
 	}
 }
 

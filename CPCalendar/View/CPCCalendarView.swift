@@ -31,9 +31,11 @@ public protocol CPCCalendarViewSelectionDelegate: AnyObject {
 }
 
 open class CPCCalendarView: UIView {
+	internal unowned let contentView: CPCMultiMonthsView;
+	
 	private var scrollViewController: ScrollViewController!;
+	
 	private unowned let scrollView: UIScrollView;
-	private unowned let contentView: CPCMultiMonthsView;
 	
 	public override init (frame: CGRect) {
 		let (scrollView, contentView) = CPCCalendarView.makeSubviews (frame);
@@ -90,7 +92,7 @@ extension CPCCalendarView {
 		
 		private var reusableMonthViews = [CPCMonthView] ();
 		private var prevOffset: CGFloat;
-		private var layoutStorage = Layout ();
+		private var layoutStorage: Layout?;
 		private var presentedPageIndex = 0 {
 			didSet {
 				self.precalculateNextPageIfNeeed ();
@@ -131,6 +133,8 @@ extension CPCCalendarView {
 		let bounds = CGRect (origin: .zero, size: frame.standardized.size);
 		let scrollView = UIScrollView (frame: bounds);
 		scrollView.translatesAutoresizingMaskIntoConstraints = false;
+		scrollView.showsVerticalScrollIndicator = false;
+		scrollView.showsHorizontalScrollIndicator = false;
 		
 		let contentView = CPCMultiMonthsView (frame: CGRect (x: 0.0, y: 0.0, width: bounds.width, height: bounds.height * CPCCalendarView.columnHeightMultiplier));
 		contentView.translatesAutoresizingMaskIntoConstraints = false;
@@ -151,37 +155,6 @@ extension CPCCalendarView {
 	}
 }
 
-extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
-	public typealias SelectionDelegateType = CPCCalendarViewSelectionDelegate;
-	
-	internal var selectionHandler: SelectionHandler {
-		get {
-			return self.contentView.selectionHandler;
-		}
-		set {
-			self.contentView.selectionHandler = newValue;
-		}
-	}
-
-	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
-		return delegate.selection;
-	}
-	
-	internal func setSelectionValue (_ selection: Selection, in delegate: SelectionDelegateType) {
-		delegate.selection = selection;
-	}
-	
-	internal func resetSelection (in delegate: SelectionDelegateType) {}
-	
-	internal func handlerShouldSelectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
-		return delegate.calendarView (self, shouldSelect: day);
-	}
-	
-	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
-		return delegate.calendarView (self, shouldDeselect: day);
-	}
-}
-
 extension CPCCalendarView.ScrollViewController {
 	fileprivate typealias ScrollViewController = CPCCalendarView.ScrollViewController;
 
@@ -191,6 +164,7 @@ extension CPCCalendarView.ScrollViewController {
 		private let columnCount: Int;
 		private let firstInset: CGFloat, otherInsets: CGFloat;
 		private let separatorWidth: CGFloat;
+		private unowned let contentView: UIView & CPCViewProtocol;
 
 		private var calculatedPages = [Page] ();
 		private var firstPageIndex = 0;
@@ -215,14 +189,6 @@ extension CPCCalendarView.ScrollViewController {
 			
 			return true;
 		}
-		
-		fileprivate init () {
-			self.columnCount = 0;
-			self.columnSize = .zero;
-			self.firstInset = 0.0;
-			self.otherInsets = 0.0;
-			self.separatorWidth = 1.0;
-		}
 	}
 	
 	private static let sharedQueue = DispatchQueue (label: "CPCCalendarView.ScrollViewController.sharedQueue", qos: .userInitiated, attributes: .concurrent);
@@ -238,18 +204,21 @@ extension CPCCalendarView.ScrollViewController {
 	
 	private var layout: Layout {
 		get {
-			let storedValue = self.layoutStorage;
-			if storedValue.isValid (for: self) {
-				return storedValue;
+			let scrollView = self.calendarView.scrollView, targetContentOffset: CGFloat;
+			if let storedValue = self.layoutStorage, storedValue.columnSize.height > 0.0 {
+				if storedValue.isValid (for: self) {
+					return storedValue;
+				}
+				targetContentOffset = CGFloat (self.presentedPageIndex) * (CPCCalendarView.columnHeightMultiplier - 2.0) * storedValue.columnSize.height + scrollView.contentOffset.y;
+			} else {
+				targetContentOffset = self.calendarView.bounds.height * (CPCCalendarView.columnHeightMultiplier - 1.0) / 2.0;
 			}
-			let scrollView = self.calendarView.scrollView;
-			let totalContentOffset = CGFloat (self.presentedPageIndex) * (CPCCalendarView.columnHeightMultiplier - 2.0) * storedValue.columnSize.height + scrollView.contentOffset.y;
 			
 			let updatedLayout = Layout (controller: self);
 			self.layoutStorage = updatedLayout;
 			let columnHeight = updatedLayout.columnSize.height;
-			scrollView.contentOffset.y = totalContentOffset.remainder (dividingBy: columnHeight);
-			self.presentedPageIndex = (totalContentOffset / columnHeight).integerRounded (.down);
+			scrollView.contentOffset.y = targetContentOffset.remainder (dividingBy: columnHeight);
+			self.presentedPageIndex = (targetContentOffset / columnHeight).integerRounded (.down);
 			return updatedLayout;
 		}
 		set {
@@ -258,7 +227,7 @@ extension CPCCalendarView.ScrollViewController {
 	}
 	
 	private var isMonthViewsReloadNeeded: Bool {
-		return !self.layoutStorage.isValid (for: self);
+		return !(self.layoutStorage?.isValid (for: self) ?? false);
 	}
 	
 	fileprivate func reloadMonthViewsIfNeeded () {
@@ -377,6 +346,7 @@ extension CPCCalendarView.ScrollViewController.Layout {
 		self.firstInset = controller.columnContentInsets.left;
 		self.otherInsets = (controller.columnContentInsets.left + controller.columnContentInsets.right) / 2.0;
 		self.separatorWidth = controller.calendarView.separatorWidth;
+		self.contentView = controller.calendarView.contentView;
 	}
 	
 	fileprivate mutating func ensurePageCalculated (_ index: Int) {
@@ -539,6 +509,11 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 			return row;
 		}.reversed ();
 	}
+	
+	private static func layoutAttributes (for month: CPCMonth, layout: Layout) -> CPCMonthView.LayoutAttributes {
+		let contentView = layout.contentView;
+		return CPCMonthView.LayoutAttributes (month: month, separatorWidth: layout.separatorWidth, titleFont: contentView.titleFont, titleMargins: contentView.titleMargins);
+	}
 
 	private static func makeRowFrame (x: CGFloat, width: CGFloat, height: CGFloat, scale: CGFloat, constraint: LayoutPageRowConstraint) -> CGRect {
 		let y: CGFloat;
@@ -565,7 +540,7 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 			
 			fileprivate init (month: CPCMonth, layout: Layout, constraint: LayoutPageRowConstraint) {
 				let columnWidth = layout.columnSize.width, scale = layout.separatorWidth;
-				let monthViewHeight = CPCMonthView.sizeThatFits (CGSize (width: columnWidth, height: .infinity), for: month, with: scale).height;
+				let monthViewHeight = CPCMonthView.heightThatFits (width: columnWidth, with: Page.layoutAttributes (for: month, layout: layout));
 				self.frame = Page.makeRowFrame (x: layout.firstInset, width: columnWidth, height: monthViewHeight, scale: scale, constraint: constraint);
 				self.month = month;
 			}
@@ -588,11 +563,10 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 			private let leftFrame: CGRect, rightFrame: CGRect;
 			
 			fileprivate init (months: (CPCMonth, CPCMonth), layout: Layout, constraint: LayoutPageRowConstraint) {
-				let columnWidth = layout.columnSize.width, scale = layout.separatorWidth;
-				let leftMonth = months.0, rightMonth = months.1;
-				let leftViewHeight = CPCMonthView.sizeThatFits (CGSize (width: columnWidth, height: .infinity), for: leftMonth, with: scale).height;
-				let rightViewHeight = CPCMonthView.sizeThatFits (CGSize (width: columnWidth, height: .infinity), for: leftMonth, with: scale).height;
-				
+				let columnWidth = layout.columnSize.width, scale = layout.separatorWidth, leftMonth = months.0, rightMonth = months.1;
+				let leftViewHeight = CPCMonthView.heightThatFits (width: columnWidth, with: Page.layoutAttributes (for: leftMonth, layout: layout));
+				let rightViewHeight = CPCMonthView.heightThatFits (width: columnWidth, with: Page.layoutAttributes (for: rightMonth, layout: layout));
+
 				self.leftMonth = leftMonth;
 				self.rightMonth = rightMonth;
 				self.leftFrame = Page.makeRowFrame (x: layout.firstInset, width: columnWidth, height: leftViewHeight, scale: scale, constraint: constraint);
@@ -615,11 +589,10 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 			fileprivate init (months: CountableClosedRange <CPCMonth>, layout: Layout, constraint: LayoutPageRowConstraint) {
 				let viewsWidth = layout.columnSize.width, viewsStrideX = viewsWidth + layout.otherInsets, scale = layout.separatorWidth;
 				let frameWidth = fma (viewsStrideX, CGFloat (layout.columnCount), -layout.otherInsets);
-				let fittingSize = CGSize (width: viewsWidth, height: CGFloat.infinity);
 
 				var maxHeight = CGFloat (0.0);
 				let viewHeights = months.map { month -> CGFloat in
-					let height = CPCMonthView.sizeThatFits (fittingSize, for: month, with: scale).height;
+					let height = CPCMonthView.heightThatFits (width: viewsWidth, with: Page.layoutAttributes (for: month, layout: layout));
 					maxHeight = Swift.max (maxHeight, height);
 					return height;
 				};

@@ -24,7 +24,7 @@
 import Swift
 
 public struct CPCDayCellState: Hashable {
-	public enum BackgroundState: Int {
+	public enum BackgroundState {
 		case normal;
 		case highlighted;
 		case selected;
@@ -81,3 +81,25 @@ extension CPCDayCellState {
 		self.isToday = cState.isToday.boolValue;
 	}
 }
+
+public extension CPCDayCellState {
+	public typealias AllCases = [CPCDayCellState];
+	
+	public static let allCases: AllCases = BackgroundState.allCases.flatMap { [
+		CPCDayCellState (backgroundState: $0, isToday: false),
+		CPCDayCellState (backgroundState: $0, isToday: true),
+	]};
+}
+
+#if swift(>=4.2)
+
+extension CPCDayCellState.BackgroundState: CaseIterable {}
+extension CPCDayCellState: CaseIterable {}
+
+#else
+
+public extension CPCDayCellState.BackgroundState {
+	public static let allCases: [CPCDayCellState.BackgroundState] = [.normal, .highlighted, .selected];
+}
+
+#endif

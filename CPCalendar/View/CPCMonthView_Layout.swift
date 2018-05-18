@@ -1,5 +1,5 @@
 //
-//  CPCMonthView.GridLayoutInfo.swift
+//  CPCMonthView_Layout.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -36,18 +36,32 @@ internal extension CPCMonthView {
 	internal typealias CellIndices = GridIndices <Int>;
 	internal typealias CellIndex = CellIndices.Element;
 
-	internal struct GridLayoutInfo {
+	internal struct Layout {
 		internal typealias SeparatorOrigins = (horizontal: ComputedArray <Int, CGFloat>, vertical: ComputedArray <Int, CGFloat>);
 		
 		internal let separatorWidth: CGFloat;
+		internal let titleFrame: CGRect?;
+		internal let gridFrame: CGRect;
 		internal let cellFrames: ComputedCollection <CellIndex, CGRect, CellIndices>;
 		internal let separatorOrigins: SeparatorOrigins;
 		
+		internal var titleContentFrame: CGRect {
+			guard let titleFrame = self.titleFrame else {
+				return .null;
+			}
+			
+			let result = UIEdgeInsetsInsetRect (titleFrame, self.titleMargins), scale = self.separatorWidth;
+			return CGRect (
+				origin: CGPoint (x: result.minX.rounded (.up, scale: scale), y: result.minY.rounded (.up, scale: scale)),
+				size: CGSize (width: result.width.rounded (.down, scale: scale), height: result.height.rounded (.down, scale: scale))
+			);
+		}
+		
 		private let month: CPCMonth;
-		private let boundsSize: CGSize;
 		private let cellsOrigin: CGPoint;
 		private let cellSize: CGSize;
-		
+		private let titleMargins: UIEdgeInsets;
+
 		internal init? (view: CPCMonthView) {
 			guard let month = view.month, !month.isEmpty else {
 				return nil;
@@ -60,13 +74,21 @@ internal extension CPCMonthView {
 			guard !month.contains (where: { $0.count != width }) else {
 				fatalError ("\(month) is not representable as a rectangular grid");
 			}
-
-			let boundsSize = view.bounds.standardized.size;
+			
 			let separatorWidth = view.separatorWidth;
-			let cellsOrigin = CGPoint (x: -separatorWidth / 2.0, y: separatorWidth / 2.0);
+			let titleMargins = view.titleMargins;
+			let titleFrame: CGRect, gridFrame: CGRect;
+			if (view.titleStyle == .none) {
+				titleFrame = .null;
+				gridFrame = view.bounds;
+			} else {
+				let titleHeight = (titleMargins.top + view.titleFont.lineHeight.rounded (.up, scale: separatorWidth) + titleMargins.bottom).rounded (.up, scale: separatorWidth);
+				(titleFrame, gridFrame) = view.bounds.divided (atDistance: titleHeight, from: .minYEdge);
+			}
+			let cellsOrigin = CGPoint (x: gridFrame.minX - separatorWidth / 2.0, y: gridFrame.minY + separatorWidth / 2.0);
 			let cellSize = CGSize (
-				width: (boundsSize.width + separatorWidth) / CGFloat (width),
-				height: (boundsSize.height - separatorWidth) / CGFloat (height)
+				width: (gridFrame.width + separatorWidth) / CGFloat (width),
+				height: (gridFrame.height - separatorWidth) / CGFloat (height)
 			);
 			
 			let separatorIndices = (horizontal: 0 ... height + 1, vertical: 0 ... width + 1);
@@ -76,28 +98,58 @@ internal extension CPCMonthView {
 			);
 			
 			self.month = month;
-			self.cellSize = cellSize;
-			self.boundsSize = boundsSize;
-			self.cellsOrigin = cellsOrigin;
 			self.separatorWidth = separatorWidth;
+
+			self.titleFrame = (titleFrame.isNull ? nil : titleFrame);
+			self.titleMargins = titleMargins;
+			
+			self.gridFrame = gridFrame;
+			self.cellSize = cellSize;
+			self.cellsOrigin = cellsOrigin;
 			self.separatorOrigins = (
 				horizontal: ComputedArray (separatorIndices.horizontal) { separatorLocations.horizontal [$0] },
 				vertical: ComputedArray (separatorIndices.vertical) { separatorLocations.vertical [$0] }
 			);
-			self.cellFrames = ComputedCollection (indices: cellIndices, subscript: { index in
+			self.cellFrames = ComputedCollection (indices: cellIndices) { index in
 				let column = index.column, columnMinX = separatorLocations.vertical [column], columnMaxX = separatorLocations.vertical [column + 1];
 				let row = index.row, rowMinY = separatorLocations.horizontal [row], rowMaxY = separatorLocations.horizontal [row + 1];
 				return CGRect (x: columnMinX, y: rowMinY, width: columnMaxX - columnMinX, height: rowMaxY - rowMinY);
-			});
+			};
 		}
 		
 		internal func isValid (for view: CPCMonthView) -> Bool {
-			let viewSize = view.bounds.standardized.size;
+			guard self.month == view.month else {
+				return false;
+			}
+			
+			let separatorWidth = self.separatorWidth, viewBounds = view.bounds.standardized, viewSeparatorWidth = view.separatorWidth;
+			guard (separatorWidth - viewSeparatorWidth).magnitude < 1e-3 else {
+				return false;
+			}
+			
+			let titleMargins = self.titleMargins, titleHeight = self.titleFrame.map { ($0.height - titleMargins.top - titleMargins.bottom).rounded (.down, scale: separatorWidth) };
+			let viewTitleMargins = view.titleMargins, viewTitleHeight = ((view.titleStyle == .none) ? nil : view.titleFont.lineHeight.rounded (.up, scale: viewSeparatorWidth));
+			switch (titleHeight, viewTitleHeight) {
+			case (nil, nil):
+				break;
+			case (.some (let height1), .some (let height2)) where (height1 - height2).magnitude < 1e-3:
+				break;
+			default:
+				return false;
+			}
 			guard
-				(self.boundsSize.width - viewSize.width).magnitude < 1e-3,
-				(self.boundsSize.height - viewSize.height).magnitude < 1e-3,
-				self.month == view.month,
-				self.separatorWidth == view.separatorWidth else {
+				(titleMargins.top - viewTitleMargins.top).magnitude < 1e-3,
+				(titleMargins.left - viewTitleMargins.left).magnitude < 1e-3,
+				(titleMargins.bottom - viewTitleMargins.bottom).magnitude < 1e-3,
+				(titleMargins.right - viewTitleMargins.right).magnitude < 1e-3,
+				titleFrame.map ({ ($0.width - viewBounds.width).magnitude < 1e-3 }) ?? true else {
+				return false;
+			}
+			
+			let gridFrame = self.gridFrame;
+			guard
+				(gridFrame.width - viewBounds.width).magnitude < 1e-3,
+				(gridFrame.maxY - viewBounds.height).magnitude < 1e-3 else {
 				return false;
 			}
 			
@@ -105,7 +157,7 @@ internal extension CPCMonthView {
 		}
 		
 		internal func cellIndex (at point: CGPoint, treatingSeparatorPointsAsEarlierIndexes flag: Bool = false) -> CellIndex? {
-			guard self.isPointInsideBounds (point) else {
+			guard self.isPointInsideGrid (point) else {
 				return nil;
 			}
 			let indices = self.cellFrames.indices;
@@ -120,8 +172,9 @@ internal extension CPCMonthView {
 			return (treatSeparatorAsEarlierIndex && ((separatorOrigins [result] - viewCoordinate).magnitude < self.separatorWidth)) ? result - 1 : result;
 		}
 
-		private func isPointInsideBounds (_ point: CGPoint) -> Bool {
-			return (0.0 ... self.boundsSize.width).contains (point.x) && (0.0 ... self.boundsSize.height).contains (point.y);
+		private func isPointInsideGrid (_ point: CGPoint) -> Bool {
+			let gridFrame = self.gridFrame;
+			return (gridFrame.minX ... gridFrame.maxX).contains (point.x) && (gridFrame.minY ... gridFrame.maxY).contains (point.y);
 		}
 		
 		internal func cellIndex (forRow row: Int, column: Int) -> CellIndex {

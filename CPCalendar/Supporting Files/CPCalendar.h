@@ -22,6 +22,7 @@
 //
 
 #import <CPCalendar/CPCDayCellState.h>
+#import <CPCalendar/CPCViewTitleStyle.h>
 
 #if __has_include(<CPCalendar/CPCalendar-Swift.h>)
 #	import <CPCalendar/CPCalendar-Swift.h>

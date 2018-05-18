@@ -23,33 +23,6 @@
 
 import UIKit
 
-public enum CPCViewSelection: Equatable {
-	case none;
-	case single (CPCDay?);
-	case range (CountableRange <CPCDay>);
-	case unordered (Set <CPCDay>);
-	case ordered ([CPCDay]);
-}
-
-extension CPCViewSelection: CustomStringConvertible {
-	public var description: String {
-		switch (self) {
-		case .none:
-			return "none";
-		case .single (nil):
-			return "nil";
-		case .single (.some (let day)):
-			return "\(day.description)";
-		case .range (let range):
-			return "<Range: \(range.isEmpty ? "empty" : "\(range.lowerBound.description) ..< \(range.upperBound.description)")>";
-		case .unordered (let days):
-			return "<Unordered: \(days.isEmpty ? "empty" : "\(days.sorted ().map { $0.description }.joined (separator: ", "))")>";
-		case .ordered (let days):
-			return "<Ordered: \(days.isEmpty ? "empty" : "\(days.sorted ().map { $0.description }.joined (separator: ", "))")>";
-		}
-	}
-}
-
 fileprivate extension CPCDayCellState {
 	fileprivate var parent: CPCDayCellState? {
 		if self.isToday {
@@ -65,48 +38,17 @@ fileprivate extension CPCDayCellState {
 	}
 }
 
-internal struct CPCViewDayCellStateBackgroundColors {
-	private static let defaultColors: [CPCDayCellState: UIColor] = [
-		.normal: .white,
-		.highlighted: UIColor.yellow.withAlphaComponent (0.125),
-		.selected: UIColor.yellow.withAlphaComponent (0.25),
-		.today: .lightGray,
-	];
-	
-	private var colors: [CPCDayCellState: UIColor];
-
-	internal init () {
-		self.colors = CPCViewDayCellStateBackgroundColors.defaultColors;
-	}
-	
-	internal init <D> (_ colors: D) where D: Sequence, D.Element == (CPCDayCellState, UIColor) {
-		self.colors = Dictionary (uniqueKeysWithValues: colors);
-	}
-	
-	internal func color (for state: CPCDayCellState) -> UIColor? {
-		return self.colors [state];
-	}
-	
-	internal func effectiveColor (for state: CPCDayCellState) -> UIColor? {
-		for state in sequence (first: state, next: { $0.parent }) {
-			if let result = self.colors [state] {
-				return result;
-			}
-		}
-		return nil;
-	}
-	
-	internal mutating func setColor (_ backgroundColor: UIColor?, for state: CPCDayCellState) {
-		self.colors [state] = backgroundColor;
-	}
-}
-
 public protocol CPCViewProtocol: AnyObject {
+	typealias TitleStyle = CPCViewTitleStyle;
 	typealias DayCellState = CPCDayCellState;
 	typealias Selection = CPCViewSelection;
 	
-	var font: UIFont { get set };
+	var titleFont: UIFont { get set };
 	var titleColor: UIColor { get set };
+	var titleStyle: TitleStyle { get set };
+	var titleMargins: UIEdgeInsets { get set };
+	var dayCellFont: UIFont { get set };
+	var dayCellTextColor: UIColor { get set };
 	var separatorColor: UIColor { get set };
 	var selection: Selection { get set };
 
@@ -114,18 +56,139 @@ public protocol CPCViewProtocol: AnyObject {
 	func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState);
 }
 
-extension CPCViewProtocol {
-	internal typealias DayCellStateBackgroundColors = CPCViewDayCellStateBackgroundColors;
-	
-	internal static var defaultFont: UIFont {
-		return .systemFont (ofSize: UIFont.systemFontSize);
+internal extension UIEdgeInsets {
+	internal static let defaultMonthTitle = UIEdgeInsets (top: 8.0, left: 8.0, bottom: 8.0, right: 8.0);
+}
+
+internal extension UIFont {
+	internal static var defaultMonthTitle: UIFont {
+		return .preferredFont (forTextStyle: .headline, compatibleWith: UIScreen.main.traitCollection);
 	}
 	
-	internal static var defaultTitleColor: UIColor {
+	internal static var defaultDayCellText: UIFont {
+		return .preferredFont (forTextStyle: .body, compatibleWith: UIScreen.main.traitCollection);
+	}
+}
+
+internal extension UIColor {
+	internal static var defaultMonthTitle: UIColor {
 		return .darkText;
 	}
-	
-	internal static var defaultSeparatorColor: UIColor {
+
+	internal static var defaultDayCellText: UIColor {
+		return .darkText;
+	}
+
+	internal static var defaultSeparator: UIColor {
 		return .gray;
+	}
+}
+
+internal extension CPCViewProtocol {
+	internal func copyStyle <View> (from otherView: View) where View: CPCViewProtocol {
+		self.copyPrimitiveAttributes (from: otherView);
+		self.copyDayCellBackgroundColors (from: otherView);
+	}
+	
+	internal func copyPrimitiveAttributes <View> (from otherView: View) where View: CPCViewProtocol {
+		self.titleFont = otherView.titleFont;
+		self.titleColor = otherView.titleColor;
+		self.titleStyle = otherView.titleStyle;
+		self.dayCellFont = otherView.dayCellFont;
+		self.dayCellTextColor = otherView.dayCellTextColor;
+		self.separatorColor = otherView.separatorColor;
+	}
+	
+	internal func copyDayCellBackgroundColors <View> (from otherView: View) where View: CPCViewProtocol {
+		for state in CPCDayCellState.allCases {
+			self.setDayCellBackgroundColor (otherView.dayCellBackgroundColor (for: state), for: state);
+		}
+	}
+}
+
+internal struct CPCViewDayCellStateBackgroundColors {
+	private var colors: [CPCDayCellState: UIColor];
+	
+	internal init () {
+		self = [
+			.normal: .white,
+			.highlighted: UIColor.yellow.withAlphaComponent (0.125),
+			.selected: UIColor.yellow.withAlphaComponent (0.25),
+			.today: .lightGray,
+		];
+	}
+	
+	internal init <D> (_ colors: D) where D: Sequence, D.Element == (CPCDayCellState, UIColor) {
+		self.colors = Dictionary (uniqueKeysWithValues: colors);
+	}
+	
+	internal subscript (state: CPCDayCellState) -> UIColor? {
+		get {
+			return self.colors [state];
+		}
+		set {
+			self.colors [state] = newValue;
+		}
+	}
+	
+	internal subscript (effective state: CPCDayCellState) -> UIColor? {
+		for state in sequence (first: state, next: { $0.parent }) {
+			if let result = self [state] {
+				return result;
+			}
+		}
+		return nil;
+	}
+}
+
+extension CPCViewDayCellStateBackgroundColors: ExpressibleByDictionaryLiteral {
+	internal typealias Key = CPCDayCellState;
+	internal typealias Value = UIColor;
+	
+	internal init (dictionaryLiteral elements: (CPCDayCellState, UIColor)...) {
+		self.colors = Dictionary <Key, Value> (uniqueKeysWithValues: elements);
+	}
+}
+
+extension CPCViewDayCellStateBackgroundColors: Collection {
+	internal typealias Index = Dictionary <Key, Value>.Index;
+	internal typealias Element = Dictionary <Key, Value>.Element;
+	
+	internal var startIndex: Index {
+		return self.colors.startIndex;
+	}
+	
+	internal var endIndex: Index {
+		return self.colors.endIndex;
+	}
+	
+	internal subscript (position: Index) -> Element {
+		return self.colors [position];
+	}
+	
+	internal func index (after i: Index) -> Index {
+		return self.colors.index (after: i);
+	}
+}
+
+internal protocol CPCViewDayCellBackgroundColorsStorage: AnyObject {
+	var cellBackgroundColors: DayCellStateBackgroundColors { get set };
+}
+
+extension CPCViewDayCellBackgroundColorsStorage {
+	public func dayCellBackgroundColor (for state: CPCViewProtocol.DayCellState) -> UIColor? {
+		return self.cellBackgroundColors [state];
+	}
+	
+	public func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: CPCViewProtocol.DayCellState) {
+		self.cellBackgroundColors [state] = backgroundColor;
+	}
+}
+
+internal extension CPCViewDayCellBackgroundColorsStorage where Self: CPCViewProtocol {
+	internal typealias DayCellStateBackgroundColors = CPCViewDayCellStateBackgroundColors;
+	
+	internal func copyDayCellBackgroundColors <View> (from otherView: View) where View: CPCViewProtocol, View: CPCViewDayCellBackgroundColorsStorage {
+		self.cellBackgroundColors = otherView.cellBackgroundColors;
 	}
 }

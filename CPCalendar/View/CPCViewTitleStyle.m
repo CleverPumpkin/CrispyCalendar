@@ -1,5 +1,5 @@
 //
-//  CPCDayCellState.h
+//  CPCViewTitleStyle.m
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,19 +21,10 @@
 //  THE SOFTWARE.
 //
 
-#import <Foundation/Foundation.h>
+#import "CPCViewTitleStyle.h"
 
-typedef NS_ENUM (uint8_t, CPCDayCellBackgroundState) {
-	CPCDayCellBackgroundStateNormal,
-	CPCDayCellBackgroundStateHighlighted,
-	CPCDayCellBackgroundStateSelected,
-} NS_REFINED_FOR_SWIFT;
-
-typedef struct {
-	CPCDayCellBackgroundState const backgroundState;
-	BOOL const isToday;
-} CPCDayCellState NS_REFINED_FOR_SWIFT;
-
-NS_INLINE NS_REFINED_FOR_SWIFT CPCDayCellState CPCDayCellStateMake (CPCDayCellBackgroundState const backgroundState, BOOL const isToday) {
-	return (CPCDayCellState) { .backgroundState = backgroundState, .isToday = isToday };
-}
+CPCViewTitleStyle const CPCViewTitleNoStyle = @"";
+CPCViewTitleStyle const CPCViewTitleShortStyle = @"Lyyyy";
+CPCViewTitleStyle const CPCViewTitleMediumStyle = @"LLyyyy";
+CPCViewTitleStyle const CPCViewTitleLongStyle = @"LLLyyyy";
+CPCViewTitleStyle const CPCViewTitleFullStyle = @"LLLLyyyy";

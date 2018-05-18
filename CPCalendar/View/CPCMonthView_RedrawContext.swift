@@ -1,5 +1,5 @@
 //
-//  CPCMonthView.RedrawContext.swift
+//  CPCMonthView_RedrawContext.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -48,142 +48,305 @@ fileprivate extension CGRect {
 	}
 }
 
-extension CPCMonthView {
-	internal struct RedrawContext {
+fileprivate extension DateFormatter {
+	private struct CacheKey: Hashable {
+		private let calendar: Calendar;
+		private let dateFormat: String;
+		
+		fileprivate init (_ calendar: Calendar, _ dateFormat: String) {
+			self.calendar = calendar;
+			self.dateFormat = dateFormat;
+		}
+		
+		fileprivate var hashValue: Int {
+			return hashIntegers (self.dateFormat.hashValue, self.calendar.hashValue);
+		}
+	}
+	
+	private static var availableFormatters = UnfairThreadsafeStorage ([CacheKey: [DateFormatter]] ());
+	
+	private static func availableFormatter (for month: CPCMonth, format: String) -> DateFormatter? {
+		return self.availableFormatters.withMutableStoredValue {
+			let cacheKey = CacheKey (month.calendar, format);
+			guard var available = $0 [cacheKey], !available.isEmpty else {
+				return nil;
+			}
+			let result = available.removeLast ();
+			$0 [cacheKey] = available;
+			return result;
+		};
+	}
+	
+	fileprivate static func dequeueFormatter (for month: CPCMonth, format: String) -> DateFormatter {
+		if let reusedFormatter = self.availableFormatter (for: month, format: format) {
+			return reusedFormatter;
+		}
+		
+		let dateFormatter = DateFormatter ();
+		dateFormatter.calendar = month.calendar;
+		dateFormatter.dateFormat = format;
+		return dateFormatter;
+	}
+
+	fileprivate static func dequeueFormatter (for month: CPCMonth, dateFormatTemplate template: String) -> DateFormatter {
+		return self.dequeueFormatter (for: month, format: DateFormatter.dateFormat (fromTemplate: template, options: 0, locale: month.calendar.locale) ?? template);
+	}
+	
+	fileprivate static func makeReusable (_ formatters: [DateFormatter]) {
+		DateFormatter.availableFormatters.withMutableStoredValue {
+			for formatter in formatters {
+				formatter.makeReusableUnlocked (&$0);
+			}
+		};
+	}
+
+	fileprivate func makeReusable () {
+		DateFormatter.availableFormatters.withMutableStoredValue {
+			self.makeReusableUnlocked (&$0);
+		};
+	}
+	
+	private func makeReusableUnlocked (_ cache: inout [CacheKey: [DateFormatter]]) {
+		let cacheKey = CacheKey (self.calendar, self.dateFormat), value = [self];
+		if let formatters = cache [cacheKey] {
+			cache [cacheKey] = formatters + value;
+		} else {
+			cache [cacheKey] = value;
+		}
+	}
+}
+
+fileprivate extension NSParagraphStyle {
+	private static func makeCentered (lineBreakMode: NSLineBreakMode) -> NSParagraphStyle {
+		let result = NSMutableParagraphStyle ();
+		result.alignment = .center;
+		result.lineBreakMode = lineBreakMode;
+		return result.copy () as! NSParagraphStyle;
+	}
+	
+	fileprivate static let centeredWithTailTruncation = makeCentered (lineBreakMode: .byTruncatingTail);
+	fileprivate static let centeredWithMiddleTruncation = makeCentered (lineBreakMode: .byTruncatingMiddle);
+}
+
+internal protocol CPCMonthViewRedrawContext {
+	/// Runs a redraw context
+	/// Note: Redraw contexts are designed to be one-shot (e. g. DateFormatters are internally reused), so calling run () twice may lead to unexpected behaviour.
+	func run ();
+}
+
+internal extension CPCMonthView {
+	internal typealias RedrawContext = CPCMonthViewRedrawContext;
+	
+	fileprivate struct TitleRedrawContext {
+		private let month: CPCMonth;
+		private let formatter: DateFormatter;
+		private let titleFrame: CGRect;
+		private let titleContentFrame: CGRect;
+		private let titleAttributes: [NSAttributedStringKey: Any];
+	}
+	
+	fileprivate struct GridRedrawContext {
 		private typealias AffectedIndices = (affected: CellIndices, highlighted: CellIndex?, selected: CellIndices?);
 		
-		private unowned let view: CPCMonthView;
 		private let month: CPCMonth;
-		private let layoutInfo: GridLayoutInfo;
+		private let layout: Layout;
 		private let cellIndices: AffectedIndices;
 		private let dayFormatter: DateFormatter;
-		private let dayCellTitleHeight: CGFloat;
-		private let dayCellTitleAttributes: [NSAttributedStringKey: Any];
-		
-		private static func calculateAffectedIndices (of view: CPCMonthView, in rect: CGRect, for month: CPCMonth, using layoutInfo: GridLayoutInfo) -> AffectedIndices? {
-			let rect = rect.intersection (view.bounds);
-			guard
-				!rect.isNull,
-				let topLeftIdx = layoutInfo.cellIndex (at: rect.origin, treatingSeparatorPointsAsEarlierIndexes: false),
-				let bottomRightIdx = layoutInfo.cellIndex (at: CGPoint (x: rect.maxX, y: rect.maxY), treatingSeparatorPointsAsEarlierIndexes: true),
-				let affected = layoutInfo.cellFrames.indices.subindices (forRows: topLeftIdx.row ... bottomRightIdx.row, columns: topLeftIdx.column ... bottomRightIdx.column),
-				!affected.isEmpty else {
-				return nil;
-			}
-			
-			let highlighted: CellIndex?;
-			if let viewHighlightedIdx = view.highlightedDayIndex, affected.rows ~= viewHighlightedIdx.row, affected.columns ~= viewHighlightedIdx.column {
-				highlighted = affected.convert (index: viewHighlightedIdx, from: layoutInfo.cellFrames.indices);
-			} else {
-				highlighted = nil;
-			}
-			
-			let selection = view.selection;
-			let selected = affected.indices { selection.isDaySelected (month [ordinal: $0.row] [ordinal: $0.column]) };
+		private let separatorColor: UIColor;
+		private let cellTitleHeight: CGFloat;
+		private let cellTitleAttributes: [NSAttributedStringKey: Any];
+		private let cellBackgroundColors: DayCellStateBackgroundColors;
+	}
+
+	internal func titleRedrawContext (_ rect: CGRect) -> RedrawContext? {
+		return TitleRedrawContext (redrawing: rect, in: self);
+	}
 	
-			return (affected: affected, highlighted: highlighted, selected: selected);
-		}
-		
-		internal init? (redrawing rect: CGRect, in view: CPCMonthView) {
-			guard
-				let month = view.month,
-				let layoutInfo = view.gridLayoutInfo,
-				let indices = RedrawContext.calculateAffectedIndices (of: view, in: rect, for: month, using: layoutInfo) else {
-				return nil;
-			}
-			
-			self.view = view;
-			self.month = month;
-			self.layoutInfo = layoutInfo;
-			self.cellIndices = indices;
+	internal func gridRedrawContext (_ rect: CGRect) -> RedrawContext? {
+		return GridRedrawContext (redrawing: rect, in: self);
+	}
+}
 
-			self.dayFormatter = DateFormatter ();
-			self.dayFormatter.setLocalizedDateFormatFromTemplate ("d");
-			
-			self.dayCellTitleHeight = view.font.lineHeight.rounded (.up, scale: layoutInfo.separatorWidth);
-			self.dayCellTitleAttributes = [
-				.font: view.font,
-				.foregroundColor: view.titleColor,
-				.paragraphStyle: { () -> Any in
-					let result = NSMutableParagraphStyle ();
-					result.alignment = .center;
-					result.lineBreakMode = .byTruncatingTail;
-					return result.copy ();
-				} (),
-			];
-		}
-		
-		internal func run () {
-			let allIndices = self.cellIndices.affected;
-			guard let firstIndex = allIndices.first, let lastIndex = allIndices.last, let ctx = UIGraphicsGetCurrentContext () else {
-				return;
-			}
-			
-			let layoutInfo = self.layoutInfo, halfSepW = layoutInfo.separatorWidth / 2.0;
-			let minIndex = allIndices.minElement, minFrame = layoutInfo.cellFrames [minIndex];
-			let maxIndex = allIndices.maxElement.advanced (by: -1), maxFrame = layoutInfo.cellFrames [maxIndex];
-			let frame = minFrame.union (maxFrame).insetBy (dx: -halfSepW, dy: -halfSepW);
-			ctx.clear (frame);
-			ctx.addRect (frame);
-			
-			if (firstIndex != minIndex) {
-				let firstCellFrame = layoutInfo.cellFrames [firstIndex];
-				ctx.addRect (frame.slice (atDistance: CGSize (width: firstCellFrame.minX - minFrame.minX, height: firstCellFrame.height), from: .topLeft));
-			}
-			if (lastIndex != maxIndex) {
-				let lastCellFrame = layoutInfo.cellFrames [lastIndex];
-				ctx.addRect (frame.slice (atDistance: CGSize (width: maxFrame.maxX - lastCellFrame.maxX, height: lastCellFrame.height), from: .bottomRight));
-			}
-			ctx.clip (using: .evenOdd);
-			
-			if let normalBackgroundColor = self.view.cellBackgroundColors.effectiveColor (for: .normal) {
-				ctx.setFillColor (normalBackgroundColor.cgColor);
-				ctx.fill (frame);
-			}
-			for index in self.cellIndices.affected {
-				self.drawDayCellContent (at: index, in: ctx);
-			}
-			
-			let verticalSeparatorIndexes = layoutInfo.verticalSeparatorIndexes (for: allIndices.columns), horizontalSeparatorIndexes = layoutInfo.horizontalSeparatorIndexes (for: allIndices.rows);
-			var separatorPoints = [CGPoint] ();
-			separatorPoints.reserveCapacity (2 * (verticalSeparatorIndexes.count + horizontalSeparatorIndexes.count));
-			for verticalSepX in layoutInfo.separatorOrigins.vertical [verticalSeparatorIndexes] {
-				separatorPoints.append (CGPoint (x: verticalSepX, y: frame.minY));
-				separatorPoints.append (CGPoint (x: verticalSepX, y: frame.maxY));
-			}
-			for horizontalSepY in layoutInfo.separatorOrigins.horizontal [horizontalSeparatorIndexes] {
-				separatorPoints.append (CGPoint (x: frame.minX, y: horizontalSepY));
-				separatorPoints.append (CGPoint (x: frame.maxX, y: horizontalSepY));
-			}
-			ctx.setStrokeColor (self.view.separatorColor.cgColor);
-			ctx.setLineWidth (layoutInfo.separatorWidth);
-			ctx.strokeLineSegments (between: separatorPoints);
-		}
-		
-		private func drawDayCellContent (at index: CellIndex, in context: CGContext) {
-			let day = self.month [ordinal: index.row] [ordinal: index.column];
-			let state = self.dayCellState (for: day, at: index), frame = self.layoutInfo.cellFrames [index];
+private protocol CPCMonthViewRedrawContextImpl: CPCMonthViewRedrawContext {
+	var reusableFormatters: [DateFormatter] { get };
+	
+	init? (redrawing rect: CGRect, in view: CPCMonthView);
+	func run (context: CGContext);
+}
 
-			if state != .normal, let backgroundColor = self.view.cellBackgroundColors.effectiveColor (for: state) {
-				context.setFillColor (backgroundColor.cgColor);
-				context.fill (frame);
-			}
-			
-			let dayString = NSAttributedString (string: self.dayFormatter.string (from: day.start), attributes: self.dayCellTitleAttributes);
-			let separatorWidth = self.layoutInfo.separatorWidth;
-			dayString.draw (in: CGRect (
-				x: frame.minX + separatorWidth / 2.0,
-				y: frame.midY - self.dayCellTitleHeight / 2.0,
-				width: frame.width - separatorWidth,
-				height: self.dayCellTitleHeight
-			));
+extension CPCMonthViewRedrawContextImpl {
+	internal func run () {
+		guard let context = UIGraphicsGetCurrentContext () else {
+			return;
+		}
+		self.run (context: context);
+		for formatter in self.reusableFormatters {
+			formatter.makeReusable ();
+		}
+	}
+}
+
+extension CPCMonthView.TitleRedrawContext: CPCMonthViewRedrawContextImpl {
+	fileprivate var reusableFormatters: [DateFormatter] {
+		return [self.formatter];
+	}
+	
+	fileprivate init? (redrawing rect: CGRect, in view: CPCMonthView) {
+		guard
+			let month = view.month,
+			let layout = view.layout,
+			let titleFrame = layout.titleFrame,
+			rect.intersects (titleFrame) else {
+			return nil;
 		}
 		
-		private func dayCellState (for day: CPCDay, at index: CellIndex) -> CPCDayCellState {
-			if let selectedIndices = self.cellIndices.selected, selectedIndices.contains (index) {
-				return .selected;
-			}
-			return CPCDayCellState (backgroundState: (self.cellIndices.highlighted == index) ? .highlighted : .normal, isToday: day == .today);
+		self.month = month;
+		self.titleFrame = titleFrame;
+		self.titleContentFrame = layout.titleContentFrame;
+		self.formatter = DateFormatter.dequeueFormatter (for: month, format: view.titleStyle.rawValue);
+		self.titleAttributes = [
+			.font: view.titleFont,
+			.foregroundColor: view.titleColor,
+			.paragraphStyle: NSParagraphStyle.centeredWithMiddleTruncation,
+		];
+	}
+	
+	fileprivate func run (context ctx: CGContext) {
+		let titleString = NSAttributedString (string: self.formatter.string (from: self.month.start), attributes: self.titleAttributes);
+		
+		ctx.clear (self.titleFrame);
+		titleString.draw (in: self.titleContentFrame);
+	}
+}
+
+extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
+	private typealias Layout = CPCMonthView.Layout;
+	private typealias CellIndex = CPCMonthView.CellIndex;
+	private typealias DayCellState = CPCMonthView.DayCellState;
+	private typealias GridRedrawContext = CPCMonthView.GridRedrawContext;
+	
+	private static func calculateAffectedIndices (of view: CPCMonthView, in rect: CGRect, for month: CPCMonth, using layout: Layout) -> AffectedIndices? {
+		let rect = rect.intersection (layout.gridFrame);
+		guard
+			!rect.isNull,
+			let topLeftIdx = layout.cellIndex (at: rect.origin, treatingSeparatorPointsAsEarlierIndexes: false),
+			let bottomRightIdx = layout.cellIndex (at: CGPoint (x: rect.maxX, y: rect.maxY), treatingSeparatorPointsAsEarlierIndexes: true),
+			let affected = layout.cellFrames.indices.subindices (forRows: topLeftIdx.row ... bottomRightIdx.row, columns: topLeftIdx.column ... bottomRightIdx.column),
+			!affected.isEmpty else {
+			return nil;
 		}
+		
+		let highlighted: CellIndex?;
+		if let viewHighlightedIdx = view.highlightedDayIndex, affected.rows ~= viewHighlightedIdx.row, affected.columns ~= viewHighlightedIdx.column {
+			highlighted = affected.convert (index: viewHighlightedIdx, from: layout.cellFrames.indices);
+		} else {
+			highlighted = nil;
+		}
+		
+		let selection = view.selection;
+		let selected = affected.indices { selection.isDaySelected (month [ordinal: $0.row] [ordinal: $0.column]) };
+
+		return (affected: affected, highlighted: highlighted, selected: selected);
+	}
+	
+	fileprivate var reusableFormatters: [DateFormatter] {
+		return [self.dayFormatter];
+	}
+
+	fileprivate init? (redrawing rect: CGRect, in view: CPCMonthView) {
+		guard
+			let month = view.month,
+			let layout = view.layout,
+			let indices = GridRedrawContext.calculateAffectedIndices (of: view, in: rect, for: month, using: layout) else {
+			return nil;
+		}
+		let dayCellFont = view.dayCellFont;
+		
+		self.month = month;
+		self.layout = layout;
+		self.cellIndices = indices;
+		self.separatorColor = view.separatorColor;
+		self.cellBackgroundColors = view.cellBackgroundColors;
+
+		self.dayFormatter = DateFormatter.dequeueFormatter (for: month, dateFormatTemplate: "d");
+		self.cellTitleHeight = dayCellFont.lineHeight.rounded (.up, scale: layout.separatorWidth);
+		self.cellTitleAttributes = [
+			.font: dayCellFont,
+			.foregroundColor: view.dayCellTextColor,
+			.paragraphStyle: NSParagraphStyle.centeredWithTailTruncation,
+		];
+	}
+		
+	fileprivate func run (context ctx: CGContext) {
+		let allIndices = self.cellIndices.affected;
+		guard let firstIndex = allIndices.first, let lastIndex = allIndices.last else {
+			return;
+		}
+		
+		let layout = self.layout, halfSepW = layout.separatorWidth / 2.0;
+		let minIndex = allIndices.minElement, minFrame = layout.cellFrames [minIndex];
+		let maxIndex = allIndices.maxElement.advanced (by: -1), maxFrame = layout.cellFrames [maxIndex];
+		let frame = minFrame.union (maxFrame).insetBy (dx: -halfSepW, dy: -halfSepW);
+		ctx.clear (frame);
+		ctx.addRect (frame);
+		
+		if (firstIndex != minIndex) {
+			let firstCellFrame = layout.cellFrames [firstIndex];
+			ctx.addRect (frame.slice (atDistance: CGSize (width: firstCellFrame.minX - minFrame.minX, height: firstCellFrame.height), from: .topLeft));
+		}
+		if (lastIndex != maxIndex) {
+			let lastCellFrame = layout.cellFrames [lastIndex];
+			ctx.addRect (frame.slice (atDistance: CGSize (width: maxFrame.maxX - lastCellFrame.maxX, height: lastCellFrame.height), from: .bottomRight));
+		}
+		ctx.clip (using: .evenOdd);
+		
+		if let normalBackgroundColor = self.cellBackgroundColors [effective: .normal] {
+			ctx.setFillColor (normalBackgroundColor.cgColor);
+			ctx.fill (frame);
+		}
+		for index in self.cellIndices.affected {
+			self.drawDayCellContent (at: index, in: ctx);
+		}
+		
+		let verticalSeparatorIndexes = layout.verticalSeparatorIndexes (for: allIndices.columns), horizontalSeparatorIndexes = layout.horizontalSeparatorIndexes (for: allIndices.rows);
+		var separatorPoints = [CGPoint] ();
+		separatorPoints.reserveCapacity (2 * (verticalSeparatorIndexes.count + horizontalSeparatorIndexes.count));
+		for verticalSepX in layout.separatorOrigins.vertical [verticalSeparatorIndexes] {
+			separatorPoints.append (CGPoint (x: verticalSepX, y: frame.minY));
+			separatorPoints.append (CGPoint (x: verticalSepX, y: frame.maxY));
+		}
+		for horizontalSepY in layout.separatorOrigins.horizontal [horizontalSeparatorIndexes] {
+			separatorPoints.append (CGPoint (x: frame.minX, y: horizontalSepY));
+			separatorPoints.append (CGPoint (x: frame.maxX, y: horizontalSepY));
+		}
+		ctx.setStrokeColor (self.separatorColor.cgColor);
+		ctx.setLineWidth (layout.separatorWidth);
+		ctx.strokeLineSegments (between: separatorPoints);
+	}
+	
+	private func drawDayCellContent (at index: CellIndex, in context: CGContext) {
+		let day = self.month [ordinal: index.row] [ordinal: index.column];
+		let state = self.dayCellState (for: day, at: index), frame = self.layout.cellFrames [index];
+
+		if state != .normal, let backgroundColor = self.cellBackgroundColors [effective: state] {
+			context.setFillColor (backgroundColor.cgColor);
+			context.fill (frame);
+		}
+		
+		let dayString = NSAttributedString (string: self.dayFormatter.string (from: day.start), attributes: self.cellTitleAttributes);
+		let separatorWidth = self.layout.separatorWidth;
+		dayString.draw (in: CGRect (
+			x: frame.minX + separatorWidth / 2.0,
+			y: frame.midY - self.cellTitleHeight / 2.0,
+			width: frame.width - separatorWidth,
+			height: self.cellTitleHeight
+		));
+	}
+	
+	private func dayCellState (for day: CPCDay, at index: CellIndex) -> DayCellState {
+		if let selectedIndices = self.cellIndices.selected, selectedIndices.contains (index) {
+			return .selected;
+		}
+		return CPCDayCellState (backgroundState: (self.cellIndices.highlighted == index) ? .highlighted : .normal, isToday: day == .today);
 	}
 }

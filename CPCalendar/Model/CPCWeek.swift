@@ -30,7 +30,7 @@ public struct CPCWeek: CPCCompoundCalendarUnit {
 
 	internal static let representedUnit = Calendar.Component.weekOfYear;
 	internal static let requiredComponents: Set <Calendar.Component> = [.weekOfYear, .year];
-	internal static let descriptionDateFormatTemplate = "ddMM";
+	internal static let descriptionDateFormatTemplate = "wddMM";
 
 	public let calendar: Calendar;
 	public let startDate: Date;

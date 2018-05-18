@@ -1,5 +1,5 @@
 //
-//  CPCMonthView+ObjC.swift
+//  CPCViewSelection.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,14 +21,31 @@
 //  THE SOFTWARE.
 //
 
-import UIKit
+import Foundation
 
-extension CPCMonthView {
-	@objc open func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
-		return self.dayCellBackgroundColor (for: CPCDayCellState (state));
-	}
-	
-	@objc open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
-		self.setDayCellBackgroundColor (backgroundColor, for: CPCDayCellState (state));
+public enum CPCViewSelection: Equatable {
+	case none;
+	case single (CPCDay?);
+	case range (CountableRange <CPCDay>);
+	case unordered (Set <CPCDay>);
+	case ordered ([CPCDay]);
+}
+
+extension CPCViewSelection: CustomStringConvertible {
+	public var description: String {
+		switch (self) {
+		case .none:
+			return "none";
+		case .single (nil):
+			return "nil";
+		case .single (.some (let day)):
+			return "\(day.description)";
+		case .range (let range):
+			return "<Range: \(range.isEmpty ? "empty" : "\(range.lowerBound.description) ..< \(range.upperBound.description)")>";
+		case .unordered (let days):
+			return "<Unordered: \(days.isEmpty ? "empty" : "\(days.sorted ().map { $0.description }.joined (separator: ", "))")>";
+		case .ordered (let days):
+			return "<Ordered: \(days.isEmpty ? "empty" : "\(days.sorted ().map { $0.description }.joined (separator: ", "))")>";
+		}
 	}
 }

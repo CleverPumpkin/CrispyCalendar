@@ -1,5 +1,5 @@
 //
-//  CPCMonthView+BuiltinSelectionHandlers.swift
+//  CPCViewSelectionHandling.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -209,7 +209,7 @@ extension CPCViewDelegatingSelectionHandling {
 		}
 		set {
 			if let newValue = newValue {
-				var selectionHandler = CPCViewDelegatingSelectionHandler (self);
+				let selectionHandler = CPCViewDelegatingSelectionHandler (self);
 				selectionHandler.delegate = newValue as AnyObject;
 				self.selectionHandler = selectionHandler;
 			} else {
@@ -223,7 +223,7 @@ extension CPCViewDelegatingSelectionHandling {
 			return self.selectionHandler.selection;
 		}
 		set {
-			if var selectionHandler = self.selectionHandler as? CPCViewDelegatingSelectionHandler {
+			if let selectionHandler = self.selectionHandler as? CPCViewDelegatingSelectionHandler {
 				selectionHandler.selection = newValue;
 			} else {
 				self.selectionHandler = CPCViewSelectionHandler.primitive (for: newValue);

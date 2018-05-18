@@ -29,7 +29,7 @@ public struct CPCMonth: CPCCompoundCalendarUnit {
 	
 	internal static let representedUnit = Calendar.Component.month;
 	internal static let requiredComponents: Set <Calendar.Component> = [.month, .year];
-	internal static let descriptionDateFormatTemplate = "MMyyyy";
+	internal static let descriptionDateFormatTemplate = "LLyyyy";
 
 	public let calendar: Calendar;
 	public var year: Int {

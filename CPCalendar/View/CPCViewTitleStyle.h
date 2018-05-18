@@ -1,5 +1,5 @@
 //
-//  CPCDayCellState.h
+//  CPCViewTitleStyle.h
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,17 +23,14 @@
 
 #import <Foundation/Foundation.h>
 
-typedef NS_ENUM (uint8_t, CPCDayCellBackgroundState) {
-	CPCDayCellBackgroundStateNormal,
-	CPCDayCellBackgroundStateHighlighted,
-	CPCDayCellBackgroundStateSelected,
-} NS_REFINED_FOR_SWIFT;
+typedef NSString *CPCViewTitleStyle NS_TYPED_ENUM NS_REFINED_FOR_SWIFT;
 
-typedef struct {
-	CPCDayCellBackgroundState const backgroundState;
-	BOOL const isToday;
-} CPCDayCellState NS_REFINED_FOR_SWIFT;
+NS_ASSUME_NONNULL_BEGIN
 
-NS_INLINE NS_REFINED_FOR_SWIFT CPCDayCellState CPCDayCellStateMake (CPCDayCellBackgroundState const backgroundState, BOOL const isToday) {
-	return (CPCDayCellState) { .backgroundState = backgroundState, .isToday = isToday };
-}
+extern CPCViewTitleStyle const CPCViewTitleNoStyle NS_SWIFT_NAME(none);
+extern CPCViewTitleStyle const CPCViewTitleShortStyle NS_SWIFT_NAME(short);
+extern CPCViewTitleStyle const CPCViewTitleMediumStyle NS_SWIFT_NAME(medium);
+extern CPCViewTitleStyle const CPCViewTitleLongStyle NS_SWIFT_NAME(long);
+extern CPCViewTitleStyle const CPCViewTitleFullStyle NS_SWIFT_NAME(full);
+
+NS_ASSUME_NONNULL_END

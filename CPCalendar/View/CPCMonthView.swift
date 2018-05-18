@@ -27,50 +27,6 @@ fileprivate extension NSLayoutConstraint {
 	fileprivate static let placeholder = UIView ().widthAnchor.constraint (equalToConstant: 0.0);
 }
 
-fileprivate extension CGSize {
-	fileprivate enum Constraint {
-		case none;
-		case width (CGFloat);
-		case height (CGFloat);
-		case full (width: CGFloat, height: CGFloat);
-	}
-	
-	private static let unconstrainedDimensionValues: Set <CGFloat> = [
-		CGFloat (Float.greatestFiniteMagnitude),
-		CGFloat (Double.greatestFiniteMagnitude),
-		CGFloat.greatestFiniteMagnitude,
-		CGFloat (Int.max),
-		CGFloat (UInt.max),
-		CGFloat (Int32.max),
-		CGFloat (UInt32.max),
-		UIViewNoIntrinsicMetric,
-		UITableViewAutomaticDimension,
-		0.0,
-	];
-	private static let saneAspectRatiosRange = CGFloat (1e-3) ... CGFloat (1e3);
-	
-	private static func isDimensionConstrained (_ value: CGFloat, relativeTo other: CGFloat) -> Bool {
-		return (value.isFinite && !CGSize.unconstrainedDimensionValues.contains (value) && CGSize.saneAspectRatiosRange.contains (value / other));
-	}
-	
-	fileprivate var constraint: Constraint {
-		let width = self.width, height = self.height;
-		if (CGSize.isDimensionConstrained (width, relativeTo: height)) {
-			if (CGSize.isDimensionConstrained (height, relativeTo: width)) {
-				return .full (width: width, height: height);
-			} else {
-				return .width (width);
-			}
-		} else {
-			if (CGSize.isDimensionConstrained (height, relativeTo: width)) {
-				return .height (height);
-			} else {
-				return .none;
-			}
-		}
-	}
-}
-
 public protocol CPCMonthViewSelectionDelegate: AnyObject {
 	var selection: CPCViewSelection { get set };
 	
@@ -92,73 +48,74 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
-	@IBInspectable open var font = CPCMonthView.defaultFont;
-	@IBInspectable open var titleColor = CPCMonthView.defaultTitleColor;
-	@IBInspectable open var separatorColor = CPCMonthView.defaultSeparatorColor;
+	@IBInspectable open var titleFont = UIFont.defaultMonthTitle {
+		didSet {
+			guard (oldValue.lineHeight != self.titleFont.lineHeight) else {
+				return self.setNeedsDisplay ();
+			}
+			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
+		}
+	}
+	@IBInspectable open var titleColor = UIColor.defaultMonthTitle {
+		didSet {
+			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
+		}
+	}
+	open var titleStyle = TitleStyle.default {
+		didSet {
+			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
+		}
+	}
+	@IBInspectable open var titleMargins = UIEdgeInsets.defaultMonthTitle {
+		didSet {
+			guard (oldValue.top + oldValue.bottom) == (self.titleMargins.top + self.titleMargins.bottom) else {
+				return self.setNeedsDisplay ();
+			}
+			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
+		}
+	}
 	
+	@IBInspectable open var dayCellFont = UIFont.defaultDayCellText {
+		didSet {
+			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
+		}
+	}
+	@IBInspectable open var dayCellTextColor = UIColor.defaultDayCellText {
+		didSet {
+			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
+		}
+	}
+	@IBInspectable open var separatorColor = UIColor.defaultSeparator {
+		didSet {
+			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
+		}
+	}
+	
+	internal var layout: Layout? {
+		if let info = self.layoutStorage, info.isValid (for: self) {
+			return info;
+		}
+		
+		self.layoutStorage = Layout (view: self);
+		return self.layoutStorage;
+	}
+
 	internal var selectionHandler = CPCViewDefaultSelectionHandler {
 		didSet {
 			self.selectionDidChange (oldValue: oldValue.selection);
 		}
 	}
 	
-	internal var gridLayoutInfo: GridLayoutInfo? {
-		if let info = self.gridLayoutInfoStorage, info.isValid (for: self) {
-			return info;
-		}
-		
-		self.gridLayoutInfoStorage = GridLayoutInfo (view: self);
-		return self.gridLayoutInfoStorage;
-	}
-	private var gridLayoutInfoStorage: GridLayoutInfo?;
-
+	internal var cellBackgroundColors = DayCellStateBackgroundColors ();
 	internal var highlightedDayIndex: CellIndex? {
 		didSet {
 			self.highlightedDayIndexDidChange (oldValue: oldValue);
 		}
 	}
 	
-	internal var cellBackgroundColors = DayCellStateBackgroundColors ();
-	
+	private var layoutStorage: Layout?;
+	private var contentSizeCategoryObserver: NSObjectProtocol?;
 	private unowned var aspectRatioConstraint: NSLayoutConstraint;
-	
-	/// Computes coefficients of equation ViewHeight = K x ViewWidth + C to maintain square-ish day cells
-	///
-	/// - Parameter month: Month to perform calculations for.
-	/// - Parameter separatorWidth: Intercell separators width/height.
-	/// - Returns: multiplier K and constant C.
-	open class func aspectRatioComponents (for month: CPCMonth?, separatorWidth: CGFloat) -> (multiplier: CGFloat, constant: CGFloat)? {
-		guard let month = month, !month.isEmpty else {
-			return nil;
-		}
-		
-		/// | height = rowN * cellSize + (rowN + 1) * sepW      | height = rowN * (cellSize + sepW) + sepW      | height - sepW = rowN * (cellSize + sepW)
-		/// {                                               <=> {                                           <=> {                                          <=>
-		/// | width = colN * cellSize + (colsN - 1) * sepW      | width = colN * (cellSize + colsN) - sepW      | width + sepW = colN * (cellSize + colsN)
-		///
-		/// <=> (height - sepW) / (width + sepW) = rowN / colN
-		/// let R = rowN / colN, then (height - sepW) / (width + sepW) = R <=> height - sepW = width * R + sepW * R <=> height = width * R + (sepW + 1) * R
-		let aspectRatio = CGFloat (month.count) / CGFloat ( month [0].count);
-		return (multiplier: aspectRatio, constant: (separatorWidth + 1.0) * aspectRatio);
-	}
-		
-	open class func sizeThatFits (_ size: CGSize, for month: CPCMonth?, with separatorWidth: CGFloat) -> CGSize {
-		guard let (multiplier, constant) = self.aspectRatioComponents (for: month, separatorWidth: separatorWidth) else {
-			return size;
-		}
-		
-		let fittingWidth: CGFloat;
-		switch (size.constraint) {
-		case .none:
-			fittingWidth = UIScreen.main.bounds.width;
-		case .width (let width), .full (let width, _):
-			fittingWidth = width;
-		case let .height (height):
-			return CGSize (width: ((height - constant) / multiplier).rounded (scale: separatorWidth), height: height.rounded (scale: separatorWidth));
-		}
-		
-		return CGSize (width: fittingWidth.rounded (scale: separatorWidth), height: (fittingWidth * multiplier + constant).rounded (scale: separatorWidth));
-	}
 	
 	public override init (frame: CGRect) {
 		self.aspectRatioConstraint = .placeholder;
@@ -196,27 +153,24 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	open override func updateConstraints () {
 		self.aspectRatioConstraint.isActive = false;
-		
-		let aspectRatioConstraint: NSLayoutConstraint;
-		if let (multiplier, constant) = type (of: self).aspectRatioComponents (for: self.month, separatorWidth: self.separatorWidth) {
-			aspectRatioConstraint = self.heightAnchor.constraint (equalTo: self.widthAnchor, multiplier: multiplier, constant: constant);
-		} else {
-			aspectRatioConstraint = self.heightAnchor.constraint (equalToConstant: 0.0);
-		}
-		aspectRatioConstraint.priority = self.contentCompressionResistancePriority (for: .vertical);
-		aspectRatioConstraint.isActive = true;
-		self.aspectRatioConstraint = aspectRatioConstraint;
+		self.aspectRatioConstraint = self.layoutAttributes.map { self.aspectRatioLayoutConstraint (for: $0) } ?? self.heightAnchor.constraint (equalToConstant: 0.0);
+		self.aspectRatioConstraint.isActive = true;
 		
 		super.updateConstraints ();
 	}
 	
 	open override func sizeThatFits (_ size: CGSize) -> CGSize {
-		return type (of: self).sizeThatFits (size, for: self.month, with: self.separatorWidth);
+		guard let attributes = self.layoutAttributes else {
+			return .zero;
+		}
+		return self.sizeThatFits (size, attributes: attributes);
 	}
 
 	open override func draw (_ rect: CGRect) {
 		super.draw (rect);
-		RedrawContext (redrawing: rect, in: self)?.run ();
+		
+		self.titleRedrawContext (rect)?.run ();
+		self.gridRedrawContext (rect)?.run ();
 	}
 	
 	open override func beginTracking (_ touch: UITouch, with event: UIEvent?) -> Bool {
@@ -254,14 +208,62 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	private func gridCellIndex (for touch: UITouch?) -> CellIndex? {
 		guard
-			let layoutInfo = self.gridLayoutInfo,
+			let layout = self.layout,
 			let point = touch?.location (in: self),
-			let index = layoutInfo.cellIndex (at: point),
-			layoutInfo.cellFrames.indices.contains (index) else {
+			let index = layout.cellIndex (at: point),
+			layout.cellFrames.indices.contains (index) else {
 			return nil;
 		}
 		
 		return index;
+	}
+}
+
+fileprivate extension UIFontMetrics {
+	fileprivate static let monthTitle = UIFontMetrics (forTextStyle: .headline);
+	fileprivate static let dayCellText = UIFontMetrics (forTextStyle: .body);
+}
+
+extension CPCMonthView: UIContentSizeCategoryAdjusting {
+	open var adjustsFontForContentSizeCategory: Bool {
+		get {
+			return self.contentSizeCategoryObserver != nil;
+		}
+		set {
+			switch (self.contentSizeCategoryObserver, newValue) {
+			case (.some (let observer), false):
+				NotificationCenter.default.removeObserver (observer);
+			case (nil, true):
+				self.contentSizeCategoryDidChange (newCategory: UIApplication.shared.preferredContentSizeCategory);
+				self.contentSizeCategoryObserver = NotificationCenter.default.addObserver (forName: .UIContentSizeCategoryDidChange, object: nil, queue: nil) { notification in
+					let category = (notification.userInfo? [UIContentSizeCategoryNewValueKey] as? UIContentSizeCategory) ?? UIApplication.shared.preferredContentSizeCategory;
+					self.contentSizeCategoryDidChange (newCategory: category);
+				};
+			default:
+				break;
+			}
+		}
+	}
+	
+	private func contentSizeCategoryDidChange (newCategory: UIContentSizeCategory) {
+		self.titleFont = UIFontMetrics.monthTitle.scaledFont (for: self.titleFont);
+		self.dayCellFont = UIFontMetrics.dayCellText.scaledFont (for: self.dayCellFont);
+	}
+}
+
+extension CPCMonthView: CPCViewDayCellBackgroundColorsStorage {
+	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
+		self.cellBackgroundColors [state] = backgroundColor;
+		
+		switch (state.backgroundState) {
+		case .highlighted:
+			guard let highlightedIdx = self.highlightedDayIndex, let layout = self.layout else {
+				return;
+			}
+			self.setNeedsDisplay (layout.cellFrames [highlightedIdx]);
+		default:
+			self.setNeedsDisplay ();
+		}
 	}
 }
 
@@ -289,6 +291,48 @@ extension CPCMonthView: CPCViewDelegatingSelectionHandling {
 	}
 }
 
+extension CPCMonthView: CPCFixedAspectRatioView {
+	public struct LayoutAttributes: CPCViewLayoutAttributes {
+		fileprivate let month: CPCMonth;
+		fileprivate let titleHeight: CGFloat;
+		fileprivate let separatorWidth: CGFloat;
+		
+		public var roundingScale: CGFloat {
+			return self.separatorWidth;
+		}
+		
+		public init? (_ view: CPCMonthView) {
+			guard let month = view.month, !month.isEmpty else {
+				return nil;
+			}
+
+			self.init (month: month, separatorWidth: view.separatorWidth, titleFont: view.titleFont, titleMargins: view.titleMargins);
+		}
+
+		public init (month: CPCMonth, separatorWidth: CGFloat, titleFont: UIFont, titleMargins: UIEdgeInsets) {
+			self.month = month;
+			self.separatorWidth = separatorWidth;
+			self.titleHeight = (titleFont.lineHeight.rounded (.up, scale: separatorWidth) + titleMargins.top + titleMargins.bottom).rounded (.up, scale: separatorWidth);
+		}
+	};
+	
+	open var layoutAttributes: LayoutAttributes? {
+		return LayoutAttributes (self);
+	}
+	
+	open class func aspectRatioComponents (for attributes: LayoutAttributes) -> (multiplier: CGFloat, constant: CGFloat)? {
+		/// | gridH = rowN * cellSize + (rowN + 1) * sepW       | gridH = rowN * (cellSize + sepW) + sepW       | gridH - sepW = rowN * (cellSize + sepW)
+		/// {                                               <=> {                                           <=> {                                          <=>
+		/// | gridW = colN * cellSize + (colsN - 1) * sepW      | gridW = colN * (cellSize + colsN) - sepW      | gridW + sepW = colN * (cellSize + colsN)
+		///
+		/// <=> (gridH - sepW) / (gridW + sepW) = rowN / colN
+		/// let R = rowN / colN, then (gridH - sepW) / (gridW + sepW) = R <=> gridH - sepW = gridW * R + sepW * R <=> gridH = gridW * R + (sepW + 1) * R
+		/// View width is equal to grid width; view height = gridW + titleHeight.
+		let month = attributes.month, aspectRatio = CGFloat (month.count) / CGFloat (month [0].count);
+		return (multiplier: aspectRatio, constant: (attributes.separatorWidth + 1.0) * aspectRatio + attributes.titleHeight);
+	}
+}
+
 extension CPCMonthView {
 	private func monthDidChange () {
 		self.highlightedDayIndex = nil;
@@ -302,16 +346,16 @@ extension CPCMonthView {
 			return;
 		}
 		
-		if let oldValue = oldValue, let oldValueFrame = self.gridLayoutInfo?.cellFrames [oldValue] {
+		if let oldValue = oldValue, let oldValueFrame = self.layout?.cellFrames [oldValue] {
 			self.setNeedsDisplay (oldValueFrame);
 		}
-		if let newValue = self.highlightedDayIndex, let newValueFrame = self.gridLayoutInfo?.cellFrames [newValue] {
+		if let newValue = self.highlightedDayIndex, let newValueFrame = self.layout?.cellFrames [newValue] {
 			self.setNeedsDisplay (newValueFrame);
 		}
 	}
 	
 	private func selectionDidChange (oldValue: Selection) {
-		guard let layoutInfo = self.gridLayoutInfo, let month = self.month, let firstDayIndex = layoutInfo.cellFrames.indices.first else {
+		guard let layout = self.layout, let month = self.month, let firstDayIndex = layout.cellFrames.indices.first else {
 			return;
 		}
 		
@@ -321,27 +365,7 @@ extension CPCMonthView {
 		}
 		
 		for day in selectionDiff {
-			self.setNeedsDisplay (layoutInfo.cellFrames [firstDayIndex.advanced (by: firstDay.distance (to: day))]);
-		}
-	}
-}
-
-extension CPCMonthView {
-	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
-		return self.cellBackgroundColors.color (for: state);
-	}
-	
-	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
-		self.cellBackgroundColors.setColor (backgroundColor, for: state);
-		
-		switch (state.backgroundState) {
-		case .highlighted:
-			guard let highlightedIdx = self.highlightedDayIndex, let layoutInfo = self.gridLayoutInfo else {
-				return;
-			}
-			self.setNeedsDisplay (layoutInfo.cellFrames [highlightedIdx]);
-		default:
-			self.setNeedsDisplay ();
+			self.setNeedsDisplay (layout.cellFrames [firstDayIndex.advanced (by: firstDay.distance (to: day))]);
 		}
 	}
 }
