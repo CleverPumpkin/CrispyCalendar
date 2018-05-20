@@ -76,13 +76,13 @@ internal extension CPCMonthView {
 			}
 			
 			let separatorWidth = view.separatorWidth;
-			let titleMargins = view.titleMargins;
+			let titleMargins = view.effectiveTitleMargins;
 			let titleFrame: CGRect, gridFrame: CGRect;
 			if (view.titleStyle == .none) {
 				titleFrame = .null;
 				gridFrame = view.bounds;
 			} else {
-				let titleHeight = (titleMargins.top + view.titleFont.lineHeight.rounded (.up, scale: separatorWidth) + titleMargins.bottom).rounded (.up, scale: separatorWidth);
+				let titleHeight = (titleMargins.top + view.effectiveTitleFont.lineHeight.rounded (.up, scale: separatorWidth) + titleMargins.bottom).rounded (.up, scale: separatorWidth);
 				(titleFrame, gridFrame) = view.bounds.divided (atDistance: titleHeight, from: .minYEdge);
 			}
 			let cellsOrigin = CGPoint (x: gridFrame.minX - separatorWidth / 2.0, y: gridFrame.minY + separatorWidth / 2.0);
@@ -128,7 +128,7 @@ internal extension CPCMonthView {
 			}
 			
 			let titleMargins = self.titleMargins, titleHeight = self.titleFrame.map { ($0.height - titleMargins.top - titleMargins.bottom).rounded (.down, scale: separatorWidth) };
-			let viewTitleMargins = view.titleMargins, viewTitleHeight = ((view.titleStyle == .none) ? nil : view.titleFont.lineHeight.rounded (.up, scale: viewSeparatorWidth));
+			let viewTitleMargins = view.effectiveTitleMargins, viewTitleHeight = ((view.titleStyle == .none) ? nil : view.effectiveTitleFont.lineHeight.rounded (.up, scale: viewSeparatorWidth));
 			switch (titleHeight, viewTitleHeight) {
 			case (nil, nil):
 				break;

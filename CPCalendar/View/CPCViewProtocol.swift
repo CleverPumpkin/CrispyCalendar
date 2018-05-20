@@ -62,11 +62,11 @@ internal extension UIEdgeInsets {
 
 internal extension UIFont {
 	internal static var defaultMonthTitle: UIFont {
-		return .preferredFont (forTextStyle: .headline, compatibleWith: UIScreen.main.traitCollection);
+		return .preferredFont (forTextStyle: .headline);
 	}
 	
 	internal static var defaultDayCellText: UIFont {
-		return .preferredFont (forTextStyle: .body, compatibleWith: UIScreen.main.traitCollection);
+		return .preferredFont (forTextStyle: .body);
 	}
 }
 

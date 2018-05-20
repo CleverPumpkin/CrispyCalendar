@@ -259,8 +259,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				43689DCA20937AF200052C7A /* CPCDayCellState.h in Headers */,
-				43689DCC20937C9F00052C7A /* CPCalendar.h in Headers */,
 				4314535C20AEF2E50019EB01 /* CPCViewTitleStyle.h in Headers */,
+				43689DCC20937C9F00052C7A /* CPCalendar.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -358,7 +358,6 @@
 				43101B9C209D037500904529 /* hash.swift in Sources */,
 				43C070102092F85200202ED8 /* guarantee.swift in Sources */,
 				436F53B820A4C14900ACE40A /* UnownedArray.swift in Sources */,
-				4318950220A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */,
 				43B6E72120A0615400A7403B /* ThreadsafeStorage.swift in Sources */,
 				43584B1120A4F18E00035A81 /* FloatingPointRounding.swift in Sources */,
 				43101B93209CDFBD00904529 /* GridIndices.swift in Sources */,
@@ -366,11 +365,10 @@
 				430492AD2094B54000A4F1F1 /* RangeExpressionInitialization.swift in Sources */,
 				430492AA2094724F00A4F1F1 /* ComputedCollection.swift in Sources */,
 				43C070062092EDC700202ED8 /* CPCDatesRange.swift in Sources */,
-				436F53BD20A4D8B900ACE40A /* CPCMultiMonthsView.swift in Sources */,
 				43689DB5209364BF00052C7A /* CPCCalendarUnitBackingType.swift in Sources */,
 				43C0700C2092F49D00202ED8 /* CPCCalendarUnit.swift in Sources */,
-				4314535020AEEE7F0019EB01 /* CPCViewProtocol_ObjCSupport.swift in Sources */,
 				4318950520AC80DE00D29AA8 /* CPCViewSelectionHandling.swift in Sources */,
+				4318950220A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */,
 				43689DBB2093681100052C7A /* CPCCalendarUnitSymbol.swift in Sources */,
 				43689DB82093656000052C7A /* CPCCompoundCalendarUnit.swift in Sources */,
 				43C07001209259B900202ED8 /* CPCDay.swift in Sources */,
@@ -383,10 +381,12 @@
 				4314535A20AEF0980019EB01 /* CPCViewSelection.swift in Sources */,
 				436F53BB20A4C86B00ACE40A /* CPCViewProtocol.swift in Sources */,
 				4314536120AF29BC0019EB01 /* CPCViewMeasuring.swift in Sources */,
+				4314535020AEEE7F0019EB01 /* CPCViewProtocol_ObjCSupport.swift in Sources */,
 				435802C320ADD0AD002FFE83 /* CPCViewSelectionConvenience.swift in Sources */,
 				43689DBF20936F2600052C7A /* CPCMonthView.swift in Sources */,
 				43101B95209CFBB400904529 /* CPCMonthView_Layout.swift in Sources */,
 				43101B97209CFBC100904529 /* CPCMonthView_RedrawContext.swift in Sources */,
+				436F53BD20A4D8B900ACE40A /* CPCMultiMonthsView.swift in Sources */,
 				43689DC020936F2600052C7A /* CPCCalendarView.swift in Sources */,
 				4314534E20AEEE7F0019EB01 /* CPCCalendarView_ProtocolConformances.swift in Sources */,
 			);
@@ -488,7 +488,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
@@ -547,7 +547,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 11.3;
+				IPHONEOS_DEPLOYMENT_TARGET = 10.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;

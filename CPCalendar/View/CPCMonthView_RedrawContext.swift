@@ -205,7 +205,7 @@ extension CPCMonthView.TitleRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.titleContentFrame = layout.titleContentFrame;
 		self.formatter = DateFormatter.dequeueFormatter (for: month, format: view.titleStyle.rawValue);
 		self.titleAttributes = [
-			.font: view.titleFont,
+			.font: view.effectiveTitleFont,
 			.foregroundColor: view.titleColor,
 			.paragraphStyle: NSParagraphStyle.centeredWithMiddleTruncation,
 		];
@@ -260,7 +260,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 			let indices = GridRedrawContext.calculateAffectedIndices (of: view, in: rect, for: month, using: layout) else {
 			return nil;
 		}
-		let dayCellFont = view.dayCellFont;
+		let dayCellFont = view.effectiveDayCellFont;
 		
 		self.month = month;
 		self.layout = layout;

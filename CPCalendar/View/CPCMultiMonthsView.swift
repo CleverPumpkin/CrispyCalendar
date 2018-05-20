@@ -63,7 +63,7 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 	
 	@IBInspectable open var dayCellFont = UIFont.defaultDayCellText {
 		didSet {
-			self.updateManagedMonthViews { $0.titleFont = self.titleFont };
+			self.updateManagedMonthViews { $0.dayCellFont = self.dayCellFont };
 		}
 	}
 	
