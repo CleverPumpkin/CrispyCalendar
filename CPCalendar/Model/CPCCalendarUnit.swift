@@ -70,12 +70,17 @@ extension CPCCalendarUnit {
 		return self.backingValue.hashValue;
 	}
 	
-	public init (containing date: Date, calendar: Calendar) {
+	internal init (containing date: Date, calendarWrapper: CalendarWrapper) {
+		let calendar = calendarWrapper.calendar;
 		let startDate = guarantee (calendar.dateInterval (of: Self.representedUnit, for: date)).start;
 		let backingValue = UnitBackingType (date: startDate, calendar: calendar, components: Self.requiredComponents);
 		self.init (backedBy: backingValue, calendar: CalendarWrapper (calendar));
 	}
 
+	public init (containing date: Date, calendar: Calendar) {
+		self.init (containing: date, calendarWrapper: CalendarWrapper (calendar));
+	}
+	
 	public init (containing date: Date, timeZone: TimeZone, calendar: Calendar) {
 		var calendar = calendar;
 		calendar.timeZone = timeZone;

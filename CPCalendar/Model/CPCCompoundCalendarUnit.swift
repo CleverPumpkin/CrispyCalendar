@@ -61,7 +61,7 @@ extension CPCCompoundCalendarUnit {
 			return cachedResult;
 		}
 		
-		let result = Element (containing: self.start, calendar: self.calendar).advanced (by: position - self.smallerUnitRange.lowerBound);
+		let result = Element (containing: self.start, calendarWrapper: self.calendarWrapper).advanced (by: position - self.smallerUnitRange.lowerBound);
 		self.cacheElement (result, for: position)
 		return result;
 	}

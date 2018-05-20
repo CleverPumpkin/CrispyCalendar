@@ -242,7 +242,7 @@ public extension CPCViewSelection {
 	}
 }
 
-extension CPCViewSelectionHandling {
+extension CPCViewProtocol {
 	public var allowsSelection: Bool {
 		get {
 			return self.selection != .none;
