@@ -1,5 +1,5 @@
 //
-//  CPCalendar.h
+//  CPCWeekViewStyle.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,10 +21,39 @@
 //  THE SOFTWARE.
 //
 
-#import <CPCalendar/CPCDayCellState.h>
-#import <CPCalendar/CPCViewTitleStyle.h>
-#import <CPCalendar/CPCWeekViewStyle.h>
+import Foundation
 
-#if __has_include(<CPCalendar/CPCalendar-Swift.h>)
-#	import <CPCalendar/CPCalendar-Swift.h>
-#endif
+public enum CPCWeekViewStyle {
+	case none;
+	case short;
+	case medium;
+	case full;
+}
+
+extension CPCWeekViewStyle {
+	public var cStyle: __CPCWeekViewStyle {
+		switch (self) {
+		case .none:
+			return .none;
+		case .short:
+			return .short;
+		case .medium:
+			return .medium;
+		case .full:
+			return .full;
+		}
+	}
+	
+	public init (_ cStyle: __CPCWeekViewStyle) {
+		switch (cStyle) {
+		case .none:
+			self = .none;
+		case .short:
+			self = .short;
+		case .medium:
+			self = .medium;
+		case .full:
+			self = .full;
+		}
+	}
+}

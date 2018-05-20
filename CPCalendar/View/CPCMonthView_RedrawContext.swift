@@ -85,6 +85,7 @@ fileprivate extension DateFormatter {
 		let dateFormatter = DateFormatter ();
 		dateFormatter.calendar = month.calendar;
 		dateFormatter.dateFormat = format;
+		dateFormatter.formattingContext = .standalone;
 		return dateFormatter;
 	}
 
@@ -114,18 +115,6 @@ fileprivate extension DateFormatter {
 			cache [cacheKey] = value;
 		}
 	}
-}
-
-fileprivate extension NSParagraphStyle {
-	private static func makeCentered (lineBreakMode: NSLineBreakMode) -> NSParagraphStyle {
-		let result = NSMutableParagraphStyle ();
-		result.alignment = .center;
-		result.lineBreakMode = lineBreakMode;
-		return result.copy () as! NSParagraphStyle;
-	}
-	
-	fileprivate static let centeredWithTailTruncation = makeCentered (lineBreakMode: .byTruncatingTail);
-	fileprivate static let centeredWithMiddleTruncation = makeCentered (lineBreakMode: .byTruncatingMiddle);
 }
 
 internal protocol CPCMonthViewRedrawContext {
@@ -180,9 +169,7 @@ extension CPCMonthViewRedrawContextImpl {
 			return;
 		}
 		self.run (context: context);
-		for formatter in self.reusableFormatters {
-			formatter.makeReusable ();
-		}
+		DateFormatter.makeReusable (self.reusableFormatters);
 	}
 }
 

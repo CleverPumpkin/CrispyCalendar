@@ -48,9 +48,9 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
-	@IBInspectable open var titleFont: UIFont = UIFont.defaultMonthTitle {
+	@IBInspectable open var titleFont = UIFont.defaultMonthTitle {
 		didSet {
-			self.effectiveTitleFont = CPCMonthView.titleMetrics.scaledFont (self.titleFont);
+			self.effectiveTitleFont = self.scaledFont (self.titleFont, using: CPCMonthView.titleMetrics);
 		}
 	}
 	@IBInspectable open var titleColor = UIColor.defaultMonthTitle {
@@ -65,13 +65,13 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 	@IBInspectable open var titleMargins = UIEdgeInsets.defaultMonthTitle {
 		didSet {
-			self.effectiveTitleMargins = CPCMonthView.titleMetrics.scaledInsets (self.titleMargins);
+			self.effectiveTitleMargins = self.scaledInsets (self.titleMargins, using: CPCMonthView.titleMetrics);
 		}
 	}
 	
 	@IBInspectable open var dayCellFont = UIFont.defaultDayCellText {
 		didSet {
-			self.effectiveDayCellFont = CPCMonthView.dayCellTextMetrics.scaledFont (self.dayCellFont);
+			self.effectiveDayCellFont = self.scaledFont (self.dayCellFont, using: CPCMonthView.dayCellTextMetrics);
 		}
 	}
 	@IBInspectable open var dayCellTextColor = UIColor.defaultDayCellText {
@@ -122,6 +122,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
+	internal var contentSizeCategoryObserver: NSObjectProtocol?;
 	internal var cellBackgroundColors = DayCellStateBackgroundColors ();
 	internal var highlightedDayIndex: CellIndex? {
 		didSet {
@@ -131,7 +132,6 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	private var layoutStorage: Layout?;
 	private unowned var aspectRatioConstraint: NSLayoutConstraint;
-	private var contentSizeCategoryObserver: NSObjectProtocol?;
 	
 	public override init (frame: CGRect) {
 		self.aspectRatioConstraint = .placeholder;
@@ -241,142 +241,19 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 }
 
-private protocol FontMetricsProtocol {
-	static var title: FontMetricsProtocol { get };
-	static var dayCellText: FontMetricsProtocol { get };
-
-	func scaledValue (_ value: CGFloat) -> CGFloat;
-	func scaledValue (_ value: CGFloat, for contentSizeCategory: UIContentSizeCategory) -> CGFloat;
-
-	func scaledInsets (_ insets: UIEdgeInsets) -> UIEdgeInsets;
-	func scaledInsets (_ insets: UIEdgeInsets, for contentSizeCategory: UIContentSizeCategory) -> UIEdgeInsets;
-	
-	func scaledFont (_ font: UIFont) -> UIFont;
-	func scaledFont (_ font: UIFont, for contentSizeCategory: UIContentSizeCategory) -> UIFont;
-}
-
-extension FontMetricsProtocol {
-	fileprivate func scaledValue (_ value: CGFloat) -> CGFloat {
-		return self.scaledValue (value, for: UIApplication.shared.preferredContentSizeCategory);
-	}
-	
-	fileprivate func scaledInsets (_ insets: UIEdgeInsets) -> UIEdgeInsets {
-		return self.scaledInsets (insets, for: UIApplication.shared.preferredContentSizeCategory);
-	}
-	
-	fileprivate func scaledInsets (_ insets: UIEdgeInsets, for contentSizeCategory: UIContentSizeCategory) -> UIEdgeInsets {
-		let scaleBlock: (CGFloat) -> CGFloat = { self.scaledValue ($0, for: contentSizeCategory) };
-		return UIEdgeInsets (top: scaleBlock (insets.top), left: scaleBlock (insets.left), bottom: scaleBlock (insets.bottom), right: scaleBlock (insets.right));
-	}
-	
-	fileprivate func scaledFont (_ font: UIFont) -> UIFont {
-		return self.scaledFont (font, for: UIApplication.shared.preferredContentSizeCategory);
-	}
-
-	fileprivate func scaledFont (_ font: UIFont, for contentSizeCategory: UIContentSizeCategory) -> UIFont {
-		return font.withSize (self.scaledValue (font.pointSize, for: contentSizeCategory));
-	}
-}
-
-extension CPCMonthView: UIContentSizeCategoryAdjusting {
-	@available (iOS 11.0, *)
-	private struct FontMetrics: FontMetricsProtocol {
-		fileprivate static let title: FontMetricsProtocol = FontMetrics (style: .headline);
-		fileprivate static let dayCellText: FontMetricsProtocol = FontMetrics (style: .body);
-
-		private let fontMetrics: UIFontMetrics;
-		
-		private init (_ fontMetrics: UIFontMetrics) {
-			self.fontMetrics = fontMetrics;
-		}
-		
-		private init (style: UIFontTextStyle) {
-			self.init (UIFontMetrics (forTextStyle: style));
-		}
-
-		fileprivate func scaledValue (_ value: CGFloat) -> CGFloat {
-			return self.fontMetrics.scaledValue (for: value);
-		}
-		
-		fileprivate func scaledValue (_ value: CGFloat, for contentSizeCategory: UIContentSizeCategory) -> CGFloat {
-			return self.fontMetrics.scaledValue (for: value, compatibleWith: UITraitCollection (preferredContentSizeCategory: contentSizeCategory));
-		}
-
-		fileprivate func scaledFont (_ font: UIFont) -> UIFont {
-			return self.fontMetrics.scaledFont (for: font);
-		}
-
-		fileprivate func scaledFont (_ font: UIFont, for contentSizeCategory: UIContentSizeCategory) -> UIFont {
-			return self.fontMetrics.scaledFont (for: font, compatibleWith: UITraitCollection (preferredContentSizeCategory: contentSizeCategory));
-		}
-	}
-	
-	private struct LegacyFontMetrics: FontMetricsProtocol {
-		fileprivate static let title: FontMetricsProtocol = LegacyFontMetrics (textStyle: .headline);
-		fileprivate static let dayCellText: FontMetricsProtocol = LegacyFontMetrics (textStyle: .body);
-
-		private let textStyle: UIFontTextStyle;
-		
-		fileprivate func scaledValue (_ value: CGFloat) -> CGFloat {
-			let scaledSystemFont = UIFont.preferredFont (forTextStyle: self.textStyle);
-			let baseSystemFont = UIFont.preferredFont (forTextStyle: self.textStyle, compatibleWith: UITraitCollection (preferredContentSizeCategory: .medium));
-			return value / baseSystemFont.pointSize * scaledSystemFont.pointSize;
-		}
-
-		fileprivate func scaledValue (_ value: CGFloat, for contentSizeCategory: UIContentSizeCategory) -> CGFloat {
-			let scaledSystemFont = UIFont.preferredFont (forTextStyle: self.textStyle, compatibleWith: UITraitCollection (preferredContentSizeCategory: contentSizeCategory));
-			let baseSystemFont = UIFont.preferredFont (forTextStyle: self.textStyle, compatibleWith: UITraitCollection (preferredContentSizeCategory: .medium));
-			return value / baseSystemFont.pointSize * scaledSystemFont.pointSize;
-		}
-	}
-	
-	private static let titleMetrics: FontMetricsProtocol = {
-		if #available (iOS 11.0, *) {
-			return FontMetrics.title;
-		} else {
-			return LegacyFontMetrics.title;
-		}
-	} ();
-	
-	private static let dayCellTextMetrics: FontMetricsProtocol = {
-		if #available (iOS 11.0, *) {
-			return FontMetrics.dayCellText;
-		} else {
-			return LegacyFontMetrics.dayCellText;
-		}
-	} ();
+extension CPCMonthView: CPCViewContentAdjusting {
+	private static let titleMetrics = CPCFontMetrics.metrics (for: .headline);
+	private static let dayCellTextMetrics = CPCFontMetrics.metrics (for: .body);
 	
 	open var adjustsFontForContentSizeCategory: Bool {
-		get {
-			return self.contentSizeCategoryObserver != nil;
-		}
-		set {
-			switch (self.contentSizeCategoryObserver, newValue) {
-			case (.some (let observer), false):
-				NotificationCenter.default.removeObserver (observer);
-			case (nil, true):
-				self.adjustValuesForCurrentContentSizeCategory ();
-				self.contentSizeCategoryObserver = NotificationCenter.default.addObserver (forName: .UIContentSizeCategoryDidChange, object: nil, queue: nil) { notification in
-					if let category = notification.userInfo? [UIContentSizeCategoryNewValueKey] as? UIContentSizeCategory {
-						self.adjustValues (for: category);
-					} else {
-						self.adjustValuesForCurrentContentSizeCategory ();
-					}
-				};
-			default:
-				break;
-			}
-		}
+		get { return self.adjustsFontForContentSizeCategoryValue }
+		set { self.adjustsFontForContentSizeCategoryValue = newValue }
 	}
-	
-	private func adjustValuesForCurrentContentSizeCategory () {
-		self.adjustValues (for: UIApplication.shared.preferredContentSizeCategory);
-	}
-	
-	private func adjustValues (for newCategory: UIContentSizeCategory) {
-		self.effectiveTitleFont = CPCMonthView.titleMetrics.scaledFont (self.titleFont, for: newCategory);
-		self.effectiveTitleMargins = CPCMonthView.titleMetrics.scaledInsets (self.titleMargins, for: newCategory);
-		self.effectiveDayCellFont = CPCMonthView.dayCellTextMetrics.scaledFont (self.dayCellFont, for: newCategory);
+
+	internal func adjustValues (for newCategory: UIContentSizeCategory) {
+		self.effectiveTitleFont = self.scaledFont (self.titleFont, using: CPCMonthView.titleMetrics, for: newCategory);
+		self.effectiveTitleMargins = self.scaledInsets (self.titleMargins, using: CPCMonthView.titleMetrics, for: newCategory);
+		self.effectiveDayCellFont = self.scaledFont (self.dayCellFont, using: CPCMonthView.dayCellTextMetrics, for: newCategory);
 	}
 }
 

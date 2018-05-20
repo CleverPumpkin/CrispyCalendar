@@ -1,5 +1,5 @@
 //
-//  CPCalendar.h
+//  CPCWeekViewStyle.h
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,10 +21,11 @@
 //  THE SOFTWARE.
 //
 
-#import <CPCalendar/CPCDayCellState.h>
-#import <CPCalendar/CPCViewTitleStyle.h>
-#import <CPCalendar/CPCWeekViewStyle.h>
+#import <Foundation/Foundation.h>
 
-#if __has_include(<CPCalendar/CPCalendar-Swift.h>)
-#	import <CPCalendar/CPCalendar-Swift.h>
-#endif
+typedef NS_ENUM (NSInteger, CPCWeekViewStyle) {
+	CPCWeekViewNoStyle NS_SWIFT_NAME(none) = 0,
+	CPCWeekViewShortStyle NS_SWIFT_NAME(short),
+	CPCWeekViewMediumStyle NS_SWIFT_NAME(medium),
+	CPCWeekViewFullStyle NS_SWIFT_NAME(full),
+} NS_REFINED_FOR_SWIFT;

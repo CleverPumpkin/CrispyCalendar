@@ -1,5 +1,5 @@
 //
-//  CPCalendar.h
+//  NSParagraphStyle_convenience.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,10 +21,16 @@
 //  THE SOFTWARE.
 //
 
-#import <CPCalendar/CPCDayCellState.h>
-#import <CPCalendar/CPCViewTitleStyle.h>
-#import <CPCalendar/CPCWeekViewStyle.h>
+import UIKit
 
-#if __has_include(<CPCalendar/CPCalendar-Swift.h>)
-#	import <CPCalendar/CPCalendar-Swift.h>
-#endif
+internal extension NSParagraphStyle {
+	private static func makeCentered (lineBreakMode: NSLineBreakMode) -> NSParagraphStyle {
+		let result = NSMutableParagraphStyle ();
+		result.alignment = .center;
+		result.lineBreakMode = lineBreakMode;
+		return result.copy () as! NSParagraphStyle;
+	}
+	
+	internal static let centeredWithTailTruncation = makeCentered (lineBreakMode: .byTruncatingTail);
+	internal static let centeredWithMiddleTruncation = makeCentered (lineBreakMode: .byTruncatingMiddle);
+}
