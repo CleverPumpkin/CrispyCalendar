@@ -45,7 +45,7 @@ extension CPCCompoundCalendarUnit {
 			return cachedResult;
 		}
 		
-		let calendar = resultingCalendarForOperation (for: self, element);
+		let calendarWrapper = resultingCalendarForOperation (for: self, element), calendar = calendarWrapper.calendar;
 		let startDate = self.start, elementStartDate = element.start;
 		guard calendar.isDate (startDate, equalTo: elementStartDate, toGranularity: Self.representedUnit) else {
 			return nil;

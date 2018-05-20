@@ -23,6 +23,22 @@
 
 import Foundation
 
+internal final class CalendarWrapper: Hashable {
+	internal let calendar: Calendar;
+	
+	internal var hashValue: Int {
+		return self.calendar.hashValue;
+	}
+	
+	internal init (_ calendar: Calendar) {
+		self.calendar = calendar;
+	}
+	
+	internal static func == (lhs: CalendarWrapper, rhs: CalendarWrapper) -> Bool {
+		return (lhs === rhs) || (lhs.calendar == rhs.calendar);
+	}
+}
+
 internal protocol CPCCalendarUnit: CustomStringConvertible, CustomDebugStringConvertible, Strideable, Hashable, CPCDateInterval where Stride == Int {
 	associatedtype UnitBackingType where UnitBackingType: CPCCalendarUnitBackingType;
 	
@@ -31,12 +47,17 @@ internal protocol CPCCalendarUnit: CustomStringConvertible, CustomDebugStringCon
 	static var descriptionDateFormatTemplate: String { get };
 	
 	var calendar: Calendar { get };
+	var calendarWrapper: CalendarWrapper { get };
 	var backingValue: UnitBackingType { get };
 	
-	init (backedBy value: UnitBackingType, calendar: Calendar);
+	init (backedBy value: UnitBackingType, calendar: CalendarWrapper);
 }
 
 extension CPCCalendarUnit {
+	public var calendar: Calendar {
+		return self.calendarWrapper.calendar;
+	}
+	
 	public var start: Date {
 		return self.backingValue.date (using: self.calendar);
 	}
@@ -52,7 +73,7 @@ extension CPCCalendarUnit {
 	public init (containing date: Date, calendar: Calendar) {
 		let startDate = guarantee (calendar.dateInterval (of: Self.representedUnit, for: date)).start;
 		let backingValue = UnitBackingType (date: startDate, calendar: calendar, components: Self.requiredComponents);
-		self.init (backedBy: backingValue, calendar: calendar);
+		self.init (backedBy: backingValue, calendar: CalendarWrapper (calendar));
 	}
 
 	public init (containing date: Date, timeZone: TimeZone, calendar: Calendar) {
@@ -75,9 +96,9 @@ extension CPCCalendarUnit {
 	}
 }
 
-internal func resultingCalendarForOperation <T, U> (for first: T, _ second: U) -> Calendar where T: CPCCalendarUnit, U: CPCCalendarUnit {
-	let calendar = first.calendar;
-	guard second.calendar == calendar else {
+internal func resultingCalendarForOperation <T, U> (for first: T, _ second: U) -> CalendarWrapper where T: CPCCalendarUnit, U: CPCCalendarUnit {
+	let calendar = first.calendarWrapper;
+	guard second.calendarWrapper == calendar else {
 		fatalError ("Cannot decide on resulting calendar for operation on \(T.self) and \(U.self) values: incompatible calendars \(calendar, second.calendar)");
 	}
 	return calendar;
@@ -94,7 +115,7 @@ extension CPCCalendarUnit {
 		}
 		
 		let calendar = resultingCalendarForOperation (for: self, other);
-		let result = UnitBackingType.getDistanceAs (Self.representedUnit, from: self.backingValue, to: other.backingValue, using: calendar);
+		let result = UnitBackingType.getDistanceAs (Self.representedUnit, from: self.backingValue, to: other.backingValue, using: calendar.calendar);
 		self.cacheDistance (result, to: other);
 		return result;
 	}
@@ -104,7 +125,7 @@ extension CPCCalendarUnit {
 			return cachedResult;
 		}
 		
-		let result = Self (backedBy: UnitBackingType.advance (self.backingValue, byAdding: Self.representedUnit, value: n, using: self.calendar), calendar: self.calendar);
+		let result = Self (backedBy: UnitBackingType.advance (self.backingValue, byAdding: Self.representedUnit, value: n, using: self.calendar), calendar: self.calendarWrapper);
 		self.cacheUnitValue (result, advancedBy: n);
 		return result;
 	}

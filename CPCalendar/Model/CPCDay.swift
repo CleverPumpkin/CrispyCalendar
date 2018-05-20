@@ -30,7 +30,6 @@ public struct CPCDay: CPCCalendarUnit {
 	internal static let requiredComponents: Set <Calendar.Component> = [.day, .month, .year];
 	internal static let descriptionDateFormatTemplate = "ddMMyyyy";
 	
-	public let calendar: Calendar;
 	public var year: Int {
 		return self.backingValue.year;
 	}
@@ -41,10 +40,11 @@ public struct CPCDay: CPCCalendarUnit {
 		return self.backingValue.day;
 	}
 	
+	internal let calendarWrapper: CalendarWrapper;
 	internal let backingValue: DayBackingValues;
-	
-	internal init (backedBy value: DayBackingValues, calendar: Calendar) {
-		self.calendar = calendar;
+
+	internal init (backedBy value: DayBackingValues, calendar: CalendarWrapper) {
+		self.calendarWrapper = calendar;
 		self.backingValue = value;
 	}
 }

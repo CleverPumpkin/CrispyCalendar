@@ -31,18 +31,18 @@ public struct CPCYear: CPCCompoundCalendarUnit {
 	internal static let requiredComponents: Set <Calendar.Component> = [.year];
 	internal static let descriptionDateFormatTemplate = "yyyy";
 
-	public let calendar: Calendar;
-	public let year: Int;
+	public var year: Int {
+		return self.backingValue;
+	}
 	internal let smallerUnitRange: Range <Int>;
 
-	internal var backingValue: Int {
-		return self.year;
-	}
+	internal let calendarWrapper: CalendarWrapper;
+	internal let backingValue: Int;
 	
-	internal init (backedBy value: Int, calendar: Calendar) {
-		self.calendar = calendar;
-		self.year = value;
-		self.smallerUnitRange = CPCYear.smallerUnitRange (for: value, using: calendar);
+	internal init (backedBy value: Int, calendar: CalendarWrapper) {
+		self.calendarWrapper = calendar;
+		self.backingValue = value;
+		self.smallerUnitRange = CPCYear.smallerUnitRange (for: value, using: calendar.calendar);
 	}
 }
 

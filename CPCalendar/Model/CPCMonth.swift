@@ -31,7 +31,6 @@ public struct CPCMonth: CPCCompoundCalendarUnit {
 	internal static let requiredComponents: Set <Calendar.Component> = [.month, .year];
 	internal static let descriptionDateFormatTemplate = "LLyyyy";
 
-	public let calendar: Calendar;
 	public var year: Int {
 		return self.backingValue.year;
 	}
@@ -39,13 +38,14 @@ public struct CPCMonth: CPCCompoundCalendarUnit {
 		return self.backingValue.month;
 	}
 	
+	internal let calendarWrapper: CalendarWrapper;
 	internal let smallerUnitRange: Range<Int>;
 	internal let backingValue: MonthBackingValues;
 	
-	internal init (backedBy value: MonthBackingValues, calendar: Calendar) {
-		self.calendar = calendar;
+	internal init (backedBy value: MonthBackingValues, calendar: CalendarWrapper) {
+		self.calendarWrapper = calendar;
 		self.backingValue = value;
-		self.smallerUnitRange = CPCMonth.smallerUnitRange (for: value, using: calendar);
+		self.smallerUnitRange = CPCMonth.smallerUnitRange (for: value, using: calendar.calendar);
 	}
 }
 

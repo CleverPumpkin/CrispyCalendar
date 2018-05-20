@@ -32,23 +32,23 @@ public struct CPCWeek: CPCCompoundCalendarUnit {
 	internal static let requiredComponents: Set <Calendar.Component> = [.weekOfYear, .year];
 	internal static let descriptionDateFormatTemplate = "wddMM";
 
-	public let calendar: Calendar;
 	public let startDate: Date;
 	
 	internal var backingValue: Date {
 		return self.startDate;
 	}
 	
+	internal let calendarWrapper: CalendarWrapper;
 	internal let smallerUnitRange: Range <Int>;
 	
 	internal static func smallerUnitRange (for value: Date, using calendar: Calendar) -> Range <Int> {
 		return guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value));
 	}
 
-	internal init (backedBy value: Date, calendar: Calendar) {
-		self.calendar = calendar;
+	internal init (backedBy value: Date, calendar: CalendarWrapper) {
+		self.calendarWrapper = calendar;
 		self.startDate = value;
-		self.smallerUnitRange = CPCWeek.smallerUnitRange (for: value, using: calendar);
+		self.smallerUnitRange = CPCWeek.smallerUnitRange (for: value, using: calendar.calendar);
 	}
 }
 	

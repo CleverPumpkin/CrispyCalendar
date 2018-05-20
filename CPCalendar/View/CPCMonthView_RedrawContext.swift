@@ -50,16 +50,16 @@ fileprivate extension CGRect {
 
 fileprivate extension DateFormatter {
 	private struct CacheKey: Hashable {
-		private let calendar: Calendar;
+		private let calendarWrapper: CalendarWrapper;
 		private let dateFormat: String;
 		
-		fileprivate init (_ calendar: Calendar, _ dateFormat: String) {
-			self.calendar = calendar;
+		fileprivate init (_ calendarWrapper: CalendarWrapper, _ dateFormat: String) {
+			self.calendarWrapper = calendarWrapper;
 			self.dateFormat = dateFormat;
 		}
 		
 		fileprivate var hashValue: Int {
-			return hashIntegers (self.dateFormat.hashValue, self.calendar.hashValue);
+			return hashIntegers (self.dateFormat.hashValue, self.calendarWrapper.hashValue);
 		}
 	}
 	
@@ -67,7 +67,7 @@ fileprivate extension DateFormatter {
 	
 	private static func availableFormatter (for month: CPCMonth, format: String) -> DateFormatter? {
 		return self.availableFormatters.withMutableStoredValue {
-			let cacheKey = CacheKey (month.calendar, format);
+			let cacheKey = CacheKey (month.calendarWrapper, format);
 			guard var available = $0 [cacheKey], !available.isEmpty else {
 				return nil;
 			}
@@ -93,22 +93,22 @@ fileprivate extension DateFormatter {
 		return self.dequeueFormatter (for: month, format: DateFormatter.dateFormat (fromTemplate: template, options: 0, locale: month.calendar.locale) ?? template);
 	}
 	
-	fileprivate static func makeReusable (_ formatters: [DateFormatter]) {
+	fileprivate static func makeReusable (_ formatters: [DateFormatter], wrapper: CalendarWrapper) {
 		DateFormatter.availableFormatters.withMutableStoredValue {
 			for formatter in formatters {
-				formatter.makeReusableUnlocked (&$0);
+				formatter.makeReusableUnlocked (&$0, wrapper: wrapper);
 			}
 		};
 	}
 
-	fileprivate func makeReusable () {
+	fileprivate func makeReusable (wrapper: CalendarWrapper) {
 		DateFormatter.availableFormatters.withMutableStoredValue {
-			self.makeReusableUnlocked (&$0);
+			self.makeReusableUnlocked (&$0, wrapper: wrapper);
 		};
 	}
 	
-	private func makeReusableUnlocked (_ cache: inout [CacheKey: [DateFormatter]]) {
-		let cacheKey = CacheKey (self.calendar, self.dateFormat), value = [self];
+	private func makeReusableUnlocked (_ cache: inout [CacheKey: [DateFormatter]], wrapper: CalendarWrapper) {
+		let cacheKey = CacheKey (wrapper, self.dateFormat), value = [self];
 		if let formatters = cache [cacheKey] {
 			cache [cacheKey] = formatters + value;
 		} else {
@@ -127,7 +127,7 @@ internal extension CPCMonthView {
 	internal typealias RedrawContext = CPCMonthViewRedrawContext;
 	
 	fileprivate struct TitleRedrawContext {
-		private let month: CPCMonth;
+		fileprivate let month: CPCMonth;
 		private let formatter: DateFormatter;
 		private let titleFrame: CGRect;
 		private let titleContentFrame: CGRect;
@@ -137,7 +137,7 @@ internal extension CPCMonthView {
 	fileprivate struct GridRedrawContext {
 		private typealias AffectedIndices = (affected: CellIndices, highlighted: CellIndex?, selected: CellIndices?);
 		
-		private let month: CPCMonth;
+		fileprivate let month: CPCMonth;
 		private let layout: Layout;
 		private let cellIndices: AffectedIndices;
 		private let dayFormatter: DateFormatter;
@@ -158,6 +158,7 @@ internal extension CPCMonthView {
 
 private protocol CPCMonthViewRedrawContextImpl: CPCMonthViewRedrawContext {
 	var reusableFormatters: [DateFormatter] { get };
+	var month: CPCMonth { get };
 	
 	init? (redrawing rect: CGRect, in view: CPCMonthView);
 	func run (context: CGContext);
@@ -169,7 +170,7 @@ extension CPCMonthViewRedrawContextImpl {
 			return;
 		}
 		self.run (context: context);
-		DateFormatter.makeReusable (self.reusableFormatters);
+		DateFormatter.makeReusable (self.reusableFormatters, wrapper: self.month.calendarWrapper);
 	}
 }
 
