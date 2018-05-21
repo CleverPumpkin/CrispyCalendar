@@ -85,6 +85,12 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
+	open var cellRenderer: CPCDayCellRenderer = CPCDefaultDayCellRenderer () {
+		didSet {
+			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
+		}
+	}
+	
 	internal var layout: Layout? {
 		if let info = self.layoutStorage, info.isValid (for: self) {
 			return info;
@@ -186,6 +192,10 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 			return .zero;
 		}
 		return self.sizeThatFits (size, attributes: attributes);
+	}
+	
+	public func setDefaultCellRendeder () {
+		self.cellRenderer = CPCDefaultDayCellRenderer ();
 	}
 
 	open override func draw (_ rect: CGRect) {

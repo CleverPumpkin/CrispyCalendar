@@ -59,6 +59,11 @@ extension CPCCalendarView: CPCViewProtocol {
 		set { self.contentView.separatorColor = newValue }
 	}
 	
+	open var cellRenderer: CellRenderer {
+		get { return self.contentView.cellRenderer }
+		set { self.contentView.cellRenderer = newValue }
+	}
+	
 	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
 		return self.contentView.dayCellBackgroundColor (for: state);
 	}

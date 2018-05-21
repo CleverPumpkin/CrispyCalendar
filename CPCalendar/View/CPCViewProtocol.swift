@@ -42,6 +42,7 @@ public protocol CPCViewProtocol: AnyObject {
 	typealias TitleStyle = CPCViewTitleStyle;
 	typealias DayCellState = CPCDayCellState;
 	typealias Selection = CPCViewSelection;
+	typealias CellRenderer = CPCDayCellRenderer;
 	
 	var titleFont: UIFont { get set };
 	var titleColor: UIColor { get set };
@@ -51,6 +52,7 @@ public protocol CPCViewProtocol: AnyObject {
 	var dayCellTextColor: UIColor { get set };
 	var separatorColor: UIColor { get set };
 	var selection: Selection { get set };
+	var cellRenderer: CellRenderer { get set };
 
 	func dayCellBackgroundColor (for state: DayCellState) -> UIColor?;
 	func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState);

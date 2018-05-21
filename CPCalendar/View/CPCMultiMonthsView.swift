@@ -79,6 +79,12 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 		}
 	}
 	
+	open var cellRenderer: CellRenderer = CPCDefaultDayCellRenderer () {
+		didSet {
+			self.updateManagedMonthViews { $0.cellRenderer = self.cellRenderer };
+		}
+	}
+
 	open var adjustsFontForContentSizeCategory = false {
 		didSet {
 			self.updateManagedMonthViews { $0.adjustsFontForContentSizeCategory = self.adjustsFontForContentSizeCategory };
@@ -119,6 +125,7 @@ extension CPCMultiMonthsView {
 			self.monthViews.insert (monthView, at: index);
 		}
 		monthView.copyStyle (from: self);
+		monthView.cellRenderer = self.cellRenderer;
 		monthView.selectionHandler = self.selectionHandler (for: monthView);
 		monthView.adjustsFontForContentSizeCategory = self.adjustsFontForContentSizeCategory;
 		monthView.setNeedsDisplay ();

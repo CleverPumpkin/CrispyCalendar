@@ -145,6 +145,7 @@ internal extension CPCMonthView {
 		private let cellTitleHeight: CGFloat;
 		private let cellTitleAttributes: [NSAttributedStringKey: Any];
 		private let cellBackgroundColors: DayCellStateBackgroundColors;
+		private let cellRenderer: CPCDayCellRenderer;
 	}
 
 	internal func titleRedrawContext (_ rect: CGRect) -> RedrawContext? {
@@ -213,6 +214,41 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 	private typealias DayCellState = CPCMonthView.DayCellState;
 	private typealias GridRedrawContext = CPCMonthView.GridRedrawContext;
 	
+	private struct DayCellRenderingContext: CPCDayCellRenderingContext {
+		fileprivate let graphicsContext: CGContext;
+		fileprivate let day: CPCDay;
+
+		fileprivate var state: CPCDayCellState {
+			return self.parent.dayCellState (for: self.day, at: self.cellIndex);
+		}
+		fileprivate var backgroundColor: UIColor? {
+			return self.parent.cellBackgroundColors [effective: self.state];
+		}
+		fileprivate var frame: CGRect {
+			return self.parent.layout.cellFrames [self.cellIndex];
+		}
+		fileprivate var title: String {
+			return self.parent.dayFormatter.string (from: self.day.start);
+		}
+		fileprivate var titleAttributes: [NSAttributedStringKey: Any] {
+			return self.parent.cellTitleAttributes;
+		}
+		fileprivate var titleFrame: CGRect {
+			let frame = self.frame, halfSeparatorWidth = self.parent.layout.separatorWidth / 2.0;
+			return frame.insetBy (dx: halfSeparatorWidth, dy: max (halfSeparatorWidth, (frame.height - self.parent.cellTitleHeight) / 2.0));
+		}
+
+		private let parent: GridRedrawContext;
+		private let cellIndex: CellIndex;
+		
+		fileprivate init (_ parent: GridRedrawContext, cellIndex: CellIndex, graphicsContext: CGContext) {
+			self.parent = parent;
+			self.cellIndex = cellIndex;
+			self.graphicsContext = graphicsContext;
+			self.day = parent.month [ordinal: cellIndex.row] [ordinal: cellIndex.column];
+		}
+	}
+	
 	private static func calculateAffectedIndices (of view: CPCMonthView, in rect: CGRect, for month: CPCMonth, using layout: Layout) -> AffectedIndices? {
 		let rect = rect.intersection (layout.gridFrame);
 		guard
@@ -253,6 +289,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.month = month;
 		self.layout = layout;
 		self.cellIndices = indices;
+		self.cellRenderer = view.cellRenderer;
 		self.separatorColor = view.separatorColor;
 		self.cellBackgroundColors = view.cellBackgroundColors;
 
@@ -293,7 +330,8 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 			ctx.fill (frame);
 		}
 		for index in self.cellIndices.affected {
-			self.drawDayCellContent (at: index, in: ctx);
+			let renderingContext = DayCellRenderingContext.init (self, cellIndex: index, graphicsContext: ctx);
+			self.cellRenderer.drawCell (in: renderingContext);
 		}
 		
 		let verticalSeparatorIndexes = layout.verticalSeparatorIndexes (for: allIndices.columns), horizontalSeparatorIndexes = layout.horizontalSeparatorIndexes (for: allIndices.rows);
@@ -311,26 +349,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		ctx.setLineWidth (layout.separatorWidth);
 		ctx.strokeLineSegments (between: separatorPoints);
 	}
-	
-	private func drawDayCellContent (at index: CellIndex, in context: CGContext) {
-		let day = self.month [ordinal: index.row] [ordinal: index.column];
-		let state = self.dayCellState (for: day, at: index), frame = self.layout.cellFrames [index];
 
-		if state != .normal, let backgroundColor = self.cellBackgroundColors [effective: state] {
-			context.setFillColor (backgroundColor.cgColor);
-			context.fill (frame);
-		}
-		
-		let dayString = NSAttributedString (string: self.dayFormatter.string (from: day.start), attributes: self.cellTitleAttributes);
-		let separatorWidth = self.layout.separatorWidth;
-		dayString.draw (in: CGRect (
-			x: frame.minX + separatorWidth / 2.0,
-			y: frame.midY - self.cellTitleHeight / 2.0,
-			width: frame.width - separatorWidth,
-			height: self.cellTitleHeight
-		));
-	}
-	
 	private func dayCellState (for day: CPCDay, at index: CellIndex) -> DayCellState {
 		if let selectedIndices = self.cellIndices.selected, selectedIndices.contains (index) {
 			return .selected;

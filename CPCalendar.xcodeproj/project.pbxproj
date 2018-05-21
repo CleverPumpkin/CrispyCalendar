@@ -41,6 +41,8 @@
 		4314536F20B220AB0019EB01 /* NSParagraphStyle_convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4314536E20B220AB0019EB01 /* NSParagraphStyle_convenience.swift */; };
 		4314537120B226F40019EB01 /* CPCFontMetrics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4314537020B226F40019EB01 /* CPCFontMetrics.swift */; };
 		4314537320B22B340019EB01 /* CPCViewContentAdjusting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4314537220B22B340019EB01 /* CPCViewContentAdjusting.swift */; };
+		4315019620B2A74600BD1186 /* CPCDayCellRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4315019520B2A74600BD1186 /* CPCDayCellRenderer.swift */; };
+		4315019720B2A74600BD1186 /* CPCDayCellRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4315019520B2A74600BD1186 /* CPCDayCellRenderer.swift */; };
 		4318950220A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4318950120A9B77900D29AA8 /* CPCCalendarUnitCaching.swift */; };
 		4318950320A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4318950120A9B77900D29AA8 /* CPCCalendarUnitCaching.swift */; };
 		4318950520AC80DE00D29AA8 /* CPCViewSelectionHandling.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4318950420AC80DE00D29AA8 /* CPCViewSelectionHandling.swift */; };
@@ -118,6 +120,7 @@
 		4314536E20B220AB0019EB01 /* NSParagraphStyle_convenience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSParagraphStyle_convenience.swift; sourceTree = "<group>"; };
 		4314537020B226F40019EB01 /* CPCFontMetrics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCFontMetrics.swift; sourceTree = "<group>"; };
 		4314537220B22B340019EB01 /* CPCViewContentAdjusting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCViewContentAdjusting.swift; sourceTree = "<group>"; };
+		4315019520B2A74600BD1186 /* CPCDayCellRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCDayCellRenderer.swift; sourceTree = "<group>"; };
 		4318950120A9B77900D29AA8 /* CPCCalendarUnitCaching.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarUnitCaching.swift; sourceTree = "<group>"; };
 		4318950420AC80DE00D29AA8 /* CPCViewSelectionHandling.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCViewSelectionHandling.swift; sourceTree = "<group>"; };
 		4318950620AC80F200D29AA8 /* RangeExpressionUnwrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeExpressionUnwrap.swift; sourceTree = "<group>"; };
@@ -245,6 +248,7 @@
 			children = (
 				43689DC920937AF200052C7A /* CPCDayCellState.h */,
 				436F53BE20A4DA1800ACE40A /* CPCDayCellState.swift */,
+				4315019520B2A74600BD1186 /* CPCDayCellRenderer.swift */,
 				4314535520AEEEBD0019EB01 /* CPCViewTitleStyle.h */,
 				4314535220AEEEAC0019EB01 /* CPCViewTitleStyle.m */,
 				4314535620AEF0200019EB01 /* CPCViewTitleStyle.swift */,
@@ -380,6 +384,7 @@
 				43B6E72120A0615400A7403B /* ThreadsafeStorage.swift in Sources */,
 				43584B1120A4F18E00035A81 /* FloatingPointRounding.swift in Sources */,
 				43101B93209CDFBD00904529 /* GridIndices.swift in Sources */,
+				4315019620B2A74600BD1186 /* CPCDayCellRenderer.swift in Sources */,
 				4318950720AC80F200D29AA8 /* RangeExpressionUnwrap.swift in Sources */,
 				4314537120B226F40019EB01 /* CPCFontMetrics.swift in Sources */,
 				430492AD2094B54000A4F1F1 /* RangeExpressionInitialization.swift in Sources */,
@@ -446,6 +451,7 @@
 				4314535B20AEF0980019EB01 /* CPCViewSelection.swift in Sources */,
 				43584B1420A4F1B500035A81 /* CPCViewProtocol.swift in Sources */,
 				4314535120AEEE7F0019EB01 /* CPCViewProtocol_ObjCSupport.swift in Sources */,
+				4315019720B2A74600BD1186 /* CPCDayCellRenderer.swift in Sources */,
 				4314535E20AEFB640019EB01 /* CPCViewSelectionConvenience.swift in Sources */,
 				4314536220AF29BC0019EB01 /* CPCViewMeasuring.swift in Sources */,
 				4314535F20AEFB640019EB01 /* CPCViewSelectionHandling.swift in Sources */,
