@@ -245,14 +245,14 @@ extension CPCCalendarView.ScrollViewController {
 	
 	private func updatePresentedPageIndexIfNeeded (offset: CGFloat, offsetDiff: CGFloat) {
 		let scrollView = self.calendarView.scrollView, boundsHeight = scrollView.bounds.height, columnHeight = self.columnSize.height;
-		if ((offset < boundsHeight) && (offsetDiff < -1e-3)) {
+		if ((offset < 0.0) && (offsetDiff < -1e-3)) {
 			self.presentedPageIndex -= 1;
 			self.prevOffset = offset + columnHeight - boundsHeight;
-		} else if ((offset > columnHeight - 2 * boundsHeight) && (offsetDiff > 1e-3)) {
+		} else if ((offset > columnHeight - boundsHeight) && (offsetDiff > 1e-3)) {
 			self.presentedPageIndex += 1;
 			self.prevOffset = offset - columnHeight + boundsHeight;
 		} else {
-			return;
+			return self.startMonthViewUpdatesWhereNeeded ();
 		}
 		
 		scrollView.contentOffset.y = self.prevOffset;
@@ -272,6 +272,7 @@ extension CPCCalendarView.ScrollViewController {
 	private func reloadMonthViews () {
 		let contentView = self.calendarView.contentView, monthViews = contentView.monthViews;
 		for monthView in monthViews {
+			monthView.contentsUpdatesPaused = true;
 			contentView.removeMonthView (monthView);
 		}
 		self.reusableMonthViews.append (contentsOf: monthViews);
@@ -284,6 +285,16 @@ extension CPCCalendarView.ScrollViewController {
 				contentView.addMonthView (monthView);
 			}
 		}
+		self.startMonthViewUpdatesWhereNeeded ();
+	}
+	
+	private func startMonthViewUpdatesWhereNeeded () {
+		let calendarView = self.calendarView, monthViews = calendarView.contentView.monthViews;
+		for monthView in monthViews {
+			if (calendarView.convert (monthView.bounds, from: monthView).intersects (calendarView.bounds)) {
+				monthView.contentsUpdatesPaused = false;
+			}
+		}
 	}
 	
 	private func precalculateNextPageIfNeeed () {
@@ -292,43 +303,58 @@ extension CPCCalendarView.ScrollViewController {
 		}
 		
 		let currentPage = self.presentedPageIndex, maxPages = ScrollViewController.maxPrecalculatedPages, currentOffset = self.calendarView.scrollView.contentOffset.y;
-		let pagesSkew = ((currentOffset > self.prevOffset) ? 1 : ((currentOffset < self.prevOffset) ? -1 : 0));
-		for i in 1 ... maxPages {
-			let workItems = [
-				self.ensurePageCalculated (currentPage + pagesSkew + i),
-				self.ensurePageCalculated (currentPage + 2 * pagesSkew + i),
-				self.ensurePageCalculated (currentPage - (pagesSkew + i)),
-			].compactMap { $0 };
-			
-			let queue = ScrollViewController.sharedQueue;
-			if let first = workItems.first {
-				queue.async (execute: first);
-				for j in 1 ..< workItems.count {
-					workItems [j - 1].notify (queue: queue, execute: workItems [j]);
+		let alreadyCalculated = self.layout.calculatedPageIndexes, desiredPages: [[Int]];
+		if (currentOffset > self.prevOffset) {
+			desiredPages = [
+				(currentPage + maxPages >= alreadyCalculated.upperBound) ? Array (alreadyCalculated.upperBound ... currentPage + maxPages) : [],
+				(currentPage - maxPages < alreadyCalculated.lowerBound - 1) ? Array (stride (from: alreadyCalculated.lowerBound - 1, to: currentPage - maxPages, by: -1)) : [],
+			];
+		} else if (currentOffset < self.prevOffset) {
+			desiredPages = [
+				(currentPage - maxPages < alreadyCalculated.lowerBound) ? Array (stride (from: alreadyCalculated.lowerBound - 1, through: currentPage - maxPages, by: -1)) : [],
+				(currentPage + maxPages >= alreadyCalculated.upperBound) ? Array (alreadyCalculated.upperBound ..< currentPage + maxPages) : [],
+			];
+		} else {
+			desiredPages = [
+				(currentPage + maxPages >= alreadyCalculated.upperBound) ? Array (alreadyCalculated.upperBound ..< currentPage + maxPages) : [],
+				(currentPage - maxPages < alreadyCalculated.lowerBound) ? Array (stride (from: alreadyCalculated.lowerBound - 1, to: currentPage - maxPages, by: -1)) : [],
+			];
+		}
+		
+		let queue = ScrollViewController.sharedQueue;
+		self.pendingPageCalculations.withMutableStoredValue {
+			for pagesSubsequence in desiredPages where !pagesSubsequence.isEmpty {
+				var prevItem: DispatchWorkItem?;
+				for pageIdx in 0 ..< pagesSubsequence.count {
+					let page = pagesSubsequence [pageIdx];
+					guard !$0.keys.contains (page) else {
+						continue;
+					}
+					
+					let workItem = DispatchWorkItem { [weak self] in
+						self?.layout.ensurePageCalculated (page);
+						self?.completePageCalculation (page);
+					};
+					$0 [page] = workItem;
+					
+					if let prevItem = prevItem {
+						prevItem.notify (queue: queue, execute: workItem);
+					} else if let executingItem = $0 [page - 1] {
+						executingItem.notify (queue: queue, execute: workItem);
+					} else {
+						queue.async (execute: workItem);
+					}
+					prevItem = workItem;
 				}
 			}
-		}
-	}
-	
-	private func ensurePageCalculated (_ index: Int) -> DispatchWorkItem? {
-		return self.pendingPageCalculations.withMutableStoredValue {
-			if $0.keys.contains (index) {
-				return nil;
-			}
-			
-			let result = DispatchWorkItem { [weak self] in
-				self?.layout.ensurePageCalculated (index);
-				self?.completePageCalculation (index);
-			};
-			$0 [index] = result;
-			return result;
-		}
+		};
 	}
 	
 	private func completePageCalculation (_ index: Int) {
 		self.pendingPageCalculations.withMutableStoredValue {
 			$0 [index] = nil;
-		}
+		};
+		self.precalculateNextPageIfNeeed ();
 	}
 }
 
@@ -338,6 +364,10 @@ extension CPCCalendarView.ScrollViewController.Layout {
 	
 	fileprivate struct Page {
 		private let rows: [Row];
+	}
+			
+	fileprivate var calculatedPageIndexes: CountableRange <Int> {
+		return self.firstPageIndex ..< (self.firstPageIndex + self.calculatedPages.count);
 	}
 	
 	fileprivate init (controller: CPCCalendarView.ScrollViewController) {

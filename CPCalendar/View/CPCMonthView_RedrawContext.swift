@@ -144,8 +144,8 @@ internal extension CPCMonthView {
 		private let separatorColor: UIColor;
 		private let cellTitleHeight: CGFloat;
 		private let cellTitleAttributes: [NSAttributedStringKey: Any];
-		private let cellBackgroundColors: DayCellStateBackgroundColors;
-		private let cellRenderer: CPCDayCellRenderer;
+		private let cellRenderer: CellRenderer;
+		private let cellBackgroundColorGetter: (DayCellState) -> UIColor?;
 	}
 
 	internal func titleRedrawContext (_ rect: CGRect) -> RedrawContext? {
@@ -208,6 +208,21 @@ extension CPCMonthView.TitleRedrawContext: CPCMonthViewRedrawContextImpl {
 	}
 }
 
+fileprivate extension CPCDayCellState {
+	fileprivate var parent: CPCDayCellState? {
+		if self.isToday {
+			return CPCDayCellState (backgroundState: self.backgroundState, isToday: false);
+		}
+		
+		switch (self.backgroundState) {
+		case .selected, .highlighted:
+			return CPCDayCellState (backgroundState: .normal, isToday: false);
+		case .normal:
+			return nil;
+		}
+	}
+}
+
 extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 	private typealias Layout = CPCMonthView.Layout;
 	private typealias CellIndex = CPCMonthView.CellIndex;
@@ -222,7 +237,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 			return self.parent.dayCellState (for: self.day, at: self.cellIndex);
 		}
 		fileprivate var backgroundColor: UIColor? {
-			return self.parent.cellBackgroundColors [effective: self.state];
+			return self.parent.effectiveBackgroundColor (state: self.state);
 		}
 		fileprivate var frame: CGRect {
 			return self.parent.layout.cellFrames [self.cellIndex];
@@ -268,7 +283,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		}
 		
 		let selection = view.selection;
-		let selected = affected.indices { selection.isDaySelected (month [ordinal: $0.row] [ordinal: $0.column]) };
+		let selected = (selection.clamped (to: month).isEmpty ? nil : affected.indices { selection.isDaySelected (month [ordinal: $0.row] [ordinal: $0.column]) });
 
 		return (affected: affected, highlighted: highlighted, selected: selected);
 	}
@@ -291,7 +306,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.cellIndices = indices;
 		self.cellRenderer = view.cellRenderer;
 		self.separatorColor = view.separatorColor;
-		self.cellBackgroundColors = view.cellBackgroundColors;
+		self.cellBackgroundColorGetter = view.dayCellBackgroundColor;
 
 		self.dayFormatter = DateFormatter.dequeueFormatter (for: month, dateFormatTemplate: "d");
 		self.cellTitleHeight = dayCellFont.lineHeight.rounded (.up, scale: layout.separatorWidth);
@@ -325,7 +340,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		}
 		ctx.clip (using: .evenOdd);
 		
-		if let normalBackgroundColor = self.cellBackgroundColors [effective: .normal] {
+		if let normalBackgroundColor = self.effectiveBackgroundColor (state: .normal) {
 			ctx.setFillColor (normalBackgroundColor.cgColor);
 			ctx.fill (frame);
 		}
@@ -348,6 +363,15 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		ctx.setStrokeColor (self.separatorColor.cgColor);
 		ctx.setLineWidth (layout.separatorWidth);
 		ctx.strokeLineSegments (between: separatorPoints);
+	}
+	
+	private func effectiveBackgroundColor (state: DayCellState) -> UIColor? {
+		for state in sequence (first: state, next: { $0.parent }) {
+			if let result = self.cellBackgroundColorGetter (state) {
+				return result;
+			}
+		}
+		return nil;
 	}
 
 	private func dayCellState (for day: CPCDay, at index: CellIndex) -> DayCellState {

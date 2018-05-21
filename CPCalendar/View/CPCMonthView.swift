@@ -48,45 +48,77 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
-	@IBInspectable open var titleFont = UIFont.defaultMonthTitle {
-		didSet {
+	@IBInspectable open var titleFont: UIFont {
+		get {
+			return self.appearanceStorage.titleFont;
+		}
+		set {
+			self.appearanceStorage.titleFont = newValue;
 			self.effectiveTitleFont = self.scaledFont (self.titleFont, using: CPCMonthView.titleMetrics);
 		}
 	}
-	@IBInspectable open var titleColor = UIColor.defaultMonthTitle {
-		didSet {
+	@IBInspectable open var titleColor: UIColor {
+		get {
+			return self.appearanceStorage.titleColor;
+		}
+		set {
+			self.appearanceStorage.titleColor = newValue;
 			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
 		}
 	}
-	open var titleStyle = TitleStyle.default {
-		didSet {
+	open var titleStyle: TitleStyle {
+		get {
+			return self.appearanceStorage.titleStyle;
+		}
+		set {
+			self.appearanceStorage.titleStyle = newValue;
 			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
 		}
 	}
-	@IBInspectable open var titleMargins = UIEdgeInsets.defaultMonthTitle {
-		didSet {
+	@IBInspectable open var titleMargins: UIEdgeInsets {
+		get {
+			return self.appearanceStorage.titleMargins;
+		}
+		set {
+			self.appearanceStorage.titleMargins = newValue;
 			self.effectiveTitleMargins = self.scaledInsets (self.titleMargins, using: CPCMonthView.titleMetrics);
 		}
 	}
 	
-	@IBInspectable open var dayCellFont = UIFont.defaultDayCellText {
-		didSet {
+	@IBInspectable open var dayCellFont: UIFont {
+		get {
+			return self.appearanceStorage.dayCellFont;
+		}
+		set {
+			self.appearanceStorage.dayCellFont = newValue;
 			self.effectiveDayCellFont = self.scaledFont (self.dayCellFont, using: CPCMonthView.dayCellTextMetrics);
 		}
 	}
-	@IBInspectable open var dayCellTextColor = UIColor.defaultDayCellText {
-		didSet {
+	@IBInspectable open var dayCellTextColor: UIColor {
+		get {
+			return self.appearanceStorage.dayCellTextColor;
+		}
+		set {
+			self.appearanceStorage.dayCellTextColor = newValue;
 			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
 		}
 	}
-	@IBInspectable open var separatorColor = UIColor.defaultSeparator {
-		didSet {
+	@IBInspectable open var separatorColor: UIColor {
+		get {
+			return self.appearanceStorage.separatorColor;
+		}
+		set {
+			self.appearanceStorage.separatorColor = newValue;
 			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
 		}
 	}
 	
-	open var cellRenderer: CPCDayCellRenderer = CPCDefaultDayCellRenderer () {
-		didSet {
+	open var cellRenderer: CPCDayCellRenderer {
+		get {
+			return self.appearanceStorage.cellRenderer;
+		}
+		set {
+			self.appearanceStorage.cellRenderer = newValue;
 			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
 		}
 	}
@@ -106,7 +138,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
-	internal var effectiveTitleFont = UIFont.defaultMonthTitle {
+	internal var effectiveTitleFont: UIFont {
 		didSet {
 			guard (oldValue.lineHeight != self.effectiveTitleFont.lineHeight) else {
 				return self.setNeedsFullAppearanceUpdate ();
@@ -114,7 +146,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
 		}
 	}
-	internal var effectiveTitleMargins = UIEdgeInsets.defaultMonthTitle {
+	internal var effectiveTitleMargins: UIEdgeInsets {
 		didSet {
 			guard (oldValue.top + oldValue.bottom) == (self.effectiveTitleMargins.top + self.effectiveTitleMargins.bottom) else {
 				return self.setNeedsFullAppearanceUpdate ();
@@ -122,14 +154,32 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
 		}
 	}
-	internal var effectiveDayCellFont = UIFont.defaultDayCellText {
+	internal var effectiveDayCellFont: UIFont {
 		didSet {
 			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
 		}
 	}
 	
+	internal var contentsUpdatesPaused: Bool {
+		get {
+			return self.postponedUpdatesFrame != nil;
+		}
+		set {
+			switch (self.postponedUpdatesFrame, newValue) {
+			case (nil, true):
+				self.postponedUpdatesFrame = .null;
+			case (.some (let frame), false):
+				self.postponedUpdatesFrame = nil;
+				if (!(frame.isNull || frame.isEmpty)) {
+					self.setNeedsDisplay (frame);
+				}
+			default:
+				break;
+			}
+		}
+	}
 	internal var contentSizeCategoryObserver: NSObjectProtocol?;
-	internal var cellBackgroundColors = DayCellStateBackgroundColors ();
+	internal var appearanceStorage: AppearanceStorage;
 	internal var highlightedDayIndex: CellIndex? {
 		didSet {
 			self.highlightedDayIndexDidChange (oldValue: oldValue);
@@ -137,10 +187,18 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 	
 	private var layoutStorage: Layout?;
+	private var postponedUpdatesFrame: CGRect?;
 	private unowned var aspectRatioConstraint: NSLayoutConstraint;
 	
 	public override init (frame: CGRect) {
 		self.aspectRatioConstraint = .placeholder;
+		
+		let appearanceStorage = AppearanceStorage ();
+		self.effectiveTitleFont = appearanceStorage.titleFont;
+		self.effectiveTitleMargins = appearanceStorage.titleMargins;
+		self.effectiveDayCellFont = appearanceStorage.dayCellFont;
+		self.appearanceStorage = appearanceStorage;
+		
 		super.init (frame: frame);
 		self.commonInit ();
 	}
@@ -156,6 +214,13 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	public required init? (coder aDecoder: NSCoder) {
 		self.aspectRatioConstraint = .placeholder;
+
+		let appearanceStorage = AppearanceStorage ();
+		self.effectiveTitleFont = appearanceStorage.titleFont;
+		self.effectiveTitleMargins = appearanceStorage.titleMargins;
+		self.effectiveDayCellFont = appearanceStorage.dayCellFont;
+		self.appearanceStorage = appearanceStorage;
+
 		super.init (coder: aDecoder);
 		self.commonInit ();
 	}
@@ -169,6 +234,24 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	deinit {
 		if let contentSizeCategoryObserver = self.contentSizeCategoryObserver {
 			NotificationCenter.default.removeObserver (contentSizeCategoryObserver);
+		}
+	}
+	
+	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
+		return self.appearanceStorage.cellBackgroundColors [state];
+	}
+	
+	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
+		self.appearanceStorage.cellBackgroundColors [state] = backgroundColor;
+		
+		switch (state.backgroundState) {
+		case .highlighted:
+			guard let highlightedIdx = self.highlightedDayIndex, let layout = self.layout else {
+				return;
+			}
+			self.setNeedsDisplay (layout.cellFrames [highlightedIdx]);
+		default:
+			self.setNeedsDisplay ();
 		}
 	}
 
@@ -197,8 +280,20 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	public func setDefaultCellRendeder () {
 		self.cellRenderer = CPCDefaultDayCellRenderer ();
 	}
+	
+	open override func setNeedsDisplay (_ rect: CGRect) {
+		if let postponedUpdatesFrame = self.postponedUpdatesFrame {
+			return self.postponedUpdatesFrame = (postponedUpdatesFrame.isNull ? rect : rect.union (postponedUpdatesFrame));
+		}
+		
+		super.setNeedsDisplay (rect);
+	}
 
 	open override func draw (_ rect: CGRect) {
+		if let postponedUpdatesFrame = self.postponedUpdatesFrame {
+			return self.postponedUpdatesFrame = (postponedUpdatesFrame.isNull ? rect : rect.union (postponedUpdatesFrame));
+		}
+
 		super.draw (rect);
 		
 		self.titleRedrawContext (rect)?.run ();
@@ -267,21 +362,7 @@ extension CPCMonthView: CPCViewContentAdjusting {
 	}
 }
 
-extension CPCMonthView: CPCViewDayCellBackgroundColorsStorage {
-	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
-		self.cellBackgroundColors [state] = backgroundColor;
-		
-		switch (state.backgroundState) {
-		case .highlighted:
-			guard let highlightedIdx = self.highlightedDayIndex, let layout = self.layout else {
-				return;
-			}
-			self.setNeedsDisplay (layout.cellFrames [highlightedIdx]);
-		default:
-			self.setNeedsDisplay ();
-		}
-	}
-}
+extension CPCMonthView: CPCViewBackedByAppearanceStorage {}
 
 extension CPCMonthView: CPCViewDelegatingSelectionHandling {
 	public typealias SelectionDelegateType = CPCMonthViewSelectionDelegate;

@@ -53,7 +53,7 @@ private final class CPCCalendarUnitElementsCache {
 	private typealias UnitSpecificCacheProtocol = CPCCalendarUnitSpecificCacheProtocol;
 	
 	fileprivate class UnitSpecificCacheBase <Unit>: UnitSpecificCacheProtocol where Unit: CPCCalendarUnit {
-		private struct UnusedItemsPurgingCache <Key, Value>: CPCUnusedItemsPurgingCacheProtocol where Key: Hashable {
+		private final class UnusedItemsPurgingCache <Key, Value>: CPCUnusedItemsPurgingCacheProtocol where Key: Hashable {
 			fileprivate typealias KeyType = Key;
 			fileprivate typealias ValueType = Value;
 			
@@ -75,7 +75,7 @@ private final class CPCCalendarUnitElementsCache {
 			fileprivate init () {}
 			
 			fileprivate subscript (key: Key) -> Value? {
-				mutating get {
+				get {
 					guard let value = self.values [key] else {
 						return nil;
 					}
@@ -92,7 +92,7 @@ private final class CPCCalendarUnitElementsCache {
 				}
 			}
 			
-			fileprivate mutating func purge (factor: Double) {
+			fileprivate func purge (factor: Double) {
 				guard let maxUsageCount = self.values.max (by: { $0.value.usageCount < $1.value.usageCount })?.value.usageCount else {
 					return;
 				}

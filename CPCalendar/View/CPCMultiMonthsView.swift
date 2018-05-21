@@ -36,52 +36,79 @@ public protocol CPCMultiMonthsViewSelectionDelegate: AnyObject {
 	func multiMonthView (_ multiMonthView: CPCMultiMonthsView, shouldDeselect day: CPCDay) -> Bool;
 }
 
-open class CPCMultiMonthsView: UIView, CPCViewProtocol {
-	@IBInspectable open var titleFont = UIFont.defaultMonthTitle {
-		didSet {
-			self.updateManagedMonthViews { $0.titleFont = self.titleFont };
+open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanceStorage {
+	@IBInspectable open var titleFont: UIFont {
+		get {
+			return self.appearanceStorage.titleFont;
+		}
+		set {
+			self.appearanceStorage.titleFont = newValue;
+			self.updateManagedMonthViews { $0.titleFont = newValue };
+		}
+	}
+	@IBInspectable open var titleColor: UIColor {
+		get {
+			return self.appearanceStorage.titleColor;
+		}
+		set {
+			self.appearanceStorage.titleColor = newValue;
+			self.updateManagedMonthViews { $0.titleColor = newValue };
+		}
+	}
+	open var titleStyle: TitleStyle {
+		get {
+			return self.appearanceStorage.titleStyle;
+		}
+		set {
+			self.appearanceStorage.titleStyle = newValue;
+			self.updateManagedMonthViews { $0.titleStyle = newValue };
+		}
+	}
+	@IBInspectable open var titleMargins: UIEdgeInsets {
+		get {
+			return self.appearanceStorage.titleMargins;
+		}
+		set {
+			self.appearanceStorage.titleMargins = newValue;
+			self.updateManagedMonthViews { $0.titleMargins = newValue };
 		}
 	}
 	
-	@IBInspectable open var titleColor = UIColor.defaultMonthTitle {
-		didSet {
-			self.updateManagedMonthViews { $0.titleColor = self.titleColor };
+	@IBInspectable open var dayCellFont: UIFont {
+		get {
+			return self.appearanceStorage.dayCellFont;
+		}
+		set {
+			self.appearanceStorage.dayCellFont = newValue;
+			self.updateManagedMonthViews { $0.dayCellFont = newValue };
+		}
+	}
+	@IBInspectable open var dayCellTextColor: UIColor {
+		get {
+			return self.appearanceStorage.dayCellTextColor;
+		}
+		set {
+			self.appearanceStorage.dayCellTextColor = newValue;
+			self.updateManagedMonthViews { $0.dayCellTextColor = newValue };
+		}
+	}
+	@IBInspectable open var separatorColor: UIColor {
+		get {
+			return self.appearanceStorage.separatorColor;
+		}
+		set {
+			self.appearanceStorage.separatorColor = newValue;
+			self.updateManagedMonthViews { $0.separatorColor = newValue };
 		}
 	}
 	
-	open var titleStyle = TitleStyle.default {
-		didSet {
-			self.updateManagedMonthViews { $0.titleStyle = self.titleStyle };
+	open var cellRenderer: CPCDayCellRenderer {
+		get {
+			return self.appearanceStorage.cellRenderer;
 		}
-	}
-	
-	@IBInspectable open var titleMargins = UIEdgeInsets.defaultMonthTitle {
-		didSet {
-			self.updateManagedMonthViews { $0.titleMargins = self.titleMargins };
-		}
-	}
-	
-	@IBInspectable open var dayCellFont = UIFont.defaultDayCellText {
-		didSet {
-			self.updateManagedMonthViews { $0.dayCellFont = self.dayCellFont };
-		}
-	}
-	
-	@IBInspectable open var dayCellTextColor = UIColor.defaultDayCellText {
-		didSet {
-			self.updateManagedMonthViews { $0.titleColor = self.titleColor };
-		}
-	}
-	
-	@IBInspectable open var separatorColor = UIColor.defaultSeparator {
-		didSet {
-			self.updateManagedMonthViews { $0.separatorColor = self.separatorColor };
-		}
-	}
-	
-	open var cellRenderer: CellRenderer = CPCDefaultDayCellRenderer () {
-		didSet {
-			self.updateManagedMonthViews { $0.cellRenderer = self.cellRenderer };
+		set {
+			self.appearanceStorage.cellRenderer = newValue;
+			self.updateManagedMonthViews { $0.cellRenderer = newValue };
 		}
 	}
 
@@ -91,21 +118,22 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 		}
 	}
 	
+	internal private (set) var monthViews = UnownedArray <CPCMonthView> ();
+	internal var appearanceStorage = CPCViewAppearanceStorage ();
+	
 	private var multiSelectionHandler = CPCViewDefaultSelectionHandler;
 	
-	internal private (set) var monthViews = UnownedArray <CPCMonthView> ();
-	
-	internal var cellBackgroundColors = DayCellStateBackgroundColors ();
-}
+	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
+		return self.appearanceStorage.cellBackgroundColors [state];
+	}
 
-extension CPCMultiMonthsView: CPCViewDayCellBackgroundColorsStorage {
+	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
+		self.appearanceStorage.cellBackgroundColors [state] = backgroundColor;
+		self.updateManagedMonthViews { $0.setDayCellBackgroundColor (backgroundColor, for: state) };
+	}
+
 	private func updateManagedMonthViews (using block: (CPCMonthView) -> ()) {
 		self.monthViews.forEach (block);
-	}
-	
-	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
-		self.cellBackgroundColors [state] = backgroundColor;
-		self.updateManagedMonthViews { $0.setDayCellBackgroundColor (backgroundColor, for: state) };
 	}
 }
 
