@@ -23,42 +23,70 @@
 
 import Foundation
 
+/// Calendar unit that repsesents a year.
 public struct CPCYear: CPCCompoundCalendarUnit {
 	public typealias Element = CPCMonth;
-	internal typealias UnitBackingType = Int;
+	internal typealias UnitBackingType = BackingStorage;
 	
+	internal struct BackingStorage: Hashable {
+		internal let year: Int;
+	}
 	internal static let representedUnit = Calendar.Component.year;
-	internal static let requiredComponents: Set <Calendar.Component> = [.year];
 	internal static let descriptionDateFormatTemplate = "yyyy";
 
+	/// Number of year represented by this value.
 	public var year: Int {
-		return self.backingValue;
+		return self.backingValue.year;
 	}
-	internal let smallerUnitRange: Range <Int>;
+	public let indices: CountableRange <Int>;
 
 	internal let calendarWrapper: CalendarWrapper;
-	internal let backingValue: Int;
+	internal let backingValue: BackingStorage;
 	
-	internal init (backedBy value: Int, calendar: CalendarWrapper) {
+	internal init (backedBy value: BackingStorage, calendar: CalendarWrapper) {
 		self.calendarWrapper = calendar;
 		self.backingValue = value;
-		self.smallerUnitRange = CPCYear.smallerUnitRange (for: value, using: calendar.calendar);
+		self.indices = CPCYear.indices (for: value, using: calendar.calendar);
 	}
 }
 
+extension CPCYear.BackingStorage: ExpressibleByDateComponents {
+	internal static let requiredComponents: Set <Calendar.Component> = [.year];
+
+	internal init (_ dateComponents: DateComponents) {
+		self.year = guarantee (dateComponents.year);
+	}
+}
+
+extension CPCYear.BackingStorage: DateComponentsConvertible {
+	internal func dateComponents (_ calendar: Calendar) -> DateComponents {
+		return DateComponents (calendar: calendar, year: self.year);
+	}
+}
+
+extension CPCYear.BackingStorage: CPCCalendarUnitBackingType {
+	internal typealias BackedType = CPCYear;
+}
+
 public extension CPCYear {
+	/// Value that represents a current year.
 	public static var current: CPCYear {
 		return self.init (containing: Date (), calendar: .current);
 	}
 	
+	/// Value that represents next year.
 	public static var next: CPCYear {
 		return self.current.next;
 	}
 	
+	/// Value that represents previous year.
 	public static var prev: CPCYear {
 		return self.current.prev;
 	}
 	
+	/// Create a new value, corresponding to a year in the future or past.
+	///
+	/// - Parameter yearsSinceNow: Distance from current year in years.
 	public init (yearsSinceNow: Int) {
 		self = CPCYear.current.advanced (by: yearsSinceNow);
 	}

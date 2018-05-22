@@ -141,16 +141,16 @@ public extension CPCViewSelection {
 			lhs = .ordered (days.filter { !range.contains ($0) } + range);
 			
 		case (.unordered (let days), .single (.some (let day))), (.single (.some (let day)), .unordered (let days)):
-			lhs = .unordered (days.union (CollectionOfOne (day)));
+			lhs = .unordered (days.union (day));
 			
 		case (.unordered (let days1), .unordered (let days2)):
 			lhs = .unordered (days1.union (days2));
 			
 		case (.ordered (let days), .single (.some (let day))):
-			lhs = .ordered (days.filter { $0 != day } + CollectionOfOne (day));
+			lhs = .ordered (days.filter { $0 != day } + day);
 			
 		case (.single (.some (let day)), .ordered (let days)):
-			lhs = .ordered (days.contains (day) ? days : CollectionOfOne (day) + days);
+			lhs = .ordered (days.contains (day) ? days : day + days);
 			
 		case (.unordered (let days1), .ordered (let days2)):
 			lhs = .ordered (days2 + days1);
@@ -216,7 +216,7 @@ public extension CPCViewSelection {
 			lhs = .ordered (range.filter { !days.contains ($0) });
 
 		case (.unordered (let days), .single (.some (let day))):
-			lhs = .unordered (days.subtracting (CollectionOfOne (day)));
+			lhs = .unordered (days.subtracting (day));
 		case (.unordered (let days), .range (let range)):
 			lhs = .unordered (days.subtracting (range));
 		case (.unordered (let days1), .unordered (let days2)):

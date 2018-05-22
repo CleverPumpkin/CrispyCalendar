@@ -23,35 +23,34 @@
 
 import Foundation
 
-internal final class CalendarWrapper: Hashable {
-	internal let calendar: Calendar;
-	
-	internal var hashValue: Int {
-		return self.calendar.hashValue;
-	}
-	
-	internal init (_ calendar: Calendar) {
-		self.calendar = calendar;
-	}
-	
-	internal static func == (lhs: CalendarWrapper, rhs: CalendarWrapper) -> Bool {
-		return (lhs === rhs) || (lhs.calendar == rhs.calendar);
-	}
-}
+// MARK: - Protocol declaration
 
+/// Common protocol implementing most of CPCDay, CPCWeek, CPCMonth and CPCYear functionality.
 internal protocol CPCCalendarUnit: CustomStringConvertible, CustomDebugStringConvertible, Strideable, Hashable, CPCDateInterval where Stride == Int {
+	/// Type serving as a storage for calendar unit info.
 	associatedtype UnitBackingType where UnitBackingType: CPCCalendarUnitBackingType;
 	
+	/// Calendar unit that is represented by this model type.
 	static var representedUnit: Calendar.Component { get };
-	static var requiredComponents: Set <Calendar.Component> { get };
+	/// DateFormatter-compatible string to generate `description`s and `debugDescription`s.
 	static var descriptionDateFormatTemplate: String { get };
 	
+	/// Calendar that is used to calculate unit's `start` an `end` dates and related units.
 	var calendar: Calendar { get };
+	/// Unit's calendar that is wrapped in `CalendarWrapper` object for performance reasons.
 	var calendarWrapper: CalendarWrapper { get };
+	/// "Raw" value of calendar unit, e.g. month and year values for `CPCMonth`.
 	var backingValue: UnitBackingType { get };
 	
+	/// Creates a new calendar unit.
+	///
+	/// - Parameters:
+	///   - value: Backing value representing calendar unit.
+	///   - calendar: Calendar to perform various calculations with.
 	init (backedBy value: UnitBackingType, calendar: CalendarWrapper);
 }
+
+// MARK: - Default implementations
 
 extension CPCCalendarUnit {
 	public var calendar: Calendar {
@@ -59,7 +58,7 @@ extension CPCCalendarUnit {
 	}
 	
 	public var start: Date {
-		return self.backingValue.date (using: self.calendar);
+		return self.backingValue.startDate (using: self.calendar);
 	}
 	
 	public var end: Date {
@@ -70,44 +69,64 @@ extension CPCCalendarUnit {
 		return self.backingValue.hashValue;
 	}
 	
-	internal init (containing date: Date, calendarWrapper: CalendarWrapper) {
-		let calendar = calendarWrapper.calendar;
-		let startDate = guarantee (calendar.dateInterval (of: Self.representedUnit, for: date)).start;
-		let backingValue = UnitBackingType (date: startDate, calendar: calendar, components: Self.requiredComponents);
-		self.init (backedBy: backingValue, calendar: CalendarWrapper (calendar));
+	/// Creates a new calendar unit that contains a given date according to supplied wrapped calendar.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - calendar: Calendar to perform calculations with.
+	internal init (containing date: Date, calendar: CalendarWrapper) {
+		self.init (backedBy: UnitBackingType (containing: date, calendar: calendar.calendar), calendar: calendar);
 	}
 
-	public init (containing date: Date, calendar: Calendar) {
-		self.init (containing: date, calendarWrapper: CalendarWrapper (calendar));
-	}
-	
+	/// Creates a new calendar unit that contains a given date according to supplied calendar.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - timeZone: Time zone to perform calculations in.
+	///   - calendar: Calendar to perform calculations with.
 	public init (containing date: Date, timeZone: TimeZone, calendar: Calendar) {
 		var calendar = calendar;
 		calendar.timeZone = timeZone;
 		self.init (containing: date, calendar: calendar);
 	}
 	
+	/// Creates a new calendar unit that contains a given date according to system calendar.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - timeZone: Time zone to perform calculations in.
 	public init (containing date: Date, timeZone: TimeZone = .current) {
-		var calendar = Calendar.current;
-		calendar.timeZone = timeZone;
-		self.init (containing: date, calendar: calendar);
+		self.init (containing: date, timeZone: timeZone, calendar: .current);
 	}
 	
+	/// Creates a new calendar unit that contains a given date according to calendar with supplied identifier.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - timeZone: Time zone to perform calculations in.
+	///   - calendarIdentifier: Identifier of calendar to perform calculations with.
 	public init (containing date: Date, timeZone: TimeZone = .current, calendarIdentifier: Calendar.Identifier) {
 		var calendar = Calendar (identifier: calendarIdentifier);
-		calendar.timeZone = timeZone;
 		calendar.locale = .current;
-		self.init (containing: date, calendar: calendar);
+		self.init (containing: date, timeZone: timeZone, calendar: calendar);
 	}
 }
 
-internal func resultingCalendarForOperation <T, U> (for first: T, _ second: U) -> CalendarWrapper where T: CPCCalendarUnit, U: CPCCalendarUnit {
+/// Test equivalence of units' calendars and abort if they differ.
+///
+/// - Parameters:
+///   - first: First calendar unit.
+///   - second: Second calendar unit.
+/// - Returns: Calendar of both of supplied units.
+internal func resultingCalendarForOperation <T, U> (for first: T, _ second: U) -> CPCCalendarWrapper where T: CPCCalendarUnit, U: CPCCalendarUnit {
 	let calendar = first.calendarWrapper;
 	guard second.calendarWrapper == calendar else {
-		fatalError ("Cannot decide on resulting calendar for operation on \(T.self) and \(U.self) values: incompatible calendars \(calendar, second.calendar)");
+		fatalError ("Cannot decide on resulting calendar for operation on \(T.self) and \(U.self) values: incompatible calendars \(calendar.calendar, second.calendar)");
 	}
 	return calendar;
 }
+
+// MARK: - Parent protocol conformances.
 
 extension CPCCalendarUnit {
 	public static func == (lhs: Self, rhs: Self) -> Bool {
@@ -120,7 +139,7 @@ extension CPCCalendarUnit {
 		}
 		
 		let calendar = resultingCalendarForOperation (for: self, other);
-		let result = UnitBackingType.getDistanceAs (Self.representedUnit, from: self.backingValue, to: other.backingValue, using: calendar.calendar);
+		let result = self.backingValue.distance (to: other.backingValue, using: calendar.calendar);
 		self.cacheDistance (result, to: other);
 		return result;
 	}
@@ -130,27 +149,9 @@ extension CPCCalendarUnit {
 			return cachedResult;
 		}
 		
-		let result = Self (backedBy: UnitBackingType.advance (self.backingValue, byAdding: Self.representedUnit, value: n, using: self.calendar), calendar: self.calendarWrapper);
+		let result = Self (backedBy: self.backingValue.advanced (by: n, using: self.calendar), calendar: self.calendarWrapper);
 		self.cacheUnitValue (result, advancedBy: n);
 		return result;
-	}
-}
-
-fileprivate extension DateIntervalFormatter {
-	private static var calendarUnitIntervalFormatters = UnfairThreadsafeStorage ([ObjectIdentifier: DateIntervalFormatter] ());
-	
-	fileprivate static func calendarUnitIntervalFormatter <Unit> (for unitType: Unit.Type = Unit.self) -> DateIntervalFormatter where Unit: CPCCalendarUnit {
-		let key = ObjectIdentifier (unitType);
-		return self.calendarUnitIntervalFormatters.withMutableStoredValue {
-			if let storedValue = $0 [key] {
-				return storedValue;
-			}
-			
-			let formatter = DateIntervalFormatter ();
-			formatter.dateTemplate = Unit.descriptionDateFormatTemplate;
-			$0 [key] = formatter;
-			return formatter;
-		};
 	}
 }
 
@@ -169,5 +170,23 @@ extension CPCCalendarUnit {
 	public var debugDescription: String {
 		let intervalFormatter = self.dateIntervalFormatter, calendar = self.calendar, calendarID = calendar.identifier, locale = calendar.locale ?? .current;
 		return "<\(Self.self): \(intervalFormatter.string (from: self.start, to: self.end)); backing: \(self.backingValue); calendar: \(locale.localizedString (for: calendarID) ?? "\(calendarID)"); locale: \(locale.identifier)>";
+	}
+}
+
+fileprivate extension DateIntervalFormatter {
+	private static var calendarUnitIntervalFormatters = UnfairThreadsafeStorage ([ObjectIdentifier: DateIntervalFormatter] ());
+	
+	fileprivate static func calendarUnitIntervalFormatter <Unit> (for unitType: Unit.Type = Unit.self) -> DateIntervalFormatter where Unit: CPCCalendarUnit {
+		let key = ObjectIdentifier (unitType);
+		return self.calendarUnitIntervalFormatters.withMutableStoredValue {
+			if let storedValue = $0 [key] {
+				return storedValue;
+			}
+			
+			let formatter = DateIntervalFormatter ();
+			formatter.dateTemplate = Unit.descriptionDateFormatTemplate;
+			$0 [key] = formatter;
+			return formatter;
+		};
 	}
 }

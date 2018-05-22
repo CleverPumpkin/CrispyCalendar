@@ -454,7 +454,7 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 		let bottomRows = Page.makeRows (for: layout, after: middleRow, startingAt: middleRow.frame.maxY);
 		let topRows = Page.makeRows (for: layout, before: middleRow, startingAt: middleRow.frame.minY);
 		
-		self.rows = topRows + CollectionOfOne (middleRow) + bottomRows;
+		self.rows = topRows + middleRow + bottomRows;
 	}
 
 	fileprivate init (previousFor page: Page, of layout: Layout) {
@@ -509,7 +509,7 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 			if (lastMonthForFullRow.year == firstRowMonth.year) {
 				lastRowMonth = lastMonthForFullRow;
 			} else {
-				lastRowMonth = CPCYear (backedBy: firstRowMonth.year, calendar: firstRowMonth.calendarWrapper).last!;
+				lastRowMonth = firstRowMonth.containingYear.last!;
 			}
 			
 			let row = Page.makeRow (months: firstRowMonth ... lastRowMonth, layout: layout, constraint: .minY (minY));
@@ -529,7 +529,7 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 			if (lastRowMonth.year == lastTopMonth.year) {
 				rowSize = layout.columnCount;
 			} else {
-				let yearSize = CPCYear (backedBy: lastRowMonth.year, calendar: lastRowMonth.calendarWrapper).count;
+				let yearSize = lastRowMonth.containingYear.count;
 				rowSize = (yearSize - 1) % layout.columnCount + 1;
 			}
 			let firstRowMonth = lastTopMonth.advanced (by: -rowSize);

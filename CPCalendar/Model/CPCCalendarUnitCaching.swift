@@ -23,6 +23,79 @@
 
 import Foundation
 
+
+// MARK: - Caching interface
+
+internal extension CPCCalendarUnit {
+	/// Query calendar units cache for distance between two units.
+	///
+	/// - Parameter other: Calendar unit to fetch distance to.
+	/// - Returns: Distance from this unit to `other` or nil if no such value was previously cached.
+	internal func cachedDistance (to other: Self) -> Stride? {
+		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, distanceTo: other);
+	}
+	
+	/// Cache a distance between two calendar units.
+	///
+	/// - Parameter distance: Distance between this unit and `other` that is being cached.
+	/// - Parameter other: Unit, distance to which is being cached.
+	internal func cacheDistance (_ distance: Stride, to other: Self) {
+		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, cacheDistance: distance, to: other);
+	}
+
+	/// Query calendar units cache for a unit that has specific distance from this one.
+	///
+	/// - Parameter stride: Required distance between units.
+	/// - Returns: Unit that has requested distance from this one or nil if no such value was previously cached.
+	internal func cachedAdvancedUnit (by stride: Self.Stride) -> Self? {
+		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, advancedBy: stride);
+	}
+	
+	/// Cache a calendar unit that has specific distance from this one.
+	///
+	/// - Parameter value: Calendar unit that is being cached.
+	/// - Parameter distance: Distance to the unit that is being cached.
+	internal func cacheUnitValue (_ value: Self, advancedBy distance: Stride) {
+		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, cacheUnit: value, asAdvancedBy: distance);
+	}
+}
+
+internal extension CPCCompoundCalendarUnit {
+	/// Query calendar units cache for subunit of a compound calendar unit.
+	///
+	/// - Parameter index: Index of queried subunit.
+	/// - Returns: Subunit at `index`ths place of this unit or nil if no such value was previously cached.
+	internal func cachedElement (at index: Index) -> Element? {
+		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, elementAt: index);
+	}
+	
+	/// Cache a calendar subunit for specified position in this unit.
+	///
+	/// - Parameter element: Subunit that is being cached.
+	/// - Parameter index: Index of cached subunit.
+	internal func cacheElement (_ element: Element, for index: Index) {
+		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, cacheElement: element, for: index);
+	}
+	
+	/// Query calendar units cache for position of subunit in this one.
+	///
+	/// - Parameter element: Subunbit, index of which is requested.
+	/// - Returns: Index of given subunit or nil if no such value was previously cached.
+	internal func cachedIndex (of element: Element) -> Index? {
+		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, indexOf: element);
+	}
+	
+	/// Cache position of a subunit inside this one.
+	///
+	/// - Parameter index: Position of given subunit that is being cached.
+	/// - Parameter element: Subunit to cache index for.
+	internal func cacheIndex (_ index: Index, for element: Element) {
+		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, cacheIndex: index, for: element);
+	}
+}
+
+// MARK: - Caching implementation declarations
+
 private protocol CPCCalendarUnitSpecificCacheProtocol {
 	var count: Int { get };
 	
@@ -48,6 +121,8 @@ private protocol CPCUnusedItemsPurgingCacheProtocol {
 	
 	subscript (key: KeyType) -> ValueType? { mutating get set };
 }
+
+// MARK: - Cache implementation
 
 private final class CPCCalendarUnitElementsCache {
 	private typealias UnitSpecificCacheProtocol = CPCCalendarUnitSpecificCacheProtocol;
@@ -111,10 +186,6 @@ private final class CPCCalendarUnitElementsCache {
 			fileprivate struct Key: Hashable {
 				private let unit: Unit;
 				private let complementValue: KeyComplement;
-				
-				fileprivate var hashValue: Int {
-					return hashIntegers (self.complementValue.hashValue, self.unit.hashValue);
-				}
 				
 				fileprivate init (_ unit: Unit, pairedWith complementValue: KeyComplement) {
 					self.unit = unit;
@@ -281,41 +352,5 @@ private final class CPCCalendarUnitElementsCache {
 				}
 			};
 		}
-	}
-}
-
-internal extension CPCCalendarUnit {
-	internal func cachedDistance (to other: Self) -> Stride? {
-		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, distanceTo: other);
-	}
-	
-	internal func cacheDistance (_ distance: Stride, to other: Self) {
-		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, cacheDistance: distance, to: other);
-	}
-
-	internal func cachedAdvancedUnit (by stride: Self.Stride) -> Self? {
-		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, advancedBy: stride);
-	}
-	
-	internal func cacheUnitValue (_ value: Self, advancedBy distance: Stride) {
-		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, cacheUnit: value, asAdvancedBy: distance);
-	}
-}
-
-internal extension CPCCompoundCalendarUnit {
-	internal func cachedElement (at index: Index) -> Element? {
-		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, elementAt: index);
-	}
-	
-	internal func cacheElement (_ element: Element, for index: Index) {
-		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, cacheElement: element, for: index);
-	}
-	
-	internal func cachedIndex (of element: Element) -> Index? {
-		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, indexOf: element);
-	}
-	
-	internal func cacheIndex (_ index: Index, for element: Element) {
-		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, cacheIndex: index, for: element);
 	}
 }

@@ -23,48 +23,85 @@
 
 import Foundation
 
+/// Calendar unit that repsesents a week.
 public struct CPCWeek: CPCCompoundCalendarUnit {
 	public typealias Element = CPCDay;
+	internal typealias UnitBackingType = BackingStorage;
 	
-	internal typealias UnitBackingType = Date;
+	internal struct BackingStorage: Hashable {
+		fileprivate let date: Date;
+		
+		fileprivate init (_ date: Date) {
+			self.date = date;
+		}
+	}
 
 	internal static let representedUnit = Calendar.Component.weekOfYear;
-	internal static let requiredComponents: Set <Calendar.Component> = [.weekOfYear, .year];
 	internal static let descriptionDateFormatTemplate = "wddMM";
 
-	public let startDate: Date;
-	
-	internal var backingValue: Date {
-		return self.startDate;
+	public let indices: CountableRange <Int>;
+
+	public var startDate: Date {
+		return self.backingValue.date;
 	}
 	
+	internal let backingValue: UnitBackingType;
 	internal let calendarWrapper: CalendarWrapper;
-	internal let smallerUnitRange: Range <Int>;
 	
-	internal static func smallerUnitRange (for value: Date, using calendar: Calendar) -> Range <Int> {
-		return guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value));
+	internal static func indices (for value: BackingStorage, using calendar: Calendar) -> Range <Int> {
+		return guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value.date));
 	}
 
-	internal init (backedBy value: Date, calendar: CalendarWrapper) {
+	internal init (backedBy value: UnitBackingType, calendar: CalendarWrapper) {
 		self.calendarWrapper = calendar;
-		self.startDate = value;
-		self.smallerUnitRange = CPCWeek.smallerUnitRange (for: value, using: calendar.calendar);
+		self.backingValue = value;
+		self.indices = CPCWeek.indices (for: value, using: calendar.calendar);
+	}
+}
+
+extension CPCWeek.BackingStorage: CPCCalendarUnitBackingType {
+	internal typealias BackedType = CPCWeek;
+	
+	internal init (containing date: Date, calendar: Calendar) {
+		self.init (guarantee (calendar.dateInterval (of: .weekOfYear, for: date)).start);
+	}
+	
+	internal func startDate (using calendar: Calendar) -> Date {
+		return self.date;
+	}
+	
+	internal func distance (to other: CPCWeek.BackingStorage, using calendar: Calendar) -> Int {
+		return guarantee (calendar.dateComponents ([.weekOfYear], from: self.date, to: other.date).value (for: .weekOfYear));
+	}
+	
+	internal func advanced (by value: Int, using calendar: Calendar) -> CPCWeek.BackingStorage {
+		guard (value != 0) else {
+			return self;
+		}
+
+		return CPCWeek.BackingStorage (guarantee (calendar.date (byAdding: .weekOfYear, value: value, to: self.date)));
 	}
 }
 	
 public extension CPCWeek {
+	/// Value that represents a current week.
 	public static var current: CPCWeek {
 		return self.init (containing: Date (), calendar: .current);
 	}
 	
+	/// Value that represents next week.
 	public static var next: CPCWeek {
 		return self.current.next;
 	}
 	
+	/// Value that represents previous week.
 	public static var prev: CPCWeek {
 		return self.current.prev;
 	}
 	
+	/// Create a new value, corresponding to a week in the future or past.
+	///
+	/// - Parameter weeksSinceNow: Distance from current week in weeks.
 	public init (weeksSinceNow: Int) {
 		self = CPCWeek.current.advanced (by: weeksSinceNow);
 	}

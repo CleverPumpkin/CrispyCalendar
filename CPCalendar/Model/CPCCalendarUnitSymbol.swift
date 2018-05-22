@@ -23,41 +23,52 @@
 
 import Foundation
 
+/// Represents style of a localized string representing a calendar unit.
 public enum CPCCalendarUnitSymbolStyle {
+	/// Full localized name of a calendar unit.
 	case normal;
+	/// Shortened localized name of calendar unit. Usually consists of just several letters.
 	case short;
+	/// The very shortest localized name for a calendar unit. Usually contains just a single letter.
 	case veryShort;
 	
+	/// Default symbol style that is used when no specific style is requested.
 	public static let `default` = normal;
 }
 
 public protocol CPCCalendarUnitSymbol {
+	/// Get a localized name of a calendar unit.
+	///
+	/// - Parameters:
+	///   - style: Style of returned value.
+	///   - standalone: `true` indicates the intention of using the returned value in standalone context, e.g. as unit's label.
+	/// - Returns: Localized symbol representing this calendar unit with requested style and context.
 	func symbol (style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> String;
 }
 
 public extension CPCCalendarUnitSymbol {
+	/// Get a localized name of a calendar unit.
+	///
+	/// - Returns: Localized symbol with default style.
 	public func symbol () -> String {
-		return self.symbol (style: .default, standalone: false);
+		return self.symbol (style: .default, standalone: true);
 	}
 	
+	/// Get a localized name of a calendar unit.
+	///
+	/// - Parameters:
+	///   - standalone: `true` indicates the intention of using the returned value in standalone context, e.g. as unit's label.
+	/// - Returns: Localized symbol with default style for requested context.
 	func symbol (standalone: Bool) -> String {
 		return self.symbol (style: .default, standalone: standalone);
-
 	}
 	
+	/// Get a localized name of a calendar unit.
+	///
+	/// - Parameters:
+	///   - style: Style of returned value.
+	/// - Returns: Localized symbol for requested style.
 	func symbol (style: CPCCalendarUnitSymbolStyle) -> String {
-		return self.symbol (style: style, standalone: false);
-	}
-}
-
-internal protocol CPCCalendarUnitSymbolImpl: CPCCalendarUnit, CPCCalendarUnitSymbol {
-	static func unitSymbols (calendar: Calendar, style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> [String];
-	
-	var unitOrdinalValue: Int { get };
-}
-
-extension CPCCalendarUnitSymbolImpl {
-	public func symbol (style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> String {
-		return Self.unitSymbols (calendar: self.calendar, style: style, standalone: standalone) [self.unitOrdinalValue];
+		return self.symbol (style: style, standalone: true);
 	}
 }

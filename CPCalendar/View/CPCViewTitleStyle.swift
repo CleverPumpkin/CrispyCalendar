@@ -56,10 +56,6 @@ public struct CPCViewTitleStyle: Equatable, Hashable, RawRepresentable, Expressi
 	
 	public let rawValue: String;
 	
-	public var hashValue: Int {
-		return self.rawValue.hashValue;
-	}
-	
 	public init (rawValue: String) {
 		self.rawValue = rawValue;
 	}

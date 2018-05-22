@@ -27,11 +27,6 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 	internal struct Element: CustomStringConvertible, CustomDebugStringConvertible, Hashable, Strideable, ExpressibleByNilLiteral {
 		internal typealias Stride = Idx.Stride;
 		
-		internal var hashValue: Int {
-			let info = self.info;
-			return concatenateHashValues (info.hashValue, Int (self.index), shiftAmount: log2i (info.indices.count) + 1);
-		}
-		
 		internal var description: String {
 			return "(\(self.row), \(self.column))";
 		}

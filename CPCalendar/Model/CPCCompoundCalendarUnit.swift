@@ -23,21 +23,26 @@
 
 import Foundation
 
-internal protocol CPCCompoundCalendarUnit: CPCCalendarUnit, RandomAccessCollection where Element: CPCCalendarUnit, Index == Int {
-	var smallerUnitRange: Range <Int> { get };
-}
+/// Protocol, implementing a collection of smaller units that are contained in this calendar unit.
+internal protocol CPCCompoundCalendarUnit: CPCCalendarUnit, RandomAccessCollection where Element: CPCCalendarUnit, Indices == CountableRange <Int> {}
 
 extension CPCCompoundCalendarUnit {
-	internal static func smallerUnitRange (for value: UnitBackingType, using calendar: Calendar) -> Range <Int> {
-		return guarantee (calendar.range (of: Element.representedUnit, in: self.representedUnit, for: value.date (using: calendar)));
+	/// Calculate all possible indices for a given compound unit.
+	///
+	/// - Parameters:
+	///   - value: Backing value of a compound unit to perform calculations for.
+	///   - calendar: Calendar to perform calculations with.
+	/// - Returns: All indices that are valid for compound unit that contains a date represented by given `value`.
+	internal static func indices (for value: UnitBackingType, using calendar: Calendar) -> CountableRange <Int> {
+		return CountableRange (guarantee (calendar.range (of: Element.representedUnit, in: self.representedUnit, for: value.startDate (using: calendar))));
 	}
 	
 	public var startIndex: Int {
-		return self.smallerUnitRange.lowerBound;
+		return self.indices.lowerBound;
 	}
 	
 	public var endIndex: Int {
-		return self.smallerUnitRange.upperBound;
+		return self.indices.upperBound;
 	}
 	
 	public func index (of element: Element) -> Index? {
@@ -61,12 +66,16 @@ extension CPCCompoundCalendarUnit {
 			return cachedResult;
 		}
 		
-		let result = Element (containing: self.start, calendarWrapper: self.calendarWrapper).advanced (by: position - self.smallerUnitRange.lowerBound);
+		let calendar = self.calendar, firstElementBacking = Element.UnitBackingType (containing: self.start, calendar: calendar);
+		let result = Element (backedBy: firstElementBacking.advanced (by: position, using: calendar), calendar: self.calendarWrapper);
 		self.cacheElement (result, for: position)
 		return result;
 	}
 	
+	/// Returns a subunit at nth place using zero-based indexes.
+	///
+	/// - Parameter position: Zero-based index of subunit.
 	public subscript (ordinal position: Int) -> Element {
-		return self [position + self.smallerUnitRange.lowerBound];
+		return self [position + self.indices.lowerBound];
 	}
 }

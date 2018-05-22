@@ -1,5 +1,5 @@
 //
-//  CPCDatesRange.swift
+//  CPCDateInterval.swift
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,24 +23,57 @@
 
 import Foundation
 
+// MARK: - Public protocol declarations
+
+/// Common protocol for types representing an arbitrary range of dates.
 public protocol CPCDateInterval: RangeExpression where Bound == Date {
+	/// Earliest date that is included in date interval.
 	var start: Date { get }
+	/// Earliest date that is not included in date interval and is later than `start` (analogous to `Date.timeIntervalSince1970`).
 	var end: Date { get }
+	/// Duration of date interval. Default implementation returns `self.end.timeIntervalSice (self.start)`.
 	var duration: TimeInterval { get }
 	
-	func contains (_ date: Date) -> Bool;
+	/// Returns a Boolean value indicating whether this date interval is fully contained or is equal to the given range.
+	///
+	/// - Parameter dateInterval: An interval to check.
+	/// - Returns: `true` if `dateInterval` is contained in this one; otherwise, `false`.
 	func contains <R> (_ dateInterval: R) -> Bool where R: RangeExpression, R.Bound == Date;
+	/// Returns a Boolean value indicating whether this date interval is fully contained or is equal to the given range.
+	///
+	/// - Parameter dateInterval: An interval to check.
+	/// - Returns: `true` if `dateInterval` is contained in this one; otherwise, `false`.
 	func contains <R> (_ dateInterval: R) -> Bool where R: CPCDateInterval;
 }
 
+/// Common protocol for types that can be initialized with a date interval.
 public protocol CPCDateIntervalInitializable: CPCDateInterval {
+	/// Creates a new, empty date interval.
+	///
+	/// - Parameter date: This date is used as `start` and `end` of resulting date interval simultaneously.
 	init (_ date: Date);
+	/// Creates a new date interval that is equivalent to another one.
+	///
+	/// - Parameter other: Date interval to be copied.
 	init <R> (_ other: R) where R: RangeExpression, R.Bound == Date;
+	/// Creates a new date interval that is equivalent to another one.
+	///
+	/// - Parameter other: Date interval to be copied.
 	init <R> (_ other: R) where R: CPCDateInterval;
 	
-	func clamped <R> (to: R) -> Self where R: RangeExpression, R.Bound == Date;
-	func clamped <R> (to: R) -> Self where R: CPCDateInterval;
+	/// Returns a copy of this date interval clamped to the given limiting date interval.
+	///
+	/// - Parameter other: The interval to clamp the bounds of this date interval.
+	/// - Returns: A new date interval clamped to the bounds of `other`.
+	func clamped <R> (to other: R) -> Self where R: RangeExpression, R.Bound == Date;
+	/// Returns a copy of this date interval clamped to the given limiting date interval.
+	///
+	/// - Parameter other: The interval to clamp the bounds of this date interval.
+	/// - Returns: A new date interval clamped to the bounds of `other`.
+	func clamped <R> (to other: R) -> Self where R: CPCDateInterval;
 }
+
+// MARK: - Default implementations
 
 public extension CPCDateInterval {
 	public var duration: TimeInterval {
@@ -65,10 +98,12 @@ public extension CPCDateInterval {
 }
 
 public extension CPCDateInterval where Self: Strideable {
+	/// Previous interval (an interval that has the same `duration` and `end`s when this interval `start`s).
 	public var prev: Self {
 		return self.advanced (by: -1);
 	}
 	
+	/// Next interval (an interval that has the same `duration` and `start`s when this interval `end`s).
 	public var next: Self {
 		return self.advanced (by: 1);
 	}
@@ -107,6 +142,8 @@ public extension CPCDateIntervalInitializable {
 		}
 	}
 }
+
+// MARK: - DateInterval and {Countable,}{Closed,}Range conformances
 
 extension Range: CPCDateInterval where Bound == Date {
 	public var start: Date {

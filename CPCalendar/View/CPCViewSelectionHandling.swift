@@ -148,7 +148,7 @@ extension CPCViewSelectionHandler {
 			}
 
 			fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
-				return Unordered (self.selectedDays.contains (day) ? self.selectedDays.filter { $0 != day } : self.selectedDays.union (CollectionOfOne (day)));
+				return Unordered (self.selectedDays.contains (day) ? self.selectedDays.filter { $0 != day } : self.selectedDays.union (day));
 			}
 		}
 		
@@ -168,7 +168,7 @@ extension CPCViewSelectionHandler {
 			}
 
 			fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
-				return Ordered (self.selectedDays.contains (day) ? self.selectedDays.filter { $0 != day } : self.selectedDays + CollectionOfOne (day));
+				return Ordered (self.selectedDays.contains (day) ? self.selectedDays.filter { $0 != day } : self.selectedDays + day);
 			}
 		}
 		

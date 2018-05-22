@@ -23,53 +23,123 @@
 
 import Foundation
 
+/// Calendar unit that repsesents a single day.
 public struct CPCDay: CPCCalendarUnit {
-	internal typealias UnitBackingType = DayBackingValues;
+	internal typealias UnitBackingType = BackingStorage;
+	
+	internal struct BackingStorage: Hashable {
+		internal let day: Int;
+		
+		internal var month: Int {
+			return self.monthValues.month;
+		}
+		internal var year: Int {
+			return self.monthValues.year;
+		}
+		
+		internal func containingYear (_ calendar: CalendarWrapper) -> CPCYear {
+			return self.monthValues.containingYear (calendar);
+		}
+
+		internal func containingMonth (_ calendar: CalendarWrapper) -> CPCMonth {
+			return CPCMonth (backedBy: self.monthValues, calendar: calendar);
+		}
+
+		fileprivate let monthValues: CPCMonth.BackingStorage;
+	}
 	
 	internal static let representedUnit = Calendar.Component.day;
 	internal static let requiredComponents: Set <Calendar.Component> = [.day, .month, .year];
 	internal static let descriptionDateFormatTemplate = "ddMMyyyy";
 	
+	/// Year of represented day.
 	public var year: Int {
 		return self.backingValue.year;
 	}
+	/// Month of represented day.
 	public var month: Int {
 		return self.backingValue.month;
 	}
+	/// Week number of represented day.
+	public var week: Int {
+		return self.calendar.component (.weekOfYear, from: self.start);
+	}
+	/// This day's number.
 	public var day: Int {
 		return self.backingValue.day;
 	}
-	
-	internal let calendarWrapper: CalendarWrapper;
-	internal let backingValue: DayBackingValues;
+	/// Year that contains represented day.
+	public var containingYear: CPCYear {
+		return self.backingValue.containingYear (self.calendarWrapper);
+	}
+	/// Month that contains represented day.
+	public var containingMonth: CPCMonth {
+		return self.backingValue.containingMonth (self.calendarWrapper);
+	}
+	/// Week that contains represented day.
+	public var containingWeek: CPCWeek {
+		return CPCWeek (containing: self.start, calendar: self.calendarWrapper);
+	}
 
-	internal init (backedBy value: DayBackingValues, calendar: CalendarWrapper) {
+	internal let calendarWrapper: CalendarWrapper;
+	internal let backingValue: BackingStorage;
+
+	internal init (backedBy value: BackingStorage, calendar: CalendarWrapper) {
 		self.calendarWrapper = calendar;
 		self.backingValue = value;
 	}
 }
 
+extension CPCDay.BackingStorage: ExpressibleByDateComponents {
+	internal static let requiredComponents: Set <Calendar.Component> = CPCMonth.BackingStorage.requiredComponents.union (.day);
+
+	internal init (_ dateComponents: DateComponents) {
+		self.monthValues = CPCMonth.BackingStorage (dateComponents);
+		self.day = guarantee (dateComponents.day);
+	}
+}
+
+extension CPCDay.BackingStorage: DateComponentsConvertible {
+	internal func dateComponents (_ calendar: Calendar) -> DateComponents {
+		var components = self.monthValues.dateComponents (calendar);
+		components.day = self.day;
+		return components;
+	}
+}
+
+extension CPCDay.BackingStorage: CPCCalendarUnitBackingType {
+	internal typealias BackedType = CPCDay;
+}
+
 public extension CPCDay {
+	/// Value that represents a current day.
 	public static var today: CPCDay {
 		return CPCDay (containing: Date (), calendar: .current);
 	}
 	
+	/// Value that represents yesterday.
 	public static var yesterday: CPCDay {
 		return self.today.next;
 	}
 	
+	/// Value that represents tomorrow.
 	public static var tommorow: CPCDay {
 		return self.today.prev;
 	}
 	
+	/// Day of week for represented day.
 	public var weekday: Int {
-		return self.calendar.component (.weekday, from: self.start);
+		return guarantee (self.containingWeek.index (of: self));
 	}
 	
+	/// Indicates whether represented day belongs to weekend.
 	public var isWeekend: Bool {
 		return self.calendar.isDateInWeekend (self.start);
 	}
 
+	/// Create a new value, corresponding to a day in the future or past.
+	///
+	/// - Parameter daysSinceNow: Distance from today in days.
 	public init (daysSinceNow: Int) {
 		self = CPCDay.today.advanced (by: daysSinceNow);
 	}
@@ -92,27 +162,3 @@ public extension CPCDay {
 		return "<\(CPCDay.self): \(self.dateFormatter.string (from: self.start))>";
 	}
 }
-
-extension CPCDay: CPCCalendarUnitSymbolImpl {
-	internal static func unitSymbols (calendar: Calendar, style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> [String] {
-		switch (style, standalone) {
-		case (.normal, false):
-			return calendar.weekdaySymbols;
-		case (.short, false):
-			return calendar.shortWeekdaySymbols;
-		case (.veryShort, false):
-			return calendar.veryShortWeekdaySymbols;
-		case (.normal, true):
-			return calendar.standaloneWeekdaySymbols;
-		case (.short, true):
-			return calendar.shortStandaloneWeekdaySymbols;
-		case (.veryShort, true):
-			return calendar.veryShortStandaloneWeekdaySymbols;
-		}
-	}
-	
-	internal var unitOrdinalValue: Int {
-		return self.weekday - 1;
-	}
-}
-

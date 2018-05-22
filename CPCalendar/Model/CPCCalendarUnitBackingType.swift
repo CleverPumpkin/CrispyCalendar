@@ -23,125 +23,85 @@
 
 import Foundation
 
+/// Common protocol for types that are suitable as backing storage of `CPCCalendarUnit` instances.
 internal protocol CPCCalendarUnitBackingType: Hashable {
-	static func getDistanceAs (_ component: Calendar.Component, from: Self, to: Self, using calendar: Calendar) -> Int;
-	static func advance (_ backingValue: Self, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> Self;
-	
-	init (date: Date, calendar: Calendar, components: Set <Calendar.Component>);
-	func date (using calendar: Calendar) -> Date;
+	/// Type for which this one serves as a backing storage.
+	associatedtype BackedType where BackedType: CPCCalendarUnit;
+
+	/// Creates a new storage for a calendar unit that contains a specific date.
+	///
+	/// - Parameters:
+	///   - date: The date that should be contained in the backed calendar unit.
+	///   - calendar: Calendar to perform calculations with.
+	init (containing date: Date, calendar: Calendar);
+	/// Get an earliest date that is contained in a backed calendar unit.
+	///
+	/// - Parameter calendar: Calendar to perform calculations with.
+	/// - Returns: Earliest date of the represented calendar unit.
+	func startDate (using calendar: Calendar) -> Date;
+
+	/// Calculate distance between this value and other one, measured in the unit's durations.
+	///
+	/// - Parameters:
+	///   - other: An instance of backing value to calculate distance to.
+	///   - calendar: Calendar to perform calculations with.
+	/// - Returns: Number of represented calendar units between starts of corresponding date intervals.
+	func distance (to other: Self, using calendar: Calendar) -> Int;
+	/// Calculate a backing value with specific distance from represented one.
+	///
+	/// - Parameters:
+	///   - value: Distance from this value.
+	///   - calendar: Calendar to perform calculations with.
+	/// - Returns: Instance of backing value for which represented unit's `start` date is advanced by `value` unit durations.
+	func advanced (by value: Int, using calendar: Calendar) -> Self;
 }
 
-extension Date: CPCCalendarUnitBackingType {
-	internal static func getDistanceAs (_ component: Calendar.Component, from: Date, to: Date, using calendar: Calendar) -> Int {
-		return guarantee (calendar.dateComponents ([component], from: from, to: to).value (for: component));
-	}
+/// Expresses that a type can be initialized using `DateComponents`.
+internal protocol ExpressibleByDateComponents {
+	/// Collection of `Calendar.Component`s that are required for proper initialization of this type's instances.
+	static var requiredComponents: Set <Calendar.Component> { get };
 	
-	internal static func advance (_ backingValue: Date, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> Date {
-		return guarantee (calendar.date (byAdding: component, value: value, to: backingValue));
-	}
-	
-	internal init (date: Date, calendar: Calendar, components: Set <Calendar.Component>) {
-		self = date;
-	}
-	
-	internal func date (using calendar: Calendar) -> Date {
-		return self;
-	}
+	/// Creates a new instance from `DateComponents`.
+	///
+	/// - Parameter dateComponents: Date components to initialize from.
+	init (_ dateComponents: DateComponents);
 }
 
-extension Int: CPCCalendarUnitBackingType {
-	internal static func getDistanceAs (_ component: Calendar.Component, from: Int, to: Int, using calendar: Calendar) -> Int {
-		return to - from;
-	}
-	
-	internal static func advance (_ backingValue: Int, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> Int {
-		return backingValue + value;
-	}
-
-	internal init (date: Date, calendar: Calendar, components: Set <Calendar.Component>) {
-		self = calendar.component (guarantee (components.first), from: date);
-	}
-	
-	internal func date (using calendar: Calendar) -> Date {
-		return guarantee (DateComponents (calendar: calendar, year: self).date);
-	}
+/// Expresses that a type can be represented as `DateComponents`.
+internal protocol DateComponentsConvertible {
+	/// Convert instance to a `DateComponents`.
+	///
+	/// - Parameter calendar: Calendar for resulting components.
+	/// - Returns: Newly created `DateComponents` containing values from this instance.
+	func dateComponents (_ calendar: Calendar) -> DateComponents;
 }
 
-fileprivate extension DateComponents {
-	fileprivate var dayBackingValues: DayBackingValues {
-		return DayBackingValues (year: guarantee (self.year), month: guarantee (self.month), day: guarantee (self.day));
-	}
-	
-	fileprivate var monthBackingValues: MonthBackingValues {
-		return MonthBackingValues (year: guarantee (self.year), month: guarantee (self.month));
-	}
-	
-	fileprivate init (_ dayBackingValues: DayBackingValues, calendar: Calendar) {
-		self.init (calendar: calendar, year: dayBackingValues.year, month: dayBackingValues.month, day: dayBackingValues.day);
-	}
-	
-	fileprivate init (_ monthBackingValues: MonthBackingValues, calendar: Calendar) {
-		self.init (calendar: calendar, year: monthBackingValues.year, month: monthBackingValues.month);
+extension CPCCalendarUnitBackingType where Self: ExpressibleByDateComponents {
+	internal init (containing date: Date, calendar: Calendar) {
+		self.init (calendar.dateComponents (Self.requiredComponents, from: date));
 	}
 }
 
-internal struct DayBackingValues: Equatable {
-	internal let year: Int;
-	internal let month: Int;
-	internal let day: Int;
-}
-
-extension DayBackingValues: CPCCalendarUnitBackingType {
-	public var hashValue: Int {
-		return hashIntegers (self.day, self.month, self.year);
+extension CPCCalendarUnitBackingType where Self: DateComponentsConvertible {
+	internal func startDate (using calendar: Calendar) -> Date {
+		return guarantee (self.dateComponents (calendar).date);
 	}
 	
-	static func getDistanceAs (_ component: Calendar.Component, from: DayBackingValues, to: DayBackingValues, using calendar: Calendar) -> Int {
-		let fromComps = DateComponents (from, calendar: calendar), toComps = DateComponents (to, calendar: calendar);
-		return guarantee (calendar.dateComponents ([component], from: fromComps, to: toComps).value (for: component));
-	}
-	
-	static func advance (_ backingValue: DayBackingValues, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> DayBackingValues {
-		var denormalizedComps = DateComponents (backingValue, calendar: calendar);
-		denormalizedComps.setValue (guarantee (denormalizedComps.value (for: component)) + value, for: component);
-		return calendar.dateComponents (CPCDay.requiredComponents, from: guarantee (denormalizedComps.date)).dayBackingValues;
-	}
-	
-	internal init (date: Date, calendar: Calendar, components: Set <Calendar.Component>) {
-		self = calendar.dateComponents (components, from: date).dayBackingValues;
-	}
-	
-	internal func date (using calendar: Calendar) -> Date {
-		return guarantee (DateComponents (self, calendar: calendar).date);
+	internal func distance (to other: Self, using calendar: Calendar) -> Int {
+		let selfComps = self.dateComponents (calendar), otherComps = other.dateComponents (calendar), backedUnit = BackedType.representedUnit;
+		return guarantee (calendar.dateComponents ([backedUnit], from: selfComps, to: otherComps).value (for: backedUnit));
 	}
 }
 
-internal struct MonthBackingValues: Equatable {
-	internal let year: Int;
-	internal let month: Int;
-}
-
-extension MonthBackingValues: CPCCalendarUnitBackingType {
-	public var hashValue: Int {
-		return hashIntegers (self.month, self.year);
-	}
-	
-	static func getDistanceAs (_ component: Calendar.Component, from: MonthBackingValues, to: MonthBackingValues, using calendar: Calendar) -> Int {
-		let fromComps = DateComponents (from, calendar: calendar), toComps = DateComponents (to, calendar: calendar);
-		return guarantee (calendar.dateComponents ([component], from: fromComps, to: toComps).value (for: component));
-	}
-	
-	static func advance (_ backingValue: MonthBackingValues, byAdding component: Calendar.Component, value: Int, using calendar: Calendar) -> MonthBackingValues {
-		var denormalizedComps = DateComponents (backingValue, calendar: calendar);
-		denormalizedComps.setValue (guarantee (denormalizedComps.value (for: component)) + value, for: component);
-		return calendar.dateComponents (CPCMonth.requiredComponents, from: guarantee (denormalizedComps.date)).monthBackingValues;
-	}
-	
-	internal init (date: Date, calendar: Calendar, components: Set <Calendar.Component>) {
-		self = calendar.dateComponents (components, from: date).monthBackingValues;
-	}
-	
-	internal func date (using calendar: Calendar) -> Date {
-		return guarantee (DateComponents (self, calendar: calendar).date);
+extension CPCCalendarUnitBackingType where Self: ExpressibleByDateComponents, Self: DateComponentsConvertible {
+	internal func advanced (by value: Int, using calendar: Calendar) -> Self {
+		guard (value != 0) else {
+			return self;
+		}
+		
+		let backedUnit = BackedType.representedUnit;
+		var denormalizedComps = self.dateComponents (calendar);
+		denormalizedComps.setValue (guarantee (denormalizedComps.value (for: backedUnit)) + value, for: backedUnit);
+		return Self (containing: guarantee (denormalizedComps.date), calendar: calendar);
 	}
 }

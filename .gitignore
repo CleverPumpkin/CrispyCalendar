@@ -18,3 +18,4 @@ DerivedData
 *.hmap
 *.xccheckout
 Pods/
+docs/*
