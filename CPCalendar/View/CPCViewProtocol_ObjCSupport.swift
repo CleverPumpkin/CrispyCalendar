@@ -30,13 +30,13 @@ fileprivate extension CPCViewTitleStyle {
 }
 
 extension CPCMonthView {
-	@objc
+	@IBInspectable
 	open var titleTemplate: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .customTemplate (newValue) }
 	}
 
-	@objc
+	@IBInspectable
 	open var titleFormat: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .custom (newValue) }
@@ -52,13 +52,13 @@ extension CPCMonthView {
 }
 
 extension CPCMultiMonthsView {
-	@objc
+	@IBInspectable
 	open var titleTemplate: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .customTemplate (newValue) }
 	}
 	
-	@objc
+	@IBInspectable
 	open var titleFormat: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .custom (newValue) }
@@ -74,13 +74,13 @@ extension CPCMultiMonthsView {
 }
 
 extension CPCCalendarView {
-	@objc
+	@IBInspectable
 	open var titleTemplate: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .customTemplate (newValue) }
 	}
 	
-	@objc
+	@IBInspectable
 	open var titleFormat: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .custom (newValue) }

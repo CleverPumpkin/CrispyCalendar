@@ -1,5 +1,5 @@
 //
-//  CPCWeekViewStyle.swift
+//  CPCCalendarUnitSymbolStyle.h
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,39 +21,19 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
+#import <Foundation/Foundation.h>
 
-public enum CPCWeekViewStyle {
-	case none;
-	case short;
-	case medium;
-	case full;
-}
-
-extension CPCWeekViewStyle {
-	public var cStyle: __CPCWeekViewStyle {
-		switch (self) {
-		case .none:
-			return .none;
-		case .short:
-			return .short;
-		case .medium:
-			return .medium;
-		case .full:
-			return .full;
-		}
-	}
-	
-	public init (_ cStyle: __CPCWeekViewStyle) {
-		switch (cStyle) {
-		case .none:
-			self = .none;
-		case .short:
-			self = .short;
-		case .medium:
-			self = .medium;
-		case .full:
-			self = .full;
-		}
-	}
-}
+/**
+ C/Objective C counterpart for `CPCCalendarUnitSymbol.Style`.
+ */
+typedef NS_ENUM (NSInteger, CPCCalendarUnitSymbolStyle) {
+	/** Full localized name of a calendar unit.
+	 */
+	CPCCalendarUnitSymbolNormalStyle NS_SWIFT_NAME(normal),
+	/** Shortened localized name of calendar unit. Usually consists of just several letters.
+	 */
+	CPCCalendarUnitSymbolShortStyle NS_SWIFT_NAME(short),
+	/** The very shortest localized name for a calendar unit. Usually contains just a single letter.
+	 */
+	CPCCalendarUnitSymbolVeryShortStyle NS_SWIFT_NAME(veryShort),
+} NS_REFINED_FOR_SWIFT;

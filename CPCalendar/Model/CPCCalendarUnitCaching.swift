@@ -23,7 +23,6 @@
 
 import Foundation
 
-
 // MARK: - Caching interface
 
 internal extension CPCCalendarUnit {

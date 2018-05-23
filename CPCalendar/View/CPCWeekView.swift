@@ -44,17 +44,8 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 		}
 	};
 	
-	open var style = CPCWeekViewStyle.short {
+	open var style = CPCDay.Style.default {
 		didSet {
-			switch (oldValue, self.style) {
-			case (.none, .none):
-				break;
-			case (.none, _), (_, .none):
-				self.invalidateIntrinsicContentSize ();
-				self.setNeedsLayout ();
-			default:
-				break;
-			}
 			self.setNeedsDisplay ();
 		}
 	}
@@ -100,19 +91,7 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	}
 	
 	open override func draw (_ rect: CGRect) {
-		let style: CPCCalendarUnitSymbolStyle;
-		switch (self.style) {
-		case .none:
-			return;
-		case .short:
-			style = .veryShort;
-		case .medium:
-			style = .short;
-		case .full:
-			style = .normal;
-		}
-		
-		let week = CPCWeek.current, font = self.effectiveFont, lineHeight = font.lineHeight, scale = self.separatorWidth;
+		let style = self.style, week = CPCWeek.current, font = self.effectiveFont, lineHeight = font.lineHeight, scale = self.separatorWidth;
 		let cellOriginY = (self.bounds.midY - lineHeight / 2).rounded (.down, scale: scale);
 		let cellWidth = self.bounds.width / CGFloat (week.count), cellHeight = lineHeight.rounded (.up, scale: scale);
 		let weekdayAttributes: [NSAttributedStringKey: Any] = [
@@ -136,5 +115,12 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	
 	internal func adjustValues (for newCategory: UIContentSizeCategory) {
 		self.effectiveFont = self.scaledFont (self.font, using: CPCWeekView.fontMetrics, for: newCategory);
+	}
+}
+
+extension CPCWeekView {
+	@IBInspectable open var cStyle: __CPCCalendarUnitSymbolStyle {
+		get { return self.style.cStyle }
+		set { self.style = CPCDay.Style (newValue) }
 	}
 }

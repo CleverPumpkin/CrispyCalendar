@@ -56,13 +56,17 @@ public struct CPCViewTitleStyle: Equatable, Hashable, RawRepresentable, Expressi
 	/// Create a new month title format using date format template.
 	///
 	/// - Parameters:
-	///   - template: Date format template, compatible with DateFormatter.
+	///   - template: Date format template compatible with DateFormatter.
 	///   - locale: Locale to evaluate format template. Defaults to current locale.
 	/// - Returns: Month title format that matches supplied parameters or `nil` if format template is invalid.
 	public static func customTemplate (_ template: String, locale: Locale = .current) -> CPCViewTitleStyle! {
 		return CPCViewTitleStyle (templateValue: template, locale: locale);
 	}
 
+	/// Create a new month title format using exact date format.
+	///
+	/// - Parameter format: Date format to use for month title.
+	/// - Returns: Month title format that uses exact date `format`.
 	public static func custom (_ format: String) -> CPCViewTitleStyle {
 		return CPCViewTitleStyle (rawValue: format);
 	}
@@ -73,6 +77,12 @@ public struct CPCViewTitleStyle: Equatable, Hashable, RawRepresentable, Expressi
 		self.rawValue = rawValue;
 	}
 	
+	/// Creates a new month title format from a string literal.
+	///
+	/// Firstly, given `stringLiteral` is evaluated as a date format template with current locale.
+	/// If this evaluation fails, `stringLiteral` is used as an exact date format.
+	///
+	/// - Parameter stringLiteral: Requested date template format or an exact date format.
 	public init (stringLiteral: String) {
 		if let result = CPCViewTitleStyle (templateValue: stringLiteral) {
 			self = result;
@@ -81,6 +91,11 @@ public struct CPCViewTitleStyle: Equatable, Hashable, RawRepresentable, Expressi
 		}
 	}
 	
+	/// Create a new month title format using date format template.
+	///
+	/// - Parameters:
+	///   - template: Date format template compatible with DateFormatter.
+	///   - locale: Locale to evaluate format template. Defaults to current locale.
 	public init? (templateValue template: String, locale: Locale = .current) {
 		guard let rawValue = DateFormatter.dateFormat (fromTemplate: template, options: 0, locale: locale) else {
 			return nil;

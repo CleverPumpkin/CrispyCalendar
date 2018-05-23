@@ -24,20 +24,22 @@
 #import <Foundation/Foundation.h>
 
 /**
- C/Objective C counterpart for `CPCDayCellState.BackgroundState`
-
- - CPCDayCellBackgroundStateNormal: Normal cell state, equivalent of `CPCDayCellState.BackgroundState.normal`.
- - CPCDayCellBackgroundStateHighlighted: Hightlighted cell state, equivalent of `CPCDayCellState.BackgroundState.highlighted`.
- - CPCDayCellBackgroundStateSelected: Selected cell state, equivalent of `CPCDayCellState.BackgroundState.selected`.
+ C/Objective C counterpart for `CPCDayCellState.BackgroundState`.
  */
 typedef NS_ENUM (uint8_t, CPCDayCellBackgroundState) {
+	/** Normal cell state, equivalent of `CPCDayCellState.BackgroundState.normal`.
+	 */
 	CPCDayCellBackgroundStateNormal,
+	/** Hightlighted cell state, equivalent of `CPCDayCellState.BackgroundState.highlighted`.
+	 */
 	CPCDayCellBackgroundStateHighlighted,
+	/** Selected cell state, equivalent of `CPCDayCellState.BackgroundState.selected`.
+	 */
 	CPCDayCellBackgroundStateSelected,
 } NS_REFINED_FOR_SWIFT;
 
 /**
- C/Objective C counterpart for `CPCDayCellState`
+ C/Objective C counterpart for `CPCDayCellState`.
  */
 typedef struct {
 	/**

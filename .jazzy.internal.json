@@ -1,14 +1,54 @@
 {
-	"output": "docs/internal/",
+	"output": "docs/generated/internal/",
 	"min_acl": "internal",
 
-	"theme": "apple",
+	"theme": "fullwidth",
 	"skip_undocumented": false,
 	"hide_documentation_coverage": false,
 	"custom_categories": [
 		{
-			"name": "",
+			"name": "Model",
 			"children": [
+				"CPCDateInterval",
+				"CPCDateIntervalInitializable",
+				"CPCCalendarUnitSymbol",
+				"CPCCalendarUnitSymbolStyle",
+				"CPCDay",
+				"CPCWeek",
+				"CPCMonth",
+				"CPCYear"
+			]
+		}, {
+			"name": "View Protocols",
+			"children": [
+				"CPCViewProtocol",
+				"CPCViewLayoutAttributes",
+				"CPCViewMeasuring",
+				"CPCFixedAspectRatioView"
+			]
+		}, {
+			"name": "Views",
+			"children": [
+				"CPCWeekView",
+				"CPCMonthView",
+				"CPCMultiMonthsView",
+				"CPCCalendarView"
+			]
+		}, {
+			"name": "Selection management",
+			"children": [
+				"CPCViewSelection",
+				"CPCMonthViewSelectionDelegate",
+				"CPCMultiMonthsViewSelectionDelegate",
+				"CPCCalendarViewSelectionDelegate"
+			]
+		}, {
+			"name": "Views customization",
+			"children": [
+				"CPCViewTitleStyle",
+				"CPCDayCellState",
+				"CPCDayCellRenderingContext",
+				"CPCDayCellRenderer"
 			]
 		}
 	],
@@ -24,6 +64,7 @@
 
 	"author": "Cleverpumpkin, Ltd.",
 	"author_url": "http://cleverpumpkin.ru",
+	"root_url": "https://cleverpumpkin.github.io/cpcalendar-ios-docs/internal/",
 	"github_url": "https://github.com/cleverpumpkin/cpcalendar-ios",
 	"github_file_prefix": "https://github.com/cleverpumpkin/cpcalendar-ios/tree/master/CPCalendar"
 }

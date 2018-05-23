@@ -29,7 +29,7 @@ import Foundation
 public protocol CPCDateInterval: RangeExpression where Bound == Date {
 	/// Earliest date that is included in date interval.
 	var start: Date { get }
-	/// Earliest date that is not included in date interval and is later than `start` (analogous to `Date.timeIntervalSince1970`).
+	/// Earliest date that is not included in date interval and is later than `start` (analogous to `Range <Date>.upperBound`).
 	var end: Date { get }
 	/// Duration of date interval. Default implementation returns `self.end.timeIntervalSice (self.start)`.
 	var duration: TimeInterval { get }
@@ -145,6 +145,7 @@ public extension CPCDateIntervalInitializable {
 
 // MARK: - DateInterval and {Countable,}{Closed,}Range conformances
 
+/// :nodoc:
 extension Range: CPCDateInterval where Bound == Date {
 	public var start: Date {
 		return self.lowerBound;
@@ -155,12 +156,14 @@ extension Range: CPCDateInterval where Bound == Date {
 	}
 }
 
+/// :nodoc:
 extension Range: CPCDateIntervalInitializable where Bound == Date {
 	public init <R> (_ other: R) where R: CPCDateInterval {
 		self.init (uncheckedBounds: (lower: other.start, upper: other.end));
 	}
 }
 
+/// :nodoc:
 extension ClosedRange: CPCDateInterval where Bound == Date {
 	public var start: Date {
 		return self.lowerBound;
@@ -171,12 +174,14 @@ extension ClosedRange: CPCDateInterval where Bound == Date {
 	}
 }
 
+/// :nodoc:
 extension ClosedRange: CPCDateIntervalInitializable where Bound == Date {
 	public init <R> (_ other: R) where R: CPCDateInterval {
 		self.init (uncheckedBounds: (lower: other.start, upper:  Date (timeIntervalSinceReferenceDate: other.end.timeIntervalSinceReferenceDate.nextDown)));
 	}
 }
 
+/// :nodoc:
 extension DateInterval: CPCDateIntervalInitializable {
 	public init <R> (_ other: R) where R: CPCDateInterval {
 		self.init (start: other.start, end: other.end);

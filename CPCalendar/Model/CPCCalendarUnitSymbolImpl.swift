@@ -26,28 +26,28 @@ import Foundation
 /// Common implememntation of `CPCalendarUnitSymbol` requirements.
 internal protocol CPCCalendarUnitSymbolImpl: CPCCalendarUnit, CPCCalendarUnitSymbol {
 	/// KeyPaths of a `Calendar` instance that should be used to retrieve non-standalone symbols.
-	static var symbolKeyPaths: [CPCCalendarUnitSymbolStyle: KeyPath <Calendar, [String]>] { get };
+	static var symbolKeyPaths: [Style: KeyPath <Calendar, [String]>] { get };
 	/// KeyPaths of a `Calendar` instance that should be used to retrieve standalone symbols.
-	static var standaloneSymbolKeyPaths: [CPCCalendarUnitSymbolStyle: KeyPath <Calendar, [String]>] { get };
+	static var standaloneSymbolKeyPaths: [Style: KeyPath <Calendar, [String]>] { get };
 	
 	/// Index that should be used to fetch a localized symbol.
 	var unitOrdinalValue: Int { get };
 }
 
 extension CPCCalendarUnitSymbolImpl {
-	public func symbol (style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> String {
+	public func symbol (style: Style, standalone: Bool) -> String {
 		return self.calendar [keyPath: guarantee ((standalone ? Self.standaloneSymbolKeyPaths : Self.symbolKeyPaths) [style])] [self.unitOrdinalValue];
 	}
 }
 
 extension CPCDay: CPCCalendarUnitSymbolImpl {
-	static let symbolKeyPaths: [CPCCalendarUnitSymbolStyle: KeyPath <Calendar, [String]>] = [
+	static let symbolKeyPaths: [Style: KeyPath <Calendar, [String]>] = [
 		.normal: \.weekdaySymbols,
 		.short: \.shortWeekdaySymbols,
 		.veryShort: \.veryShortWeekdaySymbols,
 	];
 	
-	static let standaloneSymbolKeyPaths: [CPCCalendarUnitSymbolStyle: KeyPath <Calendar, [String]>] = [
+	static let standaloneSymbolKeyPaths: [Style: KeyPath <Calendar, [String]>] = [
 		.normal: \.standaloneWeekdaySymbols,
 		.short: \.shortStandaloneWeekdaySymbols,
 		.veryShort: \.veryShortStandaloneWeekdaySymbols,
@@ -59,13 +59,13 @@ extension CPCDay: CPCCalendarUnitSymbolImpl {
 }
 
 extension CPCMonth: CPCCalendarUnitSymbolImpl {
-	static let symbolKeyPaths: [CPCCalendarUnitSymbolStyle: KeyPath <Calendar, [String]>] = [
+	static let symbolKeyPaths: [Style: KeyPath <Calendar, [String]>] = [
 		.normal: \.monthSymbols,
 		.short: \.shortMonthSymbols,
 		.veryShort: \.veryShortMonthSymbols,
 	];
 	
-	static let standaloneSymbolKeyPaths: [CPCCalendarUnitSymbolStyle: KeyPath <Calendar, [String]>] = [
+	static let standaloneSymbolKeyPaths: [Style: KeyPath <Calendar, [String]>] = [
 		.normal: \.standaloneMonthSymbols,
 		.short: \.shortStandaloneMonthSymbols,
 		.veryShort: \.veryShortStandaloneMonthSymbols,

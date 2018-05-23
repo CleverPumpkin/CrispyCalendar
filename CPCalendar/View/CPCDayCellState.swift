@@ -26,13 +26,12 @@ import Swift
 /// State of a single cell for a specific day.
 public struct CPCDayCellState: Hashable {
 	/// State of a cell that is assigned due to user actions.
-	///
-	/// - normal: Normal state of a day cell (not selected, highlighted or disabled).
-	/// - highlighted: Highlighted state of a cell (current user touch is inside cell's bounds).
-	/// - selected: Selected state of a cell (cell is part of current selection).
 	public enum BackgroundState {
+		/// Normal state of a day cell (not selected, highlighted or disabled).
 		case normal;
+		/// Highlighted state of a cell (current user touch is inside cell's bounds).
 		case highlighted;
+		/// Selected state of a cell (cell is part of current selection).
 		case selected;
 	}
 	
@@ -64,6 +63,7 @@ public extension CPCDayCellState {
 }
 
 extension CPCDayCellState.BackgroundState {
+	/// `CPCDayCellBackgroundState` value, equivalent to this `CPCDayCellState.BackgroundState` value.
 	public var cState: __CPCDayCellBackgroundState {
 		switch (self) {
 		case .normal:
@@ -75,6 +75,9 @@ extension CPCDayCellState.BackgroundState {
 		}
 	}
 	
+	/// Creates new `CPCDayCellState.BackgroundState` equivalent to a `CPCDayCellBackgroundState` value.
+	///
+	/// - Parameter cState: `CPCDayCellBackgroundState` value to copy.
 	public init (_ cState: __CPCDayCellBackgroundState) {
 		switch cState {
 		case .normal:
@@ -88,10 +91,14 @@ extension CPCDayCellState.BackgroundState {
 }
 
 extension CPCDayCellState {
+	/// `CPCDayCellState` Objective C value, equivalent to this `CPCDayCellState` value.
 	public var cState: __CPCDayCellState {
 		return __CPCDayCellState (backgroundState: self.backgroundState.cState, isToday: ObjCBool (self.isToday));
 	}
 	
+	/// Creates new `CPCDayCellState` equivalent to a `CPCDayCellState` Objective C value.
+	///
+	/// - Parameter cState: `CPCDayCellState` Objective C value to copy.
 	public init (_ cState: __CPCDayCellState) {
 		self.backgroundState = BackgroundState (cState.backgroundState);
 		self.isToday = cState.isToday.boolValue;

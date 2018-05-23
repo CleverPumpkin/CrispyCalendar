@@ -24,19 +24,19 @@
 import Foundation
 
 /// Represents style of a localized string representing a calendar unit.
-///
-/// - normal: Full localized name of a calendar unit.
-/// - short: Shortened localized name of calendar unit. Usually consists of just several letters.
-/// - veryShort: The very shortest localized name for a calendar unit. Usually contains just a single letter.
 public enum CPCCalendarUnitSymbolStyle {
+	/// Full localized name of a calendar unit.
 	case normal;
+	/// Shortened localized name of calendar unit. Usually consists of just several letters.
 	case short;
+	/// The very shortest localized name for a calendar unit. Usually contains just a single letter.
 	case veryShort;
 	
 	/// Default symbol style that is used when no specific style is requested.
 	public static let `default` = normal;
 }
 
+/// Calendar unit that has a localizable symbol in addition to an integer value.
 public protocol CPCCalendarUnitSymbol {
 	/// Get a localized name of a calendar unit.
 	///
@@ -44,10 +44,13 @@ public protocol CPCCalendarUnitSymbol {
 	///   - style: Style of returned value.
 	///   - standalone: `true` indicates the intention of using the returned value in standalone context, e.g. as unit's label.
 	/// - Returns: Localized symbol representing this calendar unit with requested style and context.
-	func symbol (style: CPCCalendarUnitSymbolStyle, standalone: Bool) -> String;
+	func symbol (style: Style, standalone: Bool) -> String;
 }
 
 public extension CPCCalendarUnitSymbol {
+	/// - SeeAlso: `CPCCalendarUnitSymbolStyle`
+	public typealias Style = CPCCalendarUnitSymbolStyle;
+	
 	/// Get a localized name of a calendar unit.
 	///
 	/// - Returns: Localized symbol with default style.
@@ -69,7 +72,35 @@ public extension CPCCalendarUnitSymbol {
 	/// - Parameters:
 	///   - style: Style of returned value.
 	/// - Returns: Localized symbol for requested style.
-	func symbol (style: CPCCalendarUnitSymbolStyle) -> String {
+	func symbol (style: Style) -> String {
 		return self.symbol (style: style, standalone: true);
+	}
+}
+
+extension CPCCalendarUnitSymbol.Style {
+	/// `CPCCalendarUnitSymbolStyle` value, equivalent to this `CPCCalendarUnitSymbol.Style` value.
+	public var cStyle: __CPCCalendarUnitSymbolStyle {
+		switch (self) {
+		case .normal:
+			return .normal;
+		case .short:
+			return .short;
+		case .veryShort:
+			return .veryShort;
+		}
+	}
+	
+	/// Creates new `CPCCalendarUnitSymbol.Style` equivalent to a `CPCCalendarUnitSymbolStyle` value.
+	///
+	/// - Parameter cStyle: `CPCCalendarUnitSymbolStyle` value to copy.
+	public init (_ cStyle: __CPCCalendarUnitSymbolStyle) {
+		switch cStyle {
+		case .normal:
+			self = .normal;
+		case .short:
+			self = .short;
+		case .veryShort:
+			self = .veryShort;
+		}
 	}
 }

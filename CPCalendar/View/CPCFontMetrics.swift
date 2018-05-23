@@ -23,14 +23,45 @@
 
 import UIKit
 
+/// Protocol that hides Dynamic Font implementation differences between iOS 10 and iOS 11+.
 internal protocol CPCFontMetricsProtocol {
+	/// Get an arbitrary scaled value for current content size category.
+	///
+	/// - Parameter value: Value to scale.
+	/// - Returns: `value`, scaled according to user-selected content size category.
 	func scaledValue (_ value: CGFloat) -> CGFloat;
+	/// Get an arbitrary scaled value for a given `contentSizeCategory`.
+	///
+	/// - Parameters:
+	///   - value: Value to scale.
+	///   - contentSizeCategory: Content size category to scale for.
+	/// - Returns: `value`, scaled according to given content size category.
 	func scaledValue (_ value: CGFloat, for contentSizeCategory: UIContentSizeCategory) -> CGFloat;
 	
+	/// Get insets, scaled for current content size category.
+	///
+	/// - Parameter insets: Insets to scale.
+	/// - Returns: `insets`, scaled according to user-selected content size category.
 	func scaledInsets (_ insets: UIEdgeInsets) -> UIEdgeInsets;
+	/// Get insets, scaled for a given `contentSizeCategory`.
+	///
+	/// - Parameters:
+	///   - insets: Insets to scale.
+	///   - contentSizeCategory: Content size category to scale for.
+	/// - Returns: `insets`, scaled according to given content size category.
 	func scaledInsets (_ insets: UIEdgeInsets, for contentSizeCategory: UIContentSizeCategory) -> UIEdgeInsets;
 	
+	/// Get font, scaled for current content size category.
+	///
+	/// - Parameter font: Font to scale.
+	/// - Returns: `font`, scaled according to user-selected content size category.
 	func scaledFont (_ font: UIFont) -> UIFont;
+	/// Get font, scaled for a given `contentSizeCategory`.
+	///
+	/// - Parameters:
+	///   - font: Font to scale.
+	///   - contentSizeCategory: Content size category to scale for.
+	/// - Returns: `font`, scaled according to given content size category.
 	func scaledFont (_ font: UIFont, for contentSizeCategory: UIContentSizeCategory) -> UIFont;
 }
 
@@ -57,7 +88,9 @@ extension CPCFontMetricsProtocol {
 	}
 }
 
+/// Container for various `CPCFontMetricsProtocol` implementations.
 internal struct CPCFontMetrics {
+	/// `CPCFontMetricsProtocol` implementation backed by `UIFontMetrics` (iOS 11.0+).
 	@available (iOS 11.0, *)
 	private struct FontMetrics: CPCFontMetricsProtocol {
 		private let fontMetrics: UIFontMetrics;
@@ -87,6 +120,7 @@ internal struct CPCFontMetrics {
 		}
 	}
 	
+	/// `CPCFontMetricsProtocol` implementation that relies on system font metrics (iOS 10.3 and older).
 	private struct LegacyFontMetrics: CPCFontMetricsProtocol {
 		private let textStyle: UIFontTextStyle;
 		
@@ -107,6 +141,10 @@ internal struct CPCFontMetrics {
 		}
 	}
 	
+	/// Creates new `CPCFontMetricsProtocol` instance that scales values according to a specific text style.
+	///
+	/// - Parameter textStyle: Text style that is used to scale various values.
+	/// - Returns: An instance of `FontMetrics` (iOS 11.0+) or `LegacyFontMetrics` (iOS 10.3 and older).
 	internal static func metrics (for textStyle: UIFontTextStyle) -> CPCFontMetricsProtocol {
 		if #available (iOS 11.0, *) {
 			return FontMetrics (style: textStyle);

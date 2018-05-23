@@ -21,9 +21,9 @@
 //  THE SOFTWARE.
 //
 
+#import <CPCalendar/CPCCalendarUnitSymbolStyle.h>
 #import <CPCalendar/CPCDayCellState.h>
 #import <CPCalendar/CPCViewTitleStyle.h>
-#import <CPCalendar/CPCWeekViewStyle.h>
 
 #if __has_include(<CPCalendar/CPCalendar-Swift.h>)
 #	import <CPCalendar/CPCalendar-Swift.h>

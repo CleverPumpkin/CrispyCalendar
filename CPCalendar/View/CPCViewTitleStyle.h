@@ -23,14 +23,26 @@
 
 #import <Foundation/Foundation.h>
 
+/** Type of predefined month title styles.
+ */
 typedef NSString *CPCViewTitleStyle NS_TYPED_ENUM NS_REFINED_FOR_SWIFT;
 
 NS_ASSUME_NONNULL_BEGIN
 
+/** Month titles are not rendered.
+ */
 extern CPCViewTitleStyle const CPCViewTitleNoStyle NS_SWIFT_NAME(none);
+/** Short title format: one-digit month number and full year.
+ */
 extern CPCViewTitleStyle const CPCViewTitleShortStyle NS_SWIFT_NAME(short);
+/** Medium title format: two-digit zero-padded month number and full year.
+ */
 extern CPCViewTitleStyle const CPCViewTitleMediumStyle NS_SWIFT_NAME(medium);
+/** Long title format: abbreviated month name and full year.
+ */
 extern CPCViewTitleStyle const CPCViewTitleLongStyle NS_SWIFT_NAME(long);
+/** Full title format: full month name and full year.
+ */
 extern CPCViewTitleStyle const CPCViewTitleFullStyle NS_SWIFT_NAME(full);
 
 NS_ASSUME_NONNULL_END

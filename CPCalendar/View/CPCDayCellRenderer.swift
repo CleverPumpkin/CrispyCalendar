@@ -23,33 +23,69 @@
 
 import UIKit
 
+/// A set of methods that provide contextual information for drawing a single day cell in a month view.
 public protocol CPCDayCellRenderingContext {
+	/// Graphical context that should be used for custom drawing.
 	var graphicsContext: CGContext { get };
+	/// Day that is represented by the cell.
 	var day: CPCDay { get };
+	/// State of the cell.
 	var state: CPCDayCellState { get };
+	/// Background color.
 	var backgroundColor: UIColor? { get };
+	/// Cell frame.
 	var frame: CGRect { get }
+	/// Cell title.
 	var title: String { get };
+	/// Cell title attributes.
 	var titleAttributes: [NSAttributedStringKey: Any] { get };
+	/// Cell title frame.
 	var titleFrame: CGRect { get };
 }
 
+/// A type that is able to render a cell of a month view, representing an arbitrary day.
 public protocol CPCDayCellRenderer {
-	func drawCell (in context: CPCDayCellRenderingContext);
-	func drawCellBackground (in context: CPCDayCellRenderingContext);
-	func drawCellTitle (in context: CPCDayCellRenderingContext);
+	/// Fully renders content of cell, representing a specific day. Default implementation calls `drawCellBackground (in:)` and `drawCellTitle (in:)`, in that order.
+	///
+	/// - Note: Graphical context is guaranteed to be cleared and than filled with background color for `CPCDayCellState.normal` inside cell's frame.
+	/// - Important: Drawing code is not restricted by cell frame (e. g. graphical context is not clipped to this rect) but doing so may lead to
+	///              undesired consequences. For example, border cells _are_ implicitly clipped at some of their edges because redraw context
+	///              does perform clipping that matches redrawn area.
+	/// - Important: Cell separators drawing code is called _after_ cell content drawing code, so you shouldn't worry that you can accidentally mess
+	///              them up. Area under separators is not cleared before drawing so they do blend with anything that was drawn inside a cell.
+	///
+	/// - Parameter context: Cell rendering context.
+	func drawCell (in context: Context);
+	/// Renders background of a day cell. Default implementation calls `drawCellBackground (state:color:frame:in:)` with corresponding values of `context`.
+	///
+	/// - Parameter context: Cell rendering context.
+	func drawCellBackground (in context: Context);
+	/// Renders title of a day cell. Default implementation calls `drawCellTitle (title:attributes:frame:in:)` with corresponding values of `context`.
+	///
+	/// - Parameter context: Cell rendering context.
+	func drawCellTitle (in context: Context);
 }
 
 public extension CPCDayCellRenderer {
-	public func drawCell (in context: CPCDayCellRenderingContext) {
+	/// - SeeAlso: `CPCDayCellRenderingContext`.
+	public typealias Context = CPCDayCellRenderingContext;
+
+	public func drawCell (in context: Context) {
 		self.drawCellBackground (in: context);
 		self.drawCellTitle (in: context);
 	}
 	
-	public func drawCellBackground (in context: CPCDayCellRenderingContext) {
+	public func drawCellBackground (in context: Context) {
 		self.drawCellBackground (state: context.state, color: context.backgroundColor, frame: context.frame, in: context.graphicsContext);
 	}
 	
+	/// Default implementation of day cell background drawing. Fills `frame` of `context` with `color` if `state` != `CPCDayCellState.normal`.
+	///
+	/// - Parameters:
+	///   - state: Cell state.
+	///   - color: Target background color.
+	///   - frame: Cell frame.
+	///   - context: Graphics context to draw in.
 	public func drawCellBackground (state: CPCDayCellState, color: UIColor?, frame: CGRect, in context: CGContext) {
 		guard state != .normal, let color = color else {
 			return;
@@ -61,10 +97,17 @@ public extension CPCDayCellRenderer {
 		context.restoreGState ();
 	}
 	
-	public func drawCellTitle (in context: CPCDayCellRenderingContext) {
+	public func drawCellTitle (in context: Context) {
 		self.drawCellTitle (title: context.title, attributes: context.titleAttributes, frame: context.titleFrame, in: context.graphicsContext);
 	}
 	
+	/// Default implementation of day cell title drawing. Renders `title` with `attributes` in `frame` of `context`.
+	///
+	/// - Parameters:
+	///   - title: Cell title (day number).
+	///   - attributes: Cell title attributes, e.g. foreground color or font.
+	///   - frame: Cell title target frame.
+	///   - context: Graphics context to draw in.
 	public func drawCellTitle (title: String, attributes: [NSAttributedStringKey: Any], frame: CGRect, in context: CGContext) {
 		UIGraphicsPushContext (context);
 		context.saveGState ();
@@ -77,4 +120,5 @@ public extension CPCDayCellRenderer {
 	}
 }
 
+/// Default implementation of `CPCDayCellRenderer`. Does not override any of `CPCDayCellRenderer`'s implementations.
 internal struct CPCDefaultDayCellRenderer: CPCDayCellRenderer {}

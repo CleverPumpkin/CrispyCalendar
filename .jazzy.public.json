@@ -1,5 +1,5 @@
 {
-	"output": "docs/public/",
+	"output": "docs/generated/public/",
 	"min_acl": "public",
 
 	"theme": "fullwidth",
@@ -21,40 +21,40 @@
 		}, {
 			"name": "View Protocols",
 			"children": [
-				"CPCDayCellRenderingContext",
-				"CPCDayCellRenderer",
 				"CPCViewProtocol",
 				"CPCViewLayoutAttributes",
 				"CPCViewMeasuring",
-				"CPCFixedAspectRatioView",
-				"CPCMonthViewSelectionDelegate",
-				"CPCMultiMonthsViewSelectionDelegate",
-				"CPCCalendarViewSelectionDelegate"
+				"CPCFixedAspectRatioView"
 			]
 		}, {
-			"name": "View Enumerations",
-			"children": [
-				"CPCWeekViewStyle",
-				"CPCViewSelection"
-			]
-		}, {
-			"name": "View Structures",
-			"children": [
-				"CPCDayCellState",
-				"CPCViewTitleStyle"
-			]
-		}, {
-			"name": "Classes",
+			"name": "Views",
 			"children": [
 				"CPCWeekView",
 				"CPCMonthView",
 				"CPCMultiMonthsView",
 				"CPCCalendarView"
 			]
+		}, {
+			"name": "Selection management",
+			"children": [
+				"CPCViewSelection",
+				"CPCMonthViewSelectionDelegate",
+				"CPCMultiMonthsViewSelectionDelegate",
+				"CPCCalendarViewSelectionDelegate"
+			]
+		}, {
+			"name": "Views customization",
+			"children": [
+				"CPCViewTitleStyle",
+				"CPCDayCellState",
+				"CPCDayCellRenderingContext",
+				"CPCDayCellRenderer"
+			]
 		}
 	],
 	"exclude": [
 		"CPCalendar/Model/CPCCalendarUnit.swift",
+		"CPCalendar/Model/CPCCalendarUnit_CalendarWrapper.swift",
 		"CPCalendar/Model/CPCCompoundCalendarUnit.swift",
 		"CPCalendar/Model/CPCCalendarUnitSymbolImpl.swift",
 		"CPCalendar/View/CPCViewSelectionHandling.swift",
@@ -72,6 +72,7 @@
 
 	"author": "Cleverpumpkin, Ltd.",
 	"author_url": "http://cleverpumpkin.ru",
+	"root_url": "https://cleverpumpkin.github.io/cpcalendar-ios-docs/public/",
 	"github_url": "https://github.com/cleverpumpkin/cpcalendar-ios",
 	"github_file_prefix": "https://github.com/cleverpumpkin/cpcalendar-ios/tree/master/CPCalendar"
 }
