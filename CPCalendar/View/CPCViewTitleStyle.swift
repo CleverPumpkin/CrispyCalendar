@@ -23,29 +23,42 @@
 
 import Foundation
 
+/// A value that holds information about formatting month titles.
 public struct CPCViewTitleStyle: Equatable, Hashable, RawRepresentable, ExpressibleByStringLiteral {
 	public typealias RawValue = String;
 	public typealias StringLiteralType = String;
 
+	/// Month titles are not rendered.
 	public static let none = CPCViewTitleStyle.custom;
 	
+	/// Short title format: one-digit month number and full year.
 	public static var short: CPCViewTitleStyle {
 		return .customTemplate (__CPCViewTitleStyle.short.rawValue);
 	};
+	/// Medium title format: two-digit zero-padded month number and full year.
 	public static var medium: CPCViewTitleStyle {
 		return .customTemplate (__CPCViewTitleStyle.medium.rawValue);
 	};
+	/// Long title format: abbreviated month name and full year.
 	public static var long: CPCViewTitleStyle {
 		return .customTemplate (__CPCViewTitleStyle.long.rawValue);
 	};
+	/// Full title format: full month name and full year.
 	public static var full: CPCViewTitleStyle {
 		return .customTemplate (__CPCViewTitleStyle.full.rawValue);
 	};
 	
+	/// Default month title format, which is used when no format was explicitly set.
 	public static var `default`: CPCViewTitleStyle {
 		return .full;
 	}
 	
+	/// Create a new month title format using date format template.
+	///
+	/// - Parameters:
+	///   - template: Date format template, compatible with DateFormatter.
+	///   - locale: Locale to evaluate format template. Defaults to current locale.
+	/// - Returns: Month title format that matches supplied parameters or `nil` if format template is invalid.
 	public static func customTemplate (_ template: String, locale: Locale = .current) -> CPCViewTitleStyle! {
 		return CPCViewTitleStyle (templateValue: template, locale: locale);
 	}

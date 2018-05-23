@@ -1,0 +1,29 @@
+{
+	"output": "docs/internal/",
+	"min_acl": "internal",
+
+	"theme": "apple",
+	"skip_undocumented": false,
+	"hide_documentation_coverage": false,
+	"custom_categories": [
+		{
+			"name": "",
+			"children": [
+			]
+		}
+	],
+
+	"clean": true,
+	"sdk": "iphoneos",
+	"swift_version": "4.1",
+	"module_version": "1.0.0",
+
+	"module": "CPCalendar",
+	"podspec": "CPCalendar.podspec",
+	"source_directory": "CPCalendar/",
+
+	"author": "Cleverpumpkin, Ltd.",
+	"author_url": "http://cleverpumpkin.ru",
+	"github_url": "https://github.com/cleverpumpkin/cpcalendar-ios",
+	"github_file_prefix": "https://github.com/cleverpumpkin/cpcalendar-ios/tree/master/CPCalendar"
+}

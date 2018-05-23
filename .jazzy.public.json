@@ -1,0 +1,77 @@
+{
+	"output": "docs/public/",
+	"min_acl": "public",
+
+	"theme": "fullwidth",
+	"skip_undocumented": false,
+	"hide_documentation_coverage": false,
+	"custom_categories": [
+		{
+			"name": "Model",
+			"children": [
+				"CPCDateInterval",
+				"CPCDateIntervalInitializable",
+				"CPCCalendarUnitSymbol",
+				"CPCCalendarUnitSymbolStyle",
+				"CPCDay",
+				"CPCWeek",
+				"CPCMonth",
+				"CPCYear"
+			]
+		}, {
+			"name": "View Protocols",
+			"children": [
+				"CPCDayCellRenderingContext",
+				"CPCDayCellRenderer",
+				"CPCViewProtocol",
+				"CPCViewLayoutAttributes",
+				"CPCViewMeasuring",
+				"CPCFixedAspectRatioView",
+				"CPCMonthViewSelectionDelegate",
+				"CPCMultiMonthsViewSelectionDelegate",
+				"CPCCalendarViewSelectionDelegate"
+			]
+		}, {
+			"name": "View Enumerations",
+			"children": [
+				"CPCWeekViewStyle",
+				"CPCViewSelection"
+			]
+		}, {
+			"name": "View Structures",
+			"children": [
+				"CPCDayCellState",
+				"CPCViewTitleStyle"
+			]
+		}, {
+			"name": "Classes",
+			"children": [
+				"CPCWeekView",
+				"CPCMonthView",
+				"CPCMultiMonthsView",
+				"CPCCalendarView"
+			]
+		}
+	],
+	"exclude": [
+		"CPCalendar/Model/CPCCalendarUnit.swift",
+		"CPCalendar/Model/CPCCompoundCalendarUnit.swift",
+		"CPCalendar/Model/CPCCalendarUnitSymbolImpl.swift",
+		"CPCalendar/View/CPCViewSelectionHandling.swift",
+		"CPCalendar/View/CPCViewDelegatingSelectionHandler.swift"
+	],
+
+	"clean": true,
+	"sdk": "iphoneos",
+	"swift_version": "4.1",
+	"module_version": "1.0.0",
+
+	"module": "CPCalendar",
+	"podspec": "CPCalendar.podspec",
+	"source_directory": "CPCalendar/",
+
+	"author": "Cleverpumpkin, Ltd.",
+	"author_url": "http://cleverpumpkin.ru",
+	"github_url": "https://github.com/cleverpumpkin/cpcalendar-ios",
+	"github_file_prefix": "https://github.com/cleverpumpkin/cpcalendar-ios/tree/master/CPCalendar"
+}

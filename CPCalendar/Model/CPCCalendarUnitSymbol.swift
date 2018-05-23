@@ -24,12 +24,13 @@
 import Foundation
 
 /// Represents style of a localized string representing a calendar unit.
+///
+/// - normal: Full localized name of a calendar unit.
+/// - short: Shortened localized name of calendar unit. Usually consists of just several letters.
+/// - veryShort: The very shortest localized name for a calendar unit. Usually contains just a single letter.
 public enum CPCCalendarUnitSymbolStyle {
-	/// Full localized name of a calendar unit.
 	case normal;
-	/// Shortened localized name of calendar unit. Usually consists of just several letters.
 	case short;
-	/// The very shortest localized name for a calendar unit. Usually contains just a single letter.
 	case veryShort;
 	
 	/// Default symbol style that is used when no specific style is requested.

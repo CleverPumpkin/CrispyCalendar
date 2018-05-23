@@ -23,17 +23,29 @@
 
 import Swift
 
+/// State of a single cell for a specific day.
 public struct CPCDayCellState: Hashable {
+	/// State of a cell that is assigned due to user actions.
+	///
+	/// - normal: Normal state of a day cell (not selected, highlighted or disabled).
+	/// - highlighted: Highlighted state of a cell (current user touch is inside cell's bounds).
+	/// - selected: Selected state of a cell (cell is part of current selection).
 	public enum BackgroundState {
 		case normal;
 		case highlighted;
 		case selected;
 	}
 	
+	/// State part, corresponding to user actions.
 	public let backgroundState: BackgroundState;
+	/// State part, indicating that cell is rendering current day.
 	public let isToday: Bool;
 	
-	
+	/// Creates a new cell state from state items.
+	///
+	/// - Parameters:
+	///   - backgroundState: User-dependent state part.
+	///   - isToday: Value that indicates that cell renders current day.
 	public init (backgroundState: BackgroundState = .normal, isToday: Bool = false) {
 		self.backgroundState = backgroundState;
 		self.isToday = isToday;
@@ -41,9 +53,13 @@ public struct CPCDayCellState: Hashable {
 }
 
 public extension CPCDayCellState {
+	/// Normal state of a cell that renders any day except current.
 	public static let normal = CPCDayCellState ();
+	/// Highlighted state of a cell that renders any day except current.
 	public static let highlighted = CPCDayCellState (backgroundState: .highlighted);
+	/// Selected state of a cell that renders any day except current.
 	public static let selected = CPCDayCellState (backgroundState: .selected);
+	/// Normal state of a cell that renders current day.
 	public static let today = CPCDayCellState (isToday: true);
 }
 
@@ -85,6 +101,7 @@ extension CPCDayCellState {
 public extension CPCDayCellState {
 	public typealias AllCases = [CPCDayCellState];
 	
+	/// Collection of all values that CPCDayCellState can be equal to.
 	public static let allCases: AllCases = BackgroundState.allCases.flatMap { [
 		CPCDayCellState (backgroundState: $0, isToday: false),
 		CPCDayCellState (backgroundState: $0, isToday: true),

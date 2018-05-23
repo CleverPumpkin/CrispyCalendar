@@ -23,17 +23,40 @@
 
 #import <Foundation/Foundation.h>
 
+/**
+ C/Objective C counterpart for `CPCDayCellState.BackgroundState`
+
+ - CPCDayCellBackgroundStateNormal: Normal cell state, equivalent of `CPCDayCellState.BackgroundState.normal`.
+ - CPCDayCellBackgroundStateHighlighted: Hightlighted cell state, equivalent of `CPCDayCellState.BackgroundState.highlighted`.
+ - CPCDayCellBackgroundStateSelected: Selected cell state, equivalent of `CPCDayCellState.BackgroundState.selected`.
+ */
 typedef NS_ENUM (uint8_t, CPCDayCellBackgroundState) {
 	CPCDayCellBackgroundStateNormal,
 	CPCDayCellBackgroundStateHighlighted,
 	CPCDayCellBackgroundStateSelected,
 } NS_REFINED_FOR_SWIFT;
 
+/**
+ C/Objective C counterpart for `CPCDayCellState`
+ */
 typedef struct {
+	/**
+	 State part, corresponding to user actions.
+	 */
 	CPCDayCellBackgroundState const backgroundState;
+	/**
+	 State part, indicating that cell is rendering current day.
+	 */
 	BOOL const isToday;
 } CPCDayCellState NS_REFINED_FOR_SWIFT;
 
+/**
+ Creates a new cell state from state items.
+
+ @param backgroundState User-dependent state part.
+ @param isToday Value that indicates that cell renders current day.
+ @return Full cell state with items initialized accordingly.
+ */
 NS_INLINE NS_REFINED_FOR_SWIFT CPCDayCellState CPCDayCellStateMake (CPCDayCellBackgroundState const backgroundState, BOOL const isToday) {
 	return (CPCDayCellState) { .backgroundState = backgroundState, .isToday = isToday };
 }
