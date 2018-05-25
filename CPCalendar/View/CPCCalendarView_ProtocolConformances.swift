@@ -24,37 +24,47 @@
 import UIKit
 
 extension CPCCalendarView: CPCViewProtocol {
-	@IBInspectable open var titleFont: UIFont {
+	@IBInspectable open dynamic var titleFont: UIFont {
 		get { return self.contentView.titleFont }
 		set { self.contentView.titleFont = newValue }
 	}
 	
-	@IBInspectable open var titleColor: UIColor {
+	@IBInspectable open dynamic var titleColor: UIColor {
 		get { return self.contentView.titleColor }
 		set { self.contentView.titleColor = newValue }
 	}
 	
+	@IBInspectable open dynamic var titleAlignment: NSTextAlignment {
+		get { return self.contentView.titleAlignment }
+		set { self.contentView.titleAlignment = newValue }
+	}
+
 	open var titleStyle: TitleStyle {
 		get { return self.contentView.titleStyle }
-		set { self.contentView.titleStyle = newValue }
+		set {
+			guard !self.isAppearanceProxy else {
+				return self.titleFormat = newValue.rawValue;
+			}
+			self.contentView.titleStyle = newValue;
+		}
 	}
 	
-	@IBInspectable open var titleMargins: UIEdgeInsets {
+	@IBInspectable open dynamic var titleMargins: UIEdgeInsets {
 		get { return self.contentView.titleMargins }
 		set { self.contentView.titleMargins = newValue }
 	}
 	
-	@IBInspectable open var dayCellFont: UIFont {
+	@IBInspectable open dynamic var dayCellFont: UIFont {
 		get { return self.contentView.dayCellFont }
 		set { self.contentView.dayCellFont = newValue }
 	}
 	
-	@IBInspectable open var dayCellTextColor: UIColor {
+	@IBInspectable open dynamic var dayCellTextColor: UIColor {
 		get { return self.contentView.dayCellTextColor }
 		set { self.contentView.dayCellTextColor = newValue }
 	}
 	
-	@IBInspectable open var separatorColor: UIColor {
+	@IBInspectable open dynamic var separatorColor: UIColor {
 		get { return self.contentView.separatorColor }
 		set { self.contentView.separatorColor = newValue }
 	}
@@ -64,11 +74,27 @@ extension CPCCalendarView: CPCViewProtocol {
 		set { self.contentView.cellRenderer = newValue }
 	}
 	
+	@objc dynamic internal func dayCellBackgroundColor (for backgroundStateValue: Int, isTodayValue: Int) -> UIColor? {
+		return self.dayCellBackgroundColorImpl (backgroundStateValue, isTodayValue);
+	}
+	
 	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
+		guard !self.isAppearanceProxy else {
+			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
+			return self.dayCellBackgroundColor (for: backgroundStateValue, isTodayValue: isTodayValue);
+		}
 		return self.contentView.dayCellBackgroundColor (for: state);
 	}
 	
+	@objc dynamic internal func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for backgroundStateValue: Int, isTodayValue: Int) {
+		return self.setDayCellBackgroundColorImpl (backgroundColor, backgroundStateValue, isTodayValue);
+	}
+	
 	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
+		guard !self.isAppearanceProxy else {
+			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
+			return self.setDayCellBackgroundColor (backgroundColor, for: backgroundStateValue, isTodayValue: isTodayValue);
+		}
 		self.contentView.setDayCellBackgroundColor (backgroundColor, for: state);
 	}
 }
@@ -111,6 +137,17 @@ extension CPCCalendarView: UIContentSizeCategoryAdjusting {
 		}
 		set {
 			self.contentView.adjustsFontForContentSizeCategory = newValue;
+		}
+	}
+}
+
+extension CPCCalendarView /* UIScrollViewProtocol */ {
+	open var scrollsToToday: Bool {
+		get {
+			return self.scrollView.scrollsToTop;
+		}
+		set {
+			self.scrollView.scrollsToTop = newValue;
 		}
 	}
 }

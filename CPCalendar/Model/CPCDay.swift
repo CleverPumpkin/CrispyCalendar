@@ -23,35 +23,112 @@
 
 import Foundation
 
+fileprivate extension Int {
+	fileprivate static let minSignedHalf = Int.min >> (Int.bitWidth / 2);
+	fileprivate static let maxSignedHalf = Int (bitPattern: UInt.max >> (UInt.bitWidth / 2 + 1));
+	fileprivate static let maxUnsignedQuarter = Int (bitPattern: UInt.max >> (UInt.bitWidth * 3 / 4));
+}
+
+private protocol CPCDayBackingStorageProtocol {
+	var year: Int { get }
+	var month: Int { get }
+	var day: Int { get }
+	
+	init (year: Int, month: Int, day: Int)
+	
+#if swift(>=4.2)
+	func hash (into hasher: inout Hasher);
+#else
+	var hashValue: Int { get }
+#endif
+}
+
 /// Calendar unit that repsesents a single day.
 public struct CPCDay: CPCCalendarUnit {
-	internal typealias UnitBackingType = BackingStorage;
+	internal typealias BackingType = BackingStorage;
 	
-	internal struct BackingStorage: Hashable {
-		internal let day: Int;
-		
-		internal var month: Int {
-			return self.monthValues.month;
-		}
-		internal var year: Int {
-			return self.monthValues.year;
-		}
-		
-		internal func containingYear (_ calendar: CalendarWrapper) -> CPCYear {
-			return self.monthValues.containingYear (calendar);
-		}
+	internal struct BackingStorage: Hashable, CPCDayBackingStorageProtocol {
+		fileprivate struct Packed: Hashable, CPCDayBackingStorageProtocol {
+			fileprivate static let acceptableYears = Int.minSignedHalf ... .maxSignedHalf;
+			fileprivate static let acceptableMonths = 0 ... .maxUnsignedQuarter;
+			fileprivate static let acceptableDays = 0 ... .maxUnsignedQuarter;
 
-		internal func containingMonth (_ calendar: CalendarWrapper) -> CPCMonth {
-			return CPCMonth (backedBy: self.monthValues, calendar: calendar);
+			private let value: Int;
+			
+			fileprivate var year: Int {
+				return self.value >> (Int.bitWidth / 2);
+			}
+			
+			fileprivate var month: Int {
+				return (self.value >> (Int.bitWidth / 4)) & .maxUnsignedQuarter;
+			}
+			
+			fileprivate var day: Int {
+				return self.value & .maxUnsignedQuarter;
+			}
+			
+			fileprivate init (year: Int, month: Int, day: Int) {
+				self.value = (year << (Int.bitWidth / 2)) | (month << (Int.bitWidth / 4)) | day;
+			}
 		}
+		
+		fileprivate struct Default: Hashable, CPCDayBackingStorageProtocol {
+			fileprivate let year: Int;
+			fileprivate let month: Int;
+			fileprivate let day: Int;
+		}
+		
+		internal static func == (lhs: BackingStorage, rhs: BackingStorage) -> Bool {
+			return (lhs.day == rhs.day) && (lhs.month == rhs.month) && (lhs.year == rhs.year);
+		}
+		
+		private let storage: CPCDayBackingStorageProtocol;
+		
+		internal init (year: Int, month: Int, day: Int) {
+			guard Packed.acceptableYears ~= year, Packed.acceptableMonths ~= month, Packed.acceptableDays ~= day else {
+				self.storage = Default (year: year, month: month, day: day);
+				return;
+			}
+			self.storage = Packed (year: year, month: month, day: day);
+		}
+		
+		fileprivate var year: Int {
+			return self.storage.year;
+		}
+		fileprivate var month: Int {
+			return self.storage.month;
+		}
+		fileprivate var day: Int {
+			return self.storage.day;
+		}
+		
+#if swift(>=4.2)
+		internal func hash (into hasher: inout Hasher) {
+			self.storage.hash (into: &hasher);
+		}
+#else
+		internal var hashValue: Int {
+			return self.storage.hashValue;
+		}
+#endif
 
-		fileprivate let monthValues: CPCMonth.BackingStorage;
+		fileprivate init (_ storage: CPCDayBackingStorageProtocol) {
+			self.storage = storage;
+		}
+		
+		fileprivate func containingYear (_ calendar: CalendarWrapper) -> CPCYear {
+			return CPCYear (backedBy: CPCYear.BackingStorage (year: self.year), calendar: calendar);
+		}
+		
+		fileprivate func containingMonth (_ calendar: CalendarWrapper) -> CPCMonth {
+			return CPCMonth (backedBy: CPCMonth.BackingStorage (year: self.year, month: self.month), calendar: calendar);
+		}
 	}
 	
 	internal static let representedUnit = Calendar.Component.day;
 	internal static let requiredComponents: Set <Calendar.Component> = [.day, .month, .year];
 	internal static let descriptionDateFormatTemplate = "ddMMyyyy";
-	
+
 	/// Year of represented day.
 	public var year: Int {
 		return self.backingValue.year;
@@ -78,7 +155,7 @@ public struct CPCDay: CPCCalendarUnit {
 	}
 	/// Week that contains represented day.
 	public var containingWeek: CPCWeek {
-		return CPCWeek (containing: self.start, calendar: self.calendarWrapper);
+		return CPCWeek (containing: self.start, calendarOf: self);
 	}
 
 	internal let calendarWrapper: CalendarWrapper;
@@ -94,16 +171,17 @@ extension CPCDay.BackingStorage: ExpressibleByDateComponents {
 	internal static let requiredComponents: Set <Calendar.Component> = CPCMonth.BackingStorage.requiredComponents.union (.day);
 
 	internal init (_ dateComponents: DateComponents) {
-		self.monthValues = CPCMonth.BackingStorage (dateComponents);
-		self.day = guarantee (dateComponents.day);
+		self.init (
+			year: guarantee (dateComponents.year),
+			month: guarantee (dateComponents.month),
+			day: guarantee (dateComponents.day)
+		);
 	}
 }
 
 extension CPCDay.BackingStorage: DateComponentsConvertible {
 	internal func dateComponents (_ calendar: Calendar) -> DateComponents {
-		var components = self.monthValues.dateComponents (calendar);
-		components.day = self.day;
-		return components;
+		return DateComponents (calendar: calendar, year: self.year, month: self.month, day: self.day);
 	}
 }
 
@@ -127,16 +205,6 @@ public extension CPCDay {
 		return self.today.prev;
 	}
 	
-	/// Day of week for represented day.
-	public var weekday: Int {
-		return guarantee (self.containingWeek.index (of: self));
-	}
-	
-	/// Indicates whether represented day belongs to weekend.
-	public var isWeekend: Bool {
-		return self.calendar.isDateInWeekend (self.start);
-	}
-
 	/// Create a new value, corresponding to a day in the future or past.
 	///
 	/// - Parameter daysSinceNow: Distance from today in days.

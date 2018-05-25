@@ -23,35 +23,51 @@
 
 import UIKit
 
+/// A view that displays weekday names in order define by current user locale and calendar.
 open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	private static let fontMetrics = CPCFontMetrics.metrics (for: .callout);
 	
-	@IBInspectable open var font = UIFont.preferredFont (forTextStyle: .callout) {
+	/// The font used to display weekday names.
+	@IBInspectable open dynamic var font = UIFont.preferredFont (forTextStyle: .callout) {
 		didSet {
 			self.effectiveFont = self.scaledFont (self.font, using: CPCWeekView.fontMetrics);
 		}
 	}
 	
-	@IBInspectable open var textColor = UIColor.darkText.withAlphaComponent (0.75) {
+	/// The color of rendered weekday symbols.
+	@IBInspectable open dynamic var textColor = UIColor.darkText.withAlphaComponent (0.75) {
 		didSet {
+			if (!self.weekendColorWasCustomized) {
+				self.weekendColor = self.textColor;
+			}
 			self.setNeedsDisplay ();
 		}
 	};
 	
-	@IBInspectable open var weekendColor: UIColor = .darkText {
+	/// The color of rendered weekday symbols that are considered weekends according to current user settings.
+	@IBInspectable open dynamic var weekendColor: UIColor = .darkText {
 		didSet {
+			self.weekendColorWasCustomized = true;
 			self.setNeedsDisplay ();
 		}
 	};
 	
-	open var style = CPCDay.Style.default {
-		didSet {
+	/// Style of rendered symbols.
+	open var style: CPCDay.Weekday.Style {
+		get {
+			return self.styleValue;
+		}
+		set {
+			guard !self.isAppearanceProxy else {
+				return self.cStyle = newValue.cStyle;
+			}
+			self.styleValue = newValue;
 			self.setNeedsDisplay ();
 		}
 	}
 	
 	open override var intrinsicContentSize: CGSize {
-		return CGSize (width: UIViewNoIntrinsicMetric, height: (self.style == .none) ? 0.0 : self.font.lineHeight);
+		return CGSize (width: UIViewNoIntrinsicMetric, height: self.font.lineHeight);
 	}
 	
 	open var adjustsFontForContentSizeCategory: Bool {
@@ -61,6 +77,11 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	
 	internal var contentSizeCategoryObserver: NSObjectProtocol?;
 	
+	private var weekendColorWasCustomized = false;
+	private var styleValue = CPCDay.Weekday.Style.short;
+	
+	/// Font that is actually used for text rendering. It is equivalent to `font` when `adjustsFontForContentSizeCategory` is `false`
+	/// and is scaled version of `font` otherwise.
 	private var effectiveFont = UIFont.preferredFont (forTextStyle: .callout) {
 		didSet {
 			if (self.effectiveFont.lineHeight != oldValue.lineHeight) {
@@ -106,9 +127,9 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 		} ();
 		
 		var lastX = CGFloat (0.0);
-		for dayIndex in 0 ..< week.count {
-			let day = week [dayIndex], frame = CGRect (x: lastX, y: cellOriginY, width: (cellWidth * CGFloat (dayIndex + 1)) - lastX, height: cellHeight);
-			NSAttributedString (string: day.symbol (style: style, standalone: true), attributes: day.isWeekend ? weekendAttributes : weekdayAttributes).draw (in: frame);
+		for dayIndex in week.indices {
+			let weekday = week [dayIndex].weekday, frame = CGRect (x: lastX, y: cellOriginY, width: (cellWidth * CGFloat (dayIndex)) - lastX, height: cellHeight);
+			NSAttributedString (string: weekday.symbol (style: style, standalone: true), attributes: weekday.isWeekend ? weekendAttributes : weekdayAttributes).draw (in: frame);
 			lastX = frame.maxX;
 		}
 	}
@@ -119,8 +140,9 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 }
 
 extension CPCWeekView {
-	@IBInspectable open var cStyle: __CPCCalendarUnitSymbolStyle {
+	/// Style value that can be accessed from Objective C code.
+	@IBInspectable open dynamic var cStyle: __CPCCalendarUnitSymbolStyle {
 		get { return self.style.cStyle }
-		set { self.style = CPCDay.Style (newValue) }
+		set { self.style = CPCDay.Weekday.Style (newValue) }
 	}
 }

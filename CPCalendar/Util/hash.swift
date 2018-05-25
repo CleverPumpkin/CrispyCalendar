@@ -23,29 +23,30 @@
 
 import Foundation
 
-internal func log2i <T> (_ value: T) -> Int where T: BinaryInteger {
-	precondition (value > 0, "log2 (\(value)) is undefined");
-	
-	let words = value.words;
-	var iterator = words.makeIterator ();
-	guard var lastWord = iterator.next () else {
-		return 0;
+internal extension BinaryInteger {
+	internal var usedBitCount: Int {
+		guard self > 0 else {
+			return (self == 0) ? 0 : self.bitWidth;
+		}
+		
+		let words = self.words;
+		var iterator = words.makeIterator ();
+		guard var lastWord = iterator.next () else {
+			return 0;
+		}
+		var result = 0;
+		while let word = iterator.next () {
+			result += UInt.bitWidth;
+			lastWord = word;
+		}
+		return result + lastWord.usedBitCount;
 	}
-	var wordsCount = 0;
-	while let word = iterator.next () {
-		wordsCount += 1;
-		lastWord = word;
-	}
-	
-	return (wordsCount - 1) * UInt.bitWidth + log2i (lastWord);
 }
 
-internal func log2i <T> (_ value: T) -> Int where T: FixedWidthInteger {
-	return T.bitWidth - value.leadingZeroBitCount - 1;
-}
-
-internal func concatenateHashValues (_ value1: Int, _ value2: Int, shiftAmount: Int) -> Int {
-	return (value1 << shiftAmount) | value2;
+internal extension FixedWidthInteger {
+	internal var usedBitCount: Int {
+		return Self.bitWidth - self.leadingZeroBitCount;
+	}
 }
 
 internal func hashIntegers <T> (_ first: T, _ other: T...) -> Int where T: FixedWidthInteger {

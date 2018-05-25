@@ -37,7 +37,13 @@ public protocol CPCMultiMonthsViewSelectionDelegate: AnyObject {
 }
 
 open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanceStorage {
-	@IBInspectable open var titleFont: UIFont {
+	open override var backgroundColor: UIColor? {
+		didSet {
+			self.updateManagedMonthViews { $0.backgroundColor = self.backgroundColor };
+		}
+	}
+	
+	@IBInspectable open dynamic var titleFont: UIFont {
 		get {
 			return self.appearanceStorage.titleFont;
 		}
@@ -46,7 +52,7 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 			self.updateManagedMonthViews { $0.titleFont = newValue };
 		}
 	}
-	@IBInspectable open var titleColor: UIColor {
+	@IBInspectable open dynamic var titleColor: UIColor {
 		get {
 			return self.appearanceStorage.titleColor;
 		}
@@ -55,16 +61,31 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 			self.updateManagedMonthViews { $0.titleColor = newValue };
 		}
 	}
+	@IBInspectable open dynamic var titleAlignment: NSTextAlignment {
+		get {
+			return self.appearanceStorage.titleAlignment;
+		}
+		set {
+			guard (self.titleAlignment != newValue) else {
+				return;
+			}
+			self.appearanceStorage.titleAlignment = newValue;
+			self.updateManagedMonthViews { $0.titleAlignment = newValue };
+		}
+	}
 	open var titleStyle: TitleStyle {
 		get {
 			return self.appearanceStorage.titleStyle;
 		}
 		set {
+			guard !self.isAppearanceProxy else {
+				return self.titleFormat = newValue.rawValue;
+			}
 			self.appearanceStorage.titleStyle = newValue;
 			self.updateManagedMonthViews { $0.titleStyle = newValue };
 		}
 	}
-	@IBInspectable open var titleMargins: UIEdgeInsets {
+	@IBInspectable open dynamic var titleMargins: UIEdgeInsets {
 		get {
 			return self.appearanceStorage.titleMargins;
 		}
@@ -74,7 +95,7 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 		}
 	}
 	
-	@IBInspectable open var dayCellFont: UIFont {
+	@IBInspectable open dynamic var dayCellFont: UIFont {
 		get {
 			return self.appearanceStorage.dayCellFont;
 		}
@@ -83,7 +104,7 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 			self.updateManagedMonthViews { $0.dayCellFont = newValue };
 		}
 	}
-	@IBInspectable open var dayCellTextColor: UIColor {
+	@IBInspectable open dynamic var dayCellTextColor: UIColor {
 		get {
 			return self.appearanceStorage.dayCellTextColor;
 		}
@@ -92,7 +113,7 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 			self.updateManagedMonthViews { $0.dayCellTextColor = newValue };
 		}
 	}
-	@IBInspectable open var separatorColor: UIColor {
+	@IBInspectable open dynamic var separatorColor: UIColor {
 		get {
 			return self.appearanceStorage.separatorColor;
 		}
@@ -123,11 +144,27 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 	
 	private var multiSelectionHandler = CPCViewDefaultSelectionHandler;
 	
+	@objc dynamic internal func dayCellBackgroundColor (for backgroundStateValue: Int, isTodayValue: Int) -> UIColor? {
+		return self.dayCellBackgroundColorImpl (backgroundStateValue, isTodayValue);
+	}
+	
 	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
+		guard !self.isAppearanceProxy else {
+			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
+			return self.dayCellBackgroundColor (for: backgroundStateValue, isTodayValue: isTodayValue);
+		}
 		return self.appearanceStorage.cellBackgroundColors [state];
 	}
-
+	
+	@objc dynamic internal func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for backgroundStateValue: Int, isTodayValue: Int) {
+		return self.setDayCellBackgroundColorImpl (backgroundColor, backgroundStateValue, isTodayValue);
+	}
+	
 	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
+		guard !self.isAppearanceProxy else {
+			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
+			return self.setDayCellBackgroundColor (backgroundColor, for: backgroundStateValue, isTodayValue: isTodayValue);
+		}
 		self.appearanceStorage.cellBackgroundColors [state] = backgroundColor;
 		self.updateManagedMonthViews { $0.setDayCellBackgroundColor (backgroundColor, for: state) };
 	}
@@ -154,6 +191,7 @@ extension CPCMultiMonthsView {
 		}
 		monthView.copyStyle (from: self);
 		monthView.cellRenderer = self.cellRenderer;
+		monthView.backgroundColor = self.backgroundColor;
 		monthView.selectionHandler = self.selectionHandler (for: monthView);
 		monthView.adjustsFontForContentSizeCategory = self.adjustsFontForContentSizeCategory;
 		monthView.setNeedsDisplay ();

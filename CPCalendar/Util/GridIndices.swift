@@ -97,7 +97,7 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 		}
 	}
 	
-	fileprivate final class Info: Equatable, Hashable, CustomStringConvertible, CustomDebugStringConvertible {
+	fileprivate final class Info: Hashable, CustomStringConvertible, CustomDebugStringConvertible {
 		fileprivate static var invalid: Info {
 			let zeroRange = Idx (0) ..< Idx (0);
 			return Info (rows: zeroRange, columns: zeroRange);
@@ -111,9 +111,46 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 			return "(Grid \(self.rows) x \(self.columns), indices: \(self.indices), indexValues: \(self.indices), indexes: \(self.min) ..< \(self.max))";
 		}
 		
+#if swift(>=4.2)
+		
 		fileprivate let rows: CountableRange <Idx>;
 		fileprivate let columns: CountableRange <Idx>;
 		
+#else
+		
+		private struct HashableValues: Hashable {
+			private let minRow: Idx;
+			private let maxRow: Idx;
+			private let minCol: Idx;
+			private let maxCol: Idx;
+			
+			fileprivate var rows: CountableRange <Idx> {
+				return self.minRow ..< self.maxRow;
+			}
+			
+			fileprivate var columns: CountableRange <Idx> {
+				return self.minCol ..< self.maxCol;
+			}
+			
+			fileprivate init (rows: CountableRange <Idx>, columns: CountableRange <Idx>) {
+				self.minRow = rows.lowerBound;
+				self.maxRow = rows.upperBound;
+				self.minCol = columns.lowerBound;
+				self.maxCol = columns.upperBound;
+			}
+		}
+		
+		fileprivate var rows: CountableRange <Idx> {
+			return self.hashableValues.rows;
+		}
+		
+		fileprivate var columns: CountableRange <Idx> {
+			return self.hashableValues.columns;
+		}
+		private let hashableValues: HashableValues;
+
+#endif
+
 		fileprivate var indices: CountableRange <Idx> {
 			return 0 ..< numericCast (self.rows.count * self.columns.count);
 		}
@@ -126,17 +163,30 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 			return Element.max (self);
 		}
 		
-		fileprivate var hashValue: Int {
-			return hashIntegers (Int (self.rows.lowerBound), Int (self.columns.lowerBound), self.rows.count, self.columns.count);
+#if swift(>=4.2)
+		fileprivate func hash (into hasher: inout Hasher) {
+			hasher.combine (self.rows.lowerBound);
+			hasher.combine (self.rows.upperBound);
+			hasher.combine (self.columns.lowerBound);
+			hasher.combine (self.columns.upperBound);
 		}
+#else
+		fileprivate var hashValue: Int {
+			return self.hashableValues.hashValue;
+		}
+#endif
 		
 		fileprivate static func == (lhs: Info, rhs: Info) -> Bool {
 			return (lhs === rhs) || ((lhs.rows == rhs.rows) && (lhs.columns == rhs.columns));
 		}
 	
 		private init (rows: CountableRange <Idx>, columns: CountableRange <Idx>) {
+#if swift(>=4.2)
 			self.rows = rows;
 			self.columns = columns;
+#else
+			self.hashableValues = HashableValues (rows: rows, columns: columns);
+#endif
 		}
 		
 		fileprivate convenience init <R1, R2> (rows: R1, columns: R2) where R1: RangeExpression, R1.Bound == Idx, R2: RangeExpression, R2.Bound == Idx {

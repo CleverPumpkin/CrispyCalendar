@@ -26,7 +26,7 @@ import Swift
 /// State of a single cell for a specific day.
 public struct CPCDayCellState: Hashable {
 	/// State of a cell that is assigned due to user actions.
-	public enum BackgroundState {
+	public enum BackgroundState: Int, Hashable {
 		/// Normal state of a day cell (not selected, highlighted or disabled).
 		case normal;
 		/// Highlighted state of a cell (current user touch is inside cell's bounds).
@@ -62,7 +62,7 @@ public extension CPCDayCellState {
 	public static let today = CPCDayCellState (isToday: true);
 }
 
-extension CPCDayCellState.BackgroundState {
+public extension CPCDayCellState.BackgroundState {
 	/// `CPCDayCellBackgroundState` value, equivalent to this `CPCDayCellState.BackgroundState` value.
 	public var cState: __CPCDayCellBackgroundState {
 		switch (self) {
@@ -106,13 +106,88 @@ extension CPCDayCellState {
 }
 
 public extension CPCDayCellState {
-	public typealias AllCases = [CPCDayCellState];
+	public struct AllCases {
+		fileprivate init () {}
+	}
 	
 	/// Collection of all values that CPCDayCellState can be equal to.
-	public static let allCases: AllCases = BackgroundState.allCases.flatMap { [
-		CPCDayCellState (backgroundState: $0, isToday: false),
-		CPCDayCellState (backgroundState: $0, isToday: true),
-	]};
+	public static let allCases = AllCases ();
+}
+
+extension CPCDayCellState.AllCases: Collection {
+	public typealias Element = CPCDayCellState;
+
+	public struct Index: Comparable {
+		private enum Value: Equatable {
+			case element (CPCDayCellState);
+			case end;
+		}
+		
+		private static let firstBackgroundState = guarantee (CPCDayCellState.BackgroundState (rawValue: 0));
+		
+		public static func < (lhs: Index, rhs: Index) -> Bool {
+			switch (lhs.value, rhs.value) {
+			case (.end, _):
+				return false;
+			case (_, .end):
+				return true;
+			case (.element (let lhs), .element (let rhs)):
+				guard lhs.isToday == rhs.isToday else {
+					return rhs.isToday;
+				}
+				return lhs.backgroundState.rawValue < rhs.backgroundState.rawValue;
+			}
+		}
+		
+		fileprivate var element: Element {
+			guard case .element (let element) = self.value else {
+				preconditionFailure ("Cannot access value at \(self) index in \(CPCDayCellState.AllCases.self)");
+			}
+			return element;
+		}
+		
+		fileprivate var next: Index {
+			guard case .element (let element) = self.value else {
+				preconditionFailure ("Cannot advance \(self) index");
+			}
+			
+			if let nextBackgroundState = CPCDayCellState.BackgroundState (rawValue: element.backgroundState.rawValue + 1) {
+				return Index (CPCDayCellState (backgroundState: nextBackgroundState, isToday: element.isToday));
+			} else {
+				return element.isToday ? Index (end: ()) : Index (CPCDayCellState (backgroundState: Index.firstBackgroundState, isToday: true));
+			}
+		}
+		
+		private let value: Value;
+		
+		fileprivate init (start: ()) {
+			self.value = .element (CPCDayCellState (backgroundState: Index.firstBackgroundState, isToday: false));
+		}
+
+		fileprivate init (end: ()) {
+			self.value = .end;
+		}
+		
+		private init (_ state: Element) {
+			self.value = .element (state);
+		}
+	}
+
+	public var startIndex: Index {
+		return Index (start: ());
+	}
+	
+	public var endIndex: Index {
+		return Index (end: ());
+	}
+	
+	public subscript (position: Index) -> CPCDayCellState {
+		return position.element;
+	}
+
+	public func index (after i: Index) -> Index {
+		return i.next;
+	}
 }
 
 #if swift(>=4.2)

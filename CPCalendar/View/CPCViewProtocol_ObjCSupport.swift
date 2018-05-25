@@ -30,67 +30,67 @@ fileprivate extension CPCViewTitleStyle {
 }
 
 extension CPCMonthView {
-	@IBInspectable
-	open var titleTemplate: String! {
+	@IBInspectable open dynamic var titleTemplate: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .customTemplate (newValue) }
 	}
 
-	@IBInspectable
-	open var titleFormat: String! {
+	@IBInspectable open dynamic var titleFormat: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .custom (newValue) }
 	}
 
-	@objc open func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
+	@objc (dayCellBackgroundColorForState:)
+	open dynamic func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
 		return self.dayCellBackgroundColor (for: CPCDayCellState (state));
 	}
 	
-	@objc open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
+	@objc (setDayCellBackgroundColor:forState:)
+	open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
 		self.setDayCellBackgroundColor (backgroundColor, for: CPCDayCellState (state));
 	}
 }
 
 extension CPCMultiMonthsView {
-	@IBInspectable
-	open var titleTemplate: String! {
+	@IBInspectable open dynamic var titleTemplate: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .customTemplate (newValue) }
 	}
 	
-	@IBInspectable
-	open var titleFormat: String! {
+	@IBInspectable open dynamic var titleFormat: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .custom (newValue) }
 	}
-	
-	@objc open func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
+
+	@objc (dayCellBackgroundColorForState:)
+	open dynamic func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
 		return self.dayCellBackgroundColor (for: CPCDayCellState (state));
 	}
 	
-	@objc open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
+	@objc (setDayCellBackgroundColor:forState:)
+	open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
 		self.setDayCellBackgroundColor (backgroundColor, for: CPCDayCellState (state));
 	}
 }
 
 extension CPCCalendarView {
-	@IBInspectable
-	open var titleTemplate: String! {
+	@IBInspectable open dynamic var titleTemplate: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .customTemplate (newValue) }
 	}
 	
-	@IBInspectable
-	open var titleFormat: String! {
+	@IBInspectable open dynamic var titleFormat: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .custom (newValue) }
 	}
-	
-	@objc open func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
+
+	@objc (dayCellBackgroundColorForState:)
+	open dynamic func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
 		return self.dayCellBackgroundColor (for: CPCDayCellState (state));
 	}
 	
-	@objc open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
+	@objc (setDayCellBackgroundColor:forState:)
+	open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
 		self.setDayCellBackgroundColor (backgroundColor, for: CPCDayCellState (state));
 	}
 }

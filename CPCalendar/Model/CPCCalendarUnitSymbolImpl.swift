@@ -40,21 +40,47 @@ extension CPCCalendarUnitSymbolImpl {
 	}
 }
 
-extension CPCDay: CPCCalendarUnitSymbolImpl {
-	static let symbolKeyPaths: [Style: KeyPath <Calendar, [String]>] = [
+extension CPCDay {
+	public struct Weekday {
+		private let day: CPCDay;
+		
+		fileprivate init (_ day: CPCDay) {
+			self.day = day;
+		}
+	}
+	
+	public var weekday: Weekday {
+		return Weekday (self);
+	}
+}
+
+extension CPCDay.Weekday: CPCCalendarUnitSymbol {
+	private typealias Weekday = CPCDay.Weekday;
+	
+	private static let symbolKeyPaths: [Style: KeyPath <Calendar, [String]>] = [
 		.normal: \.weekdaySymbols,
 		.short: \.shortWeekdaySymbols,
 		.veryShort: \.veryShortWeekdaySymbols,
 	];
 	
-	static let standaloneSymbolKeyPaths: [Style: KeyPath <Calendar, [String]>] = [
+	private static let standaloneSymbolKeyPaths: [Style: KeyPath <Calendar, [String]>] = [
 		.normal: \.standaloneWeekdaySymbols,
 		.short: \.shortStandaloneWeekdaySymbols,
 		.veryShort: \.veryShortStandaloneWeekdaySymbols,
 	];
 	
-	internal var unitOrdinalValue: Int {
-		return self.weekday - 1;
+	/// Day of week for represented day.
+	public var weekday: Int {
+		return guarantee (self.day.containingWeek.index (of: self.day));
+	}
+	
+	/// Indicates whether represented day belongs to weekend.
+	public var isWeekend: Bool {
+		return self.day.calendar.isDateInWeekend (self.day.start);
+	}
+
+	public func symbol (style: Style, standalone: Bool) -> String {
+		return self.day.calendar [keyPath: guarantee ((standalone ? Weekday.standaloneSymbolKeyPaths : Weekday.symbolKeyPaths) [style])] [self.weekday - 1];
 	}
 }
 

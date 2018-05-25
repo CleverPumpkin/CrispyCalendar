@@ -23,6 +23,14 @@
 
 import UIKit
 
+fileprivate extension UIColor {
+	fileprivate var isInvisible: Bool {
+		var alpha = 0.0 as CGFloat;
+		self.getWhite (nil, alpha: &alpha);
+		return alpha < 1e-3;
+	}
+}
+
 fileprivate extension UIRectCorner {
 	fileprivate static let anyLeft: UIRectCorner = [.topLeft, .bottomLeft];
 	fileprivate static let anyTop: UIRectCorner = [.topLeft, .topRight];
@@ -124,6 +132,7 @@ internal extension CPCMonthView {
 	
 	fileprivate struct TitleRedrawContext {
 		fileprivate let month: CPCMonth;
+		private let backgroundColor: UIColor?;
 		private let formatter: DateFormatter;
 		private let titleFrame: CGRect;
 		private let titleContentFrame: CGRect;
@@ -134,6 +143,7 @@ internal extension CPCMonthView {
 		private typealias AffectedIndices = (affected: CellIndices, highlighted: CellIndex?, selected: CellIndices?);
 		
 		fileprivate let month: CPCMonth;
+		private let backgroundColor: UIColor?;
 		private let layout: Layout;
 		private let cellIndices: AffectedIndices;
 		private let dayFormatter: DateFormatter;
@@ -188,18 +198,23 @@ extension CPCMonthView.TitleRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.month = month;
 		self.titleFrame = titleFrame;
 		self.titleContentFrame = layout.titleContentFrame;
+		self.backgroundColor = view.backgroundColor;
 		self.formatter = DateFormatter.dequeueFormatter (for: month, format: view.titleStyle.rawValue);
 		self.titleAttributes = [
 			.font: view.effectiveTitleFont,
 			.foregroundColor: view.titleColor,
-			.paragraphStyle: NSParagraphStyle.centeredWithMiddleTruncation,
+			.paragraphStyle: NSParagraphStyle.style (alignment: view.titleAlignment),
 		];
 	}
 	
 	fileprivate func run (context ctx: CGContext) {
 		let titleString = NSAttributedString (string: self.formatter.string (from: self.month.start), attributes: self.titleAttributes);
-		
-		ctx.clear (self.titleFrame);
+		if let backgroundColor = self.backgroundColor, !backgroundColor.isInvisible {
+			ctx.setFillColor (backgroundColor.cgColor);
+			ctx.fill (self.titleFrame);
+		} else {
+			ctx.clear (self.titleFrame);
+		}
 		titleString.draw (in: self.titleContentFrame);
 	}
 }
@@ -302,6 +317,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.cellIndices = indices;
 		self.cellRenderer = view.cellRenderer;
 		self.separatorColor = view.separatorColor;
+		self.backgroundColor = view.backgroundColor;
 		self.cellBackgroundColorGetter = view.dayCellBackgroundColor;
 
 		self.dayFormatter = DateFormatter.dequeueFormatter (for: month, dateFormatTemplate: "d");
@@ -323,7 +339,6 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		let minIndex = allIndices.minElement, minFrame = layout.cellFrames [minIndex];
 		let maxIndex = allIndices.maxElement.advanced (by: -1), maxFrame = layout.cellFrames [maxIndex];
 		let frame = minFrame.union (maxFrame).insetBy (dx: -halfSepW, dy: -halfSepW);
-		ctx.clear (frame);
 		ctx.addRect (frame);
 		
 		if (firstIndex != minIndex) {
@@ -336,9 +351,14 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		}
 		ctx.clip (using: .evenOdd);
 		
-		if let normalBackgroundColor = self.effectiveBackgroundColor (state: .normal) {
+		if let normalBackgroundColor = self.effectiveBackgroundColor (state: .normal), !normalBackgroundColor.isInvisible {
 			ctx.setFillColor (normalBackgroundColor.cgColor);
 			ctx.fill (frame);
+		} else if let backgroundColor = self.backgroundColor, !backgroundColor.isInvisible {
+			ctx.setFillColor (backgroundColor.cgColor);
+			ctx.fill (frame);
+		} else {
+			ctx.clear (frame);
 		}
 		for index in self.cellIndices.affected {
 			let renderingContext = DayCellRenderingContext.init (self, cellIndex: index, graphicsContext: ctx);

@@ -23,23 +23,88 @@
 
 import Foundation
 
+fileprivate extension Int {
+	fileprivate static let minSignedThreeQuarters = Int.min >> (Int.bitWidth / 4);
+	fileprivate static let maxSignedThreeQuarters = Int (bitPattern: UInt.max >> (UInt.bitWidth / 4 + 1));
+	fileprivate static let maxUnsignedQuarter = Int (bitPattern: UInt.max >> (UInt.bitWidth * 3 / 4));
+}
+
+private protocol CPCMonthBackingStorageProtocol {
+	var year: Int { get }
+	var month: Int { get }
+	
+	init (year: Int, month: Int)
+	
+#if swift(>=4.2)
+	func hash (into hasher: inout Hasher);
+#else
+	var hashValue: Int { get }
+#endif
+}
+
 /// Calendar unit that repsesents a month.
 public struct CPCMonth: CPCCompoundCalendarUnit {
 	public typealias Element = CPCWeek;
 	internal typealias UnitBackingType = BackingStorage;
 	
-	internal struct BackingStorage: Hashable {
-		internal let month: Int;
+	internal struct BackingStorage: Hashable, CPCMonthBackingStorageProtocol {
+		fileprivate struct Packed: Hashable, CPCMonthBackingStorageProtocol {
+			fileprivate static let acceptableYears = Int.minSignedThreeQuarters ... .maxSignedThreeQuarters;
+			fileprivate static let acceptableMonths = 0 ... .maxUnsignedQuarter;
 
+			private let value: Int;
+			
+			fileprivate var year: Int {
+				return self.value >> (Int.bitWidth / 4);
+			}
+			fileprivate var month: Int {
+				return self.value & .maxUnsignedQuarter;
+			}
+			
+			fileprivate init (year: Int, month: Int) {
+				self.value = (year << (Int.bitWidth / 4)) | month;
+			}
+		}
+		
+		fileprivate struct Default: Hashable, CPCMonthBackingStorageProtocol {
+			fileprivate let year: Int;
+			fileprivate let month: Int;
+		}
+		
+		internal static func == (lhs: BackingStorage, rhs: BackingStorage) -> Bool {
+			return (lhs.month == rhs.month) && (lhs.year == rhs.year);
+		}
+		
+		private let storage: CPCMonthBackingStorageProtocol;
+		
 		internal var year: Int {
-			return self.yearValues.year;
+			return self.storage.year;
+		}
+		internal var month: Int {
+			return self.storage.month;
+		}
+		
+#if swift(>=4.2)
+		internal func hash (into hasher: inout Hasher) {
+			self.storage.hash (into: &hasher);
+		}
+#else
+		internal var hashValue: Int {
+			return self.storage.hashValue;
+		}
+#endif
+		
+		internal init (year: Int, month: Int) {
+			guard Packed.acceptableYears ~= year, Packed.acceptableMonths ~= month else {
+				self.storage = Default (year: year, month: month);
+				return;
+			}
+			self.storage = Packed (year: year, month: month);
 		}
 		
 		internal func containingYear (_ calendar: CalendarWrapper) -> CPCYear {
-			return CPCYear (backedBy: self.yearValues, calendar: calendar);
+			return CPCYear (backedBy: CPCYear.BackingStorage (year: self.year), calendar: calendar);
 		}
-
-		private let yearValues: CPCYear.BackingStorage;
 	}
 
 	internal static let representedUnit = Calendar.Component.month;
@@ -74,16 +139,16 @@ extension CPCMonth.BackingStorage: ExpressibleByDateComponents {
 	internal static let requiredComponents: Set <Calendar.Component> = CPCYear.BackingStorage.requiredComponents.union (.month);
 
 	internal init (_ dateComponents: DateComponents) {
-		self.yearValues = CPCYear.BackingStorage (dateComponents);
-		self.month = guarantee (dateComponents.month);
+		self.init (
+			year: guarantee (dateComponents.year),
+			month: guarantee (dateComponents.month)
+		);
 	}
 }
 
 extension CPCMonth.BackingStorage: DateComponentsConvertible {
 	internal func dateComponents (_ calendar: Calendar) -> DateComponents {
-		var components = self.yearValues.dateComponents (calendar);
-		components.month = self.month;
-		return components;
+		return DateComponents (calendar: calendar, year: self.year, month: self.month);
 	}
 }
 

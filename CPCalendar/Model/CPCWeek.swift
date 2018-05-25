@@ -48,8 +48,8 @@ public struct CPCWeek: CPCCompoundCalendarUnit {
 	internal let backingValue: UnitBackingType;
 	internal let calendarWrapper: CalendarWrapper;
 	
-	internal static func indices (for value: BackingStorage, using calendar: Calendar) -> Range <Int> {
-		return guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value.date));
+	internal static func indices (for value: BackingStorage, using calendar: Calendar) -> CountableRange <Int> {
+		return CountableRange (guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value.date)));
 	}
 
 	internal init (backedBy value: UnitBackingType, calendar: CalendarWrapper) {

@@ -24,13 +24,17 @@
 import UIKit
 
 internal extension NSParagraphStyle {
-	private static func makeCentered (lineBreakMode: NSLineBreakMode) -> NSParagraphStyle {
+	internal static let centeredWithTailTruncation = makeCentered (lineBreakMode: .byTruncatingTail);
+	internal static let centeredWithMiddleTruncation = makeCentered (lineBreakMode: .byTruncatingMiddle);
+
+	internal static func style (alignment: NSTextAlignment, lineBreakMode: NSLineBreakMode = .byWordWrapping) -> NSParagraphStyle {
 		let result = NSMutableParagraphStyle ();
-		result.alignment = .center;
+		result.alignment = alignment;
 		result.lineBreakMode = lineBreakMode;
 		return result.copy () as! NSParagraphStyle;
 	}
-	
-	internal static let centeredWithTailTruncation = makeCentered (lineBreakMode: .byTruncatingTail);
-	internal static let centeredWithMiddleTruncation = makeCentered (lineBreakMode: .byTruncatingMiddle);
+
+	private static func makeCentered (lineBreakMode: NSLineBreakMode) -> NSParagraphStyle {
+		return self.style (alignment: .center, lineBreakMode: lineBreakMode);
+	}
 }

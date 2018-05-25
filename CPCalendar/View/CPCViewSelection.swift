@@ -21,13 +21,19 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
+import Swift
 
+/// A value that describes view selection mode and currently selected days simultaneously.
 public enum CPCViewSelection: Equatable {
+	/// Selection is disabled.
 	case none;
+	/// Single day selection mode; associated value holds currently selected day or `nil` if selection is empty.
 	case single (CPCDay?);
+	/// Range of dates selection mode; associated value holds currently selected days range (possibly empty).
 	case range (CountableRange <CPCDay>);
+	/// Arbitrary set of dates selection mode; associated value holds unordered collection of selected dates (possibly empty).
 	case unordered (Set <CPCDay>);
+	/// Arbitrary array of dates selection mode; associated value holds collection of selected dates (possibly empty) ordered the same way that user did pick them.
 	case ordered ([CPCDay]);
 }
 

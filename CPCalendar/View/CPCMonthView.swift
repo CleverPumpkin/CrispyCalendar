@@ -48,7 +48,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
-	@IBInspectable open var titleFont: UIFont {
+	@IBInspectable open dynamic var titleFont: UIFont {
 		get {
 			return self.appearanceStorage.titleFont;
 		}
@@ -57,7 +57,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 			self.effectiveTitleFont = self.scaledFont (self.titleFont, using: CPCMonthView.titleMetrics);
 		}
 	}
-	@IBInspectable open var titleColor: UIColor {
+	@IBInspectable open dynamic var titleColor: UIColor {
 		get {
 			return self.appearanceStorage.titleColor;
 		}
@@ -66,16 +66,31 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
 		}
 	}
+	@IBInspectable open dynamic var titleAlignment: NSTextAlignment {
+		get {
+			return self.appearanceStorage.titleAlignment;
+		}
+		set {
+			guard (self.titleAlignment != newValue) else {
+				return;
+			}
+			self.appearanceStorage.titleAlignment = newValue;
+			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
+		}
+	}
 	open var titleStyle: TitleStyle {
 		get {
 			return self.appearanceStorage.titleStyle;
 		}
 		set {
+			guard !self.isAppearanceProxy else {
+				return self.titleFormat = newValue.rawValue;
+			}
 			self.appearanceStorage.titleStyle = newValue;
 			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
 		}
 	}
-	@IBInspectable open var titleMargins: UIEdgeInsets {
+	@IBInspectable open dynamic var titleMargins: UIEdgeInsets {
 		get {
 			return self.appearanceStorage.titleMargins;
 		}
@@ -85,7 +100,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
-	@IBInspectable open var dayCellFont: UIFont {
+	@IBInspectable open dynamic var dayCellFont: UIFont {
 		get {
 			return self.appearanceStorage.dayCellFont;
 		}
@@ -94,7 +109,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 			self.effectiveDayCellFont = self.scaledFont (self.dayCellFont, using: CPCMonthView.dayCellTextMetrics);
 		}
 	}
-	@IBInspectable open var dayCellTextColor: UIColor {
+	@IBInspectable open dynamic var dayCellTextColor: UIColor {
 		get {
 			return self.appearanceStorage.dayCellTextColor;
 		}
@@ -103,7 +118,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
 		}
 	}
-	@IBInspectable open var separatorColor: UIColor {
+	@IBInspectable open dynamic var separatorColor: UIColor {
 		get {
 			return self.appearanceStorage.separatorColor;
 		}
@@ -237,11 +252,27 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
+	@objc dynamic internal func dayCellBackgroundColor (for backgroundStateValue: Int, isTodayValue: Int) -> UIColor? {
+		return self.dayCellBackgroundColorImpl (backgroundStateValue, isTodayValue);
+	}
+	
 	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
+		guard !self.isAppearanceProxy else {
+			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
+			return self.dayCellBackgroundColor (for: backgroundStateValue, isTodayValue: isTodayValue);
+		}
 		return self.appearanceStorage.cellBackgroundColors [state];
 	}
 	
+	@objc dynamic internal func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for backgroundStateValue: Int, isTodayValue: Int) {
+		return self.setDayCellBackgroundColorImpl (backgroundColor, backgroundStateValue, isTodayValue);
+	}
+	
 	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
+		guard !self.isAppearanceProxy else {
+			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
+			return self.setDayCellBackgroundColor (backgroundColor, for: backgroundStateValue, isTodayValue: isTodayValue);
+		}
 		self.appearanceStorage.cellBackgroundColors [state] = backgroundColor;
 		
 		switch (state.backgroundState) {

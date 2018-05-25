@@ -31,7 +31,7 @@ internal extension CPCCalendarUnit {
 	/// - Parameter other: Calendar unit to fetch distance to.
 	/// - Returns: Distance from this unit to `other` or nil if no such value was previously cached.
 	internal func cachedDistance (to other: Self) -> Stride? {
-		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, distanceTo: other);
+		return self.calendarWrapper.unitSpecificCacheInstance ().calendarUnit (self, distanceTo: other);
 	}
 	
 	/// Cache a distance between two calendar units.
@@ -39,7 +39,7 @@ internal extension CPCCalendarUnit {
 	/// - Parameter distance: Distance between this unit and `other` that is being cached.
 	/// - Parameter other: Unit, distance to which is being cached.
 	internal func cacheDistance (_ distance: Stride, to other: Self) {
-		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, cacheDistance: distance, to: other);
+		return self.calendarWrapper.unitSpecificCacheInstance ().calendarUnit (self, cacheDistance: distance, to: other);
 	}
 
 	/// Query calendar units cache for a unit that has specific distance from this one.
@@ -47,7 +47,7 @@ internal extension CPCCalendarUnit {
 	/// - Parameter stride: Required distance between units.
 	/// - Returns: Unit that has requested distance from this one or nil if no such value was previously cached.
 	internal func cachedAdvancedUnit (by stride: Self.Stride) -> Self? {
-		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, advancedBy: stride);
+		return self.calendarWrapper.unitSpecificCacheInstance ().calendarUnit (self, advancedBy: stride);
 	}
 	
 	/// Cache a calendar unit that has specific distance from this one.
@@ -55,7 +55,7 @@ internal extension CPCCalendarUnit {
 	/// - Parameter value: Calendar unit that is being cached.
 	/// - Parameter distance: Distance to the unit that is being cached.
 	internal func cacheUnitValue (_ value: Self, advancedBy distance: Stride) {
-		return CPCCalendarUnitElementsCache.UnitSpecificCache.instance ().calendarUnit (self, cacheUnit: value, asAdvancedBy: distance);
+		return self.calendarWrapper.unitSpecificCacheInstance ().calendarUnit (self, cacheUnit: value, asAdvancedBy: distance);
 	}
 }
 
@@ -65,7 +65,7 @@ internal extension CPCCompoundCalendarUnit {
 	/// - Parameter index: Index of queried subunit.
 	/// - Returns: Subunit at `index`ths place of this unit or nil if no such value was previously cached.
 	internal func cachedElement (at index: Index) -> Element? {
-		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, elementAt: index);
+		return self.calendarWrapper.unitSpecificCacheInstance ().calendarUnit (self, elementAt: index);
 	}
 	
 	/// Cache a calendar subunit for specified position in this unit.
@@ -73,7 +73,7 @@ internal extension CPCCompoundCalendarUnit {
 	/// - Parameter element: Subunit that is being cached.
 	/// - Parameter index: Index of cached subunit.
 	internal func cacheElement (_ element: Element, for index: Index) {
-		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, cacheElement: element, for: index);
+		return self.calendarWrapper.unitSpecificCacheInstance ().calendarUnit (self, cacheElement: element, for: index);
 	}
 	
 	/// Query calendar units cache for position of subunit in this one.
@@ -81,7 +81,7 @@ internal extension CPCCompoundCalendarUnit {
 	/// - Parameter element: Subunbit, index of which is requested.
 	/// - Returns: Index of given subunit or nil if no such value was previously cached.
 	internal func cachedIndex (of element: Element) -> Index? {
-		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, indexOf: element);
+		return self.calendarWrapper.unitSpecificCacheInstance ().calendarUnit (self, indexOf: element);
 	}
 	
 	/// Cache position of a subunit inside this one.
@@ -89,29 +89,16 @@ internal extension CPCCompoundCalendarUnit {
 	/// - Parameter index: Position of given subunit that is being cached.
 	/// - Parameter element: Subunit to cache index for.
 	internal func cacheIndex (_ index: Index, for element: Element) {
-		return CPCCalendarUnitElementsCache.CompoundUnitSpecificCache.instance ().calendarUnit (self, cacheIndex: index, for: element);
+		return self.calendarWrapper.unitSpecificCacheInstance ().calendarUnit (self, cacheIndex: index, for: element);
 	}
 }
 
 // MARK: - Caching implementation declarations
 
-private protocol CPCCalendarUnitSpecificCacheProtocol {
+internal protocol CPCCalendarUnitSpecificCacheProtocol {
 	var count: Int { get };
 	
 	mutating func purge (factor: Double);
-}
-
-private protocol CPCCalendarUnitSingletonCacheProtocol: CPCCalendarUnitSpecificCacheProtocol {
-	associatedtype Unit where Unit: CPCCalendarUnit;
-	
-	static func instance () -> Self;
-	init ();
-}
-
-extension CPCCalendarUnitSingletonCacheProtocol {
-	fileprivate static func instance () -> Self {
-		return CPCCalendarUnitElementsCache.shared.unitSpecificCacheInstance ();
-	}
 }
 
 private protocol CPCUnusedItemsPurgingCacheProtocol {
@@ -123,8 +110,8 @@ private protocol CPCUnusedItemsPurgingCacheProtocol {
 
 // MARK: - Cache implementation
 
-private final class CPCCalendarUnitElementsCache {
-	private typealias UnitSpecificCacheProtocol = CPCCalendarUnitSpecificCacheProtocol;
+internal extension CPCCalendarWrapper {
+	internal typealias UnitSpecificCacheProtocol = CPCCalendarUnitSpecificCacheProtocol;
 	
 	fileprivate class UnitSpecificCacheBase <Unit>: UnitSpecificCacheProtocol where Unit: CPCCalendarUnit {
 		private final class UnusedItemsPurgingCache <Key, Value>: CPCUnusedItemsPurgingCacheProtocol where Key: Hashable {
@@ -142,7 +129,7 @@ private final class CPCCalendarUnitElementsCache {
 			
 			private var values: [Key: ValueWrapper] = {
 				var result = [Key: ValueWrapper] ();
-				result.reserveCapacity (CPCCalendarUnitElementsCache.cacheSizeThreshold);
+				result.reserveCapacity (CPCCalendarWrapper.cacheSizeThreshold);
 				return result;
 			} ();
 			
@@ -218,6 +205,16 @@ private final class CPCCalendarUnitElementsCache {
 			return result;
 		}
 		
+		private unowned let calendarWrapper: CPCCalendarWrapper;
+		
+		fileprivate required init (_ calendarWrapper: CPCCalendarWrapper) {
+			self.calendarWrapper = calendarWrapper;
+		}
+		
+		fileprivate func purgeAllCachesIfNeeded () {
+			self.calendarWrapper.purgeCacheIfNeeded ();
+		}
+		
 		fileprivate func purge (factor: Double) {
 			self.enumerateSubcaches { (subcache: inout CPCCalendarUnitSpecificCacheProtocol) in
 				subcache.purge (factor: factor);
@@ -233,14 +230,12 @@ private final class CPCCalendarUnitElementsCache {
 		fileprivate func enumerateSubcaches (using block: (inout CPCCalendarUnitSpecificCacheProtocol) -> ()) -> () {}
 	}
 	
-	fileprivate class UnitSpecificCache <Unit>: UnitSpecificCacheBase <Unit>, CPCCalendarUnitSingletonCacheProtocol where Unit: CPCCalendarUnit {
+	fileprivate class UnitSpecificCache <Unit>: UnitSpecificCacheBase <Unit> where Unit: CPCCalendarUnit {
 		private typealias UnitDistancesStorage = ThreadsafePurgingCacheStorage <Unit, Unit.Stride>;
 		private typealias UnitAdvancesStorage = ThreadsafePurgingCacheStorage <Unit.Stride, Unit>;
 		
 		private var distancesCache = UnitDistancesStorage ();
 		private var advancedUnitsCache = UnitAdvancesStorage ();
-		
-		fileprivate required override init () {}
 		
 		fileprivate func calendarUnit (_ unit: Unit, distanceTo otherUnit: Unit) -> Unit.Stride? {
 			return self.distancesCache [UnitDistancesStorage.Key (unit, pairedWith: otherUnit)];
@@ -249,7 +244,7 @@ private final class CPCCalendarUnitElementsCache {
 		fileprivate func calendarUnit (_ unit: Unit, cacheDistance distance: Unit.Stride, to otherUnit: Unit) {
 			self.distancesCache [UnitDistancesStorage.Key (unit, pairedWith: otherUnit)] = distance;
 			self.advancedUnitsCache [UnitAdvancesStorage.Key (unit, pairedWith: distance)] = otherUnit;
-			CPCCalendarUnitElementsCache.shared.purgeCacheIfNeeded ();
+			self.purgeAllCachesIfNeeded ();
 		}
 		
 		fileprivate func calendarUnit (_ unit: Unit, advancedBy value: Unit.Stride) -> Unit? {
@@ -259,7 +254,7 @@ private final class CPCCalendarUnitElementsCache {
 		fileprivate func calendarUnit (_ unit: Unit, cacheUnit otherUnit: Unit, asAdvancedBy value: Unit.Stride) {
 			self.advancedUnitsCache [UnitAdvancesStorage.Key (unit, pairedWith: value)] = otherUnit;
 			self.distancesCache [UnitDistancesStorage.Key (unit, pairedWith: otherUnit)] = value;
-			CPCCalendarUnitElementsCache.shared.purgeCacheIfNeeded ();
+			self.purgeAllCachesIfNeeded ();
 		}
 		
 		fileprivate override func enumerateSubcaches (using block: (CPCCalendarUnitSpecificCacheProtocol) -> ()) -> () {
@@ -283,8 +278,6 @@ private final class CPCCalendarUnitElementsCache {
 		private var smallerUnitValuesCache = UnitValuesStorage ();
 		private var smallerUnitIndexesCache = UnitIndexesStorage ();
 		
-		fileprivate required init () {}
-
 		fileprivate func calendarUnit (_ unit: Unit, elementAt index: Unit.Index) -> Unit.Element? {
 			return self.smallerUnitValuesCache [UnitValuesStorage.Key (unit, pairedWith: index)];
 		}
@@ -292,7 +285,7 @@ private final class CPCCalendarUnitElementsCache {
 		fileprivate func calendarUnit (_ unit: Unit, cacheElement element: Unit.Element, for index: Unit.Index) {
 			self.smallerUnitValuesCache [UnitValuesStorage.Key (unit, pairedWith: index)] = element;
 			self.smallerUnitIndexesCache [UnitIndexesStorage.Key (unit, pairedWith: element)] = index;
-			CPCCalendarUnitElementsCache.shared.purgeCacheIfNeeded ();
+			self.purgeAllCachesIfNeeded ();
 		}
 		
 		fileprivate func calendarUnit (_ unit: Unit, indexOf element: Unit.Element) -> Unit.Index? {
@@ -302,7 +295,7 @@ private final class CPCCalendarUnitElementsCache {
 		fileprivate func calendarUnit (_ unit: Unit, cacheIndex index: Unit.Index, for element: Unit.Element) {
 			self.smallerUnitIndexesCache [UnitIndexesStorage.Key (unit, pairedWith: element)] = index;
 			self.smallerUnitValuesCache [UnitValuesStorage.Key (unit, pairedWith: index)] = element;
-			CPCCalendarUnitElementsCache.shared.purgeCacheIfNeeded ();
+			self.purgeAllCachesIfNeeded ();
 		}
 		
 		fileprivate override func enumerateSubcaches (using block: (CPCCalendarUnitSpecificCacheProtocol) -> ()) -> () {
@@ -321,33 +314,39 @@ private final class CPCCalendarUnitElementsCache {
 		}
 	}
 
-	fileprivate static let shared = CPCCalendarUnitElementsCache ();
 	private static let cacheSizeThreshold = 20480;
 	private static let cachePurgeFactor = 0.5;
-	
-	private var unitSpecificCaches = UnfairThreadsafeStorage ([ObjectIdentifier: UnitSpecificCacheProtocol] ());
 	
 	private var currentCacheSize: Int {
 		return self.unitSpecificCaches.withStoredValue { $0.values.reduce (0) { $0 + $1.count } };
 	}
+
+	fileprivate func unitSpecificCacheInstance <Unit, Cache> () -> Cache where Cache: CompoundUnitSpecificCache <Unit> {
+		return self.unitSpecificCacheInstanceImpl ();
+	}
 	
-	fileprivate func unitSpecificCacheInstance <Unit, Cache> (ofType type: Unit.Type = Unit.self) -> Cache where Cache: CPCCalendarUnitSingletonCacheProtocol, Cache.Unit == Unit {
+	fileprivate func unitSpecificCacheInstance <Unit, Cache> () -> Cache where Cache: UnitSpecificCache <Unit> {
+		return self.unitSpecificCacheInstanceImpl ();
+	}
+	
+	private func unitSpecificCacheInstanceImpl <Unit, Cache> () -> Cache where Cache: UnitSpecificCacheBase <Unit> {
 		return self.unitSpecificCaches.withMutableStoredValue { caches in
 			let typeID = ObjectIdentifier (Unit.self);
 			if let existingCache = caches [typeID] as? Cache {
 				return existingCache;
 			}
-			let instance = Cache ();
+			let instance = Cache (self);
 			caches [typeID] = instance;
 			return instance;
 		};
+
 	}
-	
+
 	fileprivate func purgeCacheIfNeeded () {
-		if (self.currentCacheSize > CPCCalendarUnitElementsCache.cacheSizeThreshold) {
+		if (self.currentCacheSize > CPCCalendarWrapper.cacheSizeThreshold) {
 			self.unitSpecificCaches.withMutableStoredValue {
 				for key in $0.keys {
-					$0 [key]?.purge (factor: CPCCalendarUnitElementsCache.cachePurgeFactor);
+					$0 [key]?.purge (factor: CPCCalendarWrapper.cachePurgeFactor);
 				}
 			};
 		}

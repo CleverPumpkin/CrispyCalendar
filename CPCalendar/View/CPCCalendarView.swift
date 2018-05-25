@@ -31,11 +31,35 @@ public protocol CPCCalendarViewSelectionDelegate: AnyObject {
 }
 
 open class CPCCalendarView: UIView {
-	internal unowned let contentView: CPCMultiMonthsView;
+	open var calendar: Calendar {
+		get {
+			return self.calendarWrapper.calendar;
+		}
+		set {
+			guard self.calendarWrapper.calendar != newValue else {
+				return;
+			}
+			self.calendarWrapper = CPCYear (containing: Date (), calendar: newValue).calendarWrapper;
+		}
+	}
 	
+	open override var backgroundColor: UIColor? {
+		didSet {
+			self.scrollView.backgroundColor = self.backgroundColor;
+			self.contentView.backgroundColor = self.backgroundColor;
+		}
+	}
+	
+	internal unowned let contentView: CPCMultiMonthsView;
+	internal unowned let scrollView: UIScrollView;
+
+	private var calendarWrapper = CPCYear.current.calendarWrapper {
+		didSet {
+			self.scrollViewController.reloadMonthViewsIfNeeded ();
+		}
+	}
 	private var scrollViewController: ScrollViewController!;
 	
-	private unowned let scrollView: UIScrollView;
 	
 	public override init (frame: CGRect) {
 		let (scrollView, contentView) = CPCCalendarView.makeSubviews (frame);
@@ -99,6 +123,7 @@ extension CPCCalendarView {
 			}
 		}
 		private var pendingPageCalculations = UnfairThreadsafeStorage ([Int: DispatchWorkItem] ());
+		private var scrollingToTop = false;
 		
 		fileprivate init (_ calendarView: CPCCalendarView) {
 			self.calendarView = calendarView;
@@ -164,7 +189,7 @@ extension CPCCalendarView.ScrollViewController {
 		private let columnCount: Int;
 		private let firstInset: CGFloat, otherInsets: CGFloat;
 		private let separatorWidth: CGFloat;
-		private unowned let contentView: UIView & CPCViewProtocol;
+		private unowned let calendarView: CPCCalendarView;
 
 		private var calculatedPages = [Page] ();
 		private var firstPageIndex = 0;
@@ -237,7 +262,48 @@ extension CPCCalendarView.ScrollViewController {
 		self.reloadMonthViews ();
 	}
 	
+	fileprivate func scrollViewShouldScrollToTop (_ scrollView: UIScrollView) -> Bool {
+		let shouldSwitchPage = (self.presentedPageIndex != 0), currentPositionIsBelow = (shouldSwitchPage && self.presentedPageIndex > 0), zeroPage = self.layout [0];
+		let middleRowCenterY = zeroPage.row (month: CPCMonth (containing: Date (), calendar: self.calendarView.calendarWrapper))?.frame.midY ?? zeroPage.midY;
+		let zeroPageTargetOffset = middleRowCenterY - scrollView.bounds.height / 2.0;
+		if (!shouldSwitchPage && (zeroPageTargetOffset - scrollView.contentOffset.y).magnitude < 1e-3) {
+			return false;
+		}
+
+		self.scrollingToTop = true;
+		if shouldSwitchPage {
+			let currentPage = self.layout [self.presentedPageIndex];
+			UIView.animateKeyframes (withDuration: 0.3, delay: 0.0, options: .calculationModeCubic, animations: {
+				UIView.addKeyframe (withRelativeStartTime: 0.0, relativeDuration: 0.5) {
+					scrollView.contentOffset = CGPoint (x: 0.0, y: (currentPositionIsBelow ? currentPage.minY : currentPage.maxY));
+				};
+				UIView.addKeyframe (withRelativeStartTime: 0.5, relativeDuration: 0.0) {
+					self.presentedPageIndex = 0;
+					self.reloadMonthViews ();
+					scrollView.contentOffset = CGPoint (x: 0.0, y: (currentPositionIsBelow ? zeroPage.maxY : zeroPage.minY));
+				};
+				UIView.addKeyframe (withRelativeStartTime: 0.5, relativeDuration: 0.5) {
+					scrollView.contentOffset = CGPoint (x: 0.0, y: zeroPageTargetOffset);
+				}
+			}, completion: { [weak self] _ in
+				self?.scrollingToTop = false;
+			});
+		} else {
+			UIView.animate (withDuration: 0.3, animations: {
+				scrollView.contentOffset = CGPoint (x: 0.0, y: zeroPageTargetOffset);
+			}, completion: { [weak self] _ in
+				self?.scrollingToTop = false;
+			});
+		};
+		
+		return false;
+	}
+	
 	fileprivate func scrollViewDidScroll (_ scrollView: UIScrollView) {
+		guard !self.scrollingToTop else {
+			return;
+		}
+		
 		let currentOffset = scrollView.contentOffset.y, offsetDiff = currentOffset - self.prevOffset;
 		self.prevOffset = currentOffset;
 		self.updatePresentedPageIndexIfNeeded (offset: currentOffset, offsetDiff: offsetDiff);
@@ -332,8 +398,12 @@ extension CPCCalendarView.ScrollViewController {
 					}
 					
 					let workItem = DispatchWorkItem { [weak self] in
-						self?.layout.ensurePageCalculated (page);
-						self?.completePageCalculation (page);
+						guard let strongSelf = self else {
+							return;
+						}
+						
+						strongSelf.layout.ensurePageCalculated (page);
+						strongSelf.completePageCalculation (page);
 					};
 					$0 [page] = workItem;
 					
@@ -370,13 +440,17 @@ extension CPCCalendarView.ScrollViewController.Layout {
 		return self.firstPageIndex ..< (self.firstPageIndex + self.calculatedPages.count);
 	}
 	
+	private var contentView: UIView & CPCViewProtocol {
+		return self.calendarView.contentView;
+	}
+	
 	fileprivate init (controller: CPCCalendarView.ScrollViewController) {
 		self.columnCount = controller.columnCount;
 		self.columnSize = controller.columnSize;
 		self.firstInset = controller.columnContentInsets.left;
 		self.otherInsets = (controller.columnContentInsets.left + controller.columnContentInsets.right) / 2.0;
 		self.separatorWidth = controller.calendarView.separatorWidth;
-		self.contentView = controller.calendarView.contentView;
+		self.calendarView = controller.calendarView;
 	}
 	
 	fileprivate mutating func ensurePageCalculated (_ index: Int) {
@@ -445,9 +519,9 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 	}
 	
 	fileprivate init (startPageFor layout: Layout) {
-		let currentYear = CPCYear.current, currentMonth = CPCMonth.current, currentMonthIndex = currentMonth.month - currentYear [ordinal: 0].month;
-		let firstMonthOfMiddleRow = currentYear [ordinal: (currentMonthIndex / layout.columnCount) * layout.columnCount];
-		let lastMonthOfMiddleRow = currentYear [Swift.min (currentYear.endIndex, firstMonthOfMiddleRow.month + layout.columnCount) - 1];
+		let now = Date (), currentMonth = CPCMonth (containing: now, calendar: layout.calendarView.calendarWrapper), currentMonthIndex = currentMonth.unitOrdinalValue;
+		let firstMonthOfMiddleRow = currentMonth.advanced (by: -(currentMonthIndex % layout.columnCount));
+		let lastMonthOfMiddleRow = Swift.min (firstMonthOfMiddleRow.advanced (by: layout.columnCount - 1), firstMonthOfMiddleRow.containingYear.last!);
 		
 		let columnHeight = layout.columnSize.height;
 		let middleRow = Page.makeRow (months: firstMonthOfMiddleRow ... lastMonthOfMiddleRow, layout: layout, constraint: .midY (columnHeight / 2.0));
@@ -471,6 +545,49 @@ extension CPCCalendarView.ScrollViewController.Layout.Page {
 	
 	fileprivate subscript (row: Int) -> Row {
 		return self.rows [row];
+	}
+	
+	fileprivate var frame: CGRect {
+		guard let firstRow = self.first, let lastRow = self.last else {
+			return .null;
+		}
+		return firstRow.frame.union (lastRow.frame);
+	}
+	
+	fileprivate var minX: CGFloat {
+		return self.frame.minX;
+	}
+	
+	fileprivate var midX: CGFloat {
+		return self.frame.midX;
+	}
+	
+	fileprivate var maxX: CGFloat {
+		return self.frame.maxX;
+	}
+	
+	fileprivate var minY: CGFloat {
+		return self.frame.minY;
+	}
+	
+	fileprivate var midY: CGFloat {
+		return self.frame.midY;
+	}
+	
+	fileprivate var maxY: CGFloat {
+		return self.frame.maxY;
+	}
+	
+	fileprivate var width: CGFloat {
+		return self.frame.width;
+	}
+	
+	fileprivate var height: CGFloat {
+		return self.frame.height;
+	}
+	
+	fileprivate func row (month: CPCMonth) -> Row? {
+		return self.rows.first { $0.months.contains (month) };
 	}
 }
 

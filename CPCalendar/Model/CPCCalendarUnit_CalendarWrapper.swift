@@ -27,8 +27,20 @@ import Swift
 internal final class CPCCalendarWrapper: Hashable {
 	/// Wrapped Calendar instance
 	internal let calendar: Calendar;
-	internal let hashValue: Int;
+	private let calendarHashValue: Int;
 	
+#if swift(>=4.2)
+	internal func hash (into hasher: inout Hasher) {
+		hasher.combine (self.calendarHashValue);
+	}
+#else
+	internal var hashValue: Int {
+		return self.calendarHashValue;
+	}
+#endif
+
+	internal var unitSpecificCaches = UnfairThreadsafeStorage ([ObjectIdentifier: UnitSpecificCacheProtocol] ());
+
 	internal static func == (lhs: CPCCalendarWrapper, rhs: CPCCalendarWrapper) -> Bool {
 		return (lhs === rhs) || (lhs.calendar == rhs.calendar);
 	}
@@ -38,7 +50,7 @@ internal final class CPCCalendarWrapper: Hashable {
 	/// - Parameter calendar: Calendar to wrap
 	fileprivate init (_ calendar: Calendar) {
 		self.calendar = calendar;
-		self.hashValue = calendar.hashValue;
+		self.calendarHashValue = calendar.hashValue;
 	}
 }
 

@@ -28,7 +28,7 @@ import Foundation
 /// Common protocol implementing most of CPCDay, CPCWeek, CPCMonth and CPCYear functionality.
 internal protocol CPCCalendarUnit: CustomStringConvertible, CustomDebugStringConvertible, Strideable, Hashable, CPCDateInterval where Stride == Int {
 	/// Type serving as a storage for calendar unit info.
-	associatedtype UnitBackingType where UnitBackingType: CPCCalendarUnitBackingType;
+	associatedtype BackingType where BackingType: CPCCalendarUnitBackingType;
 	
 	/// Calendar unit that is represented by this model type.
 	static var representedUnit: Calendar.Component { get };
@@ -40,14 +40,14 @@ internal protocol CPCCalendarUnit: CustomStringConvertible, CustomDebugStringCon
 	/// Unit's calendar that is wrapped in `CalendarWrapper` object for performance reasons.
 	var calendarWrapper: CalendarWrapper { get };
 	/// "Raw" value of calendar unit, e.g. month and year values for `CPCMonth`.
-	var backingValue: UnitBackingType { get };
+	var backingValue: BackingType { get };
 	
 	/// Creates a new calendar unit.
 	///
 	/// - Parameters:
 	///   - value: Backing value representing calendar unit.
 	///   - calendar: Calendar to perform various calculations with.
-	init (backedBy value: UnitBackingType, calendar: CalendarWrapper);
+	init (backedBy value: BackingType, calendar: CalendarWrapper);
 }
 
 // MARK: - Default implementations
@@ -65,9 +65,15 @@ extension CPCCalendarUnit {
 		return guarantee (self.calendar.date (byAdding: Self.representedUnit, value: 1, to: self.start));
 	}
 	
+#if swift(>=4.2)
+	public func hash (into hasher: inout Hasher) {
+		self.backingValue.hash (into: &hasher);
+	}
+#else
 	public var hashValue: Int {
 		return self.backingValue.hashValue;
 	}
+#endif
 	
 	/// Creates a new calendar unit that contains a given date according to supplied wrapped calendar.
 	///
@@ -75,10 +81,10 @@ extension CPCCalendarUnit {
 	///   - date: Date to perform calculations for.
 	///   - calendar: Calendar to perform calculations with.
 	internal init (containing date: Date, calendar: CalendarWrapper) {
-		self.init (backedBy: UnitBackingType (containing: date, calendar: calendar.calendar), calendar: calendar);
+		self.init (backedBy: BackingType (containing: date, calendar: calendar.calendar), calendar: calendar);
 	}
 
-	/// Creates a new calendar unit that contains a given date according to supplied calendar.
+	/// Creates a new calendar unit that contains a given date according to supplied calendar and time zone.
 	///
 	/// - Parameters:
 	///   - date: Date to perform calculations for.
@@ -109,6 +115,15 @@ extension CPCCalendarUnit {
 		var calendar = Calendar (identifier: calendarIdentifier);
 		calendar.locale = .current;
 		self.init (containing: date, timeZone: timeZone, calendar: calendar);
+	}
+
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - calendar: Calendar to perform calculations with.
+	public init <Unit> (containing date: Date, calendarOf otherUnit: Unit) where Unit: CPCCalendarUnit {
+		self.init (containing: date, calendar: otherUnit.calendarWrapper);
 	}
 }
 

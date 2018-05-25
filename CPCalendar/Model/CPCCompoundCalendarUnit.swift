@@ -33,7 +33,7 @@ extension CPCCompoundCalendarUnit {
 	///   - value: Backing value of a compound unit to perform calculations for.
 	///   - calendar: Calendar to perform calculations with.
 	/// - Returns: All indices that are valid for compound unit that contains a date represented by given `value`.
-	internal static func indices (for value: UnitBackingType, using calendar: Calendar) -> CountableRange <Int> {
+	internal static func indices (for value: BackingType, using calendar: Calendar) -> CountableRange <Int> {
 		return CountableRange (guarantee (calendar.range (of: Element.representedUnit, in: self.representedUnit, for: value.startDate (using: calendar))));
 	}
 	
@@ -49,14 +49,15 @@ extension CPCCompoundCalendarUnit {
 		if let cachedResult = self.cachedIndex (of: element) {
 			return cachedResult;
 		}
-		
+
 		let calendarWrapper = resultingCalendarForOperation (for: self, element), calendar = calendarWrapper.calendar;
 		let startDate = self.start, elementStartDate = element.start;
 		guard calendar.isDate (startDate, equalTo: elementStartDate, toGranularity: Self.representedUnit) else {
 			return nil;
 		}
 
-		let result = guarantee (calendar.dateComponents ([Element.representedUnit], from: startDate, to: elementStartDate).value (for: Element.representedUnit));
+		let distanceFromStart = guarantee (calendar.dateComponents ([Element.representedUnit], from: startDate, to: elementStartDate).value (for: Element.representedUnit));
+		let result = self.startIndex + distanceFromStart;
 		self.cacheIndex (result, for: element);
 		return result;
 	}
@@ -66,8 +67,8 @@ extension CPCCompoundCalendarUnit {
 			return cachedResult;
 		}
 		
-		let calendar = self.calendar, firstElementBacking = Element.UnitBackingType (containing: self.start, calendar: calendar);
-		let result = Element (backedBy: firstElementBacking.advanced (by: position, using: calendar), calendar: self.calendarWrapper);
+		let calendar = self.calendar, firstElementBacking = Element.BackingType (containing: self.start, calendar: calendar);
+		let result = Element (backedBy: firstElementBacking.advanced (by: position - self.indices.lowerBound, using: calendar), calendar: self.calendarWrapper);
 		self.cacheElement (result, for: position)
 		return result;
 	}

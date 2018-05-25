@@ -24,7 +24,7 @@
 import Foundation
 
 /// A value that holds information about formatting month titles.
-public struct CPCViewTitleStyle: Equatable, Hashable, RawRepresentable, ExpressibleByStringLiteral {
+public struct CPCViewTitleStyle: Hashable, RawRepresentable, ExpressibleByStringLiteral {
 	public typealias RawValue = String;
 	public typealias StringLiteralType = String;
 

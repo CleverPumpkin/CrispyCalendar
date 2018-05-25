@@ -117,12 +117,15 @@ public extension CPCViewSelection {
 				lhs = .unordered ([day1, day2]);
 			}
 			
-		case (.range (let range), .single (.some (let day))), (.single (.some (let day)), .range (let range)):
+		case (.range (let range), .single (.some (let day))):
 			if let contiguousRange = range.contiguousUnion (day) {
 				lhs = .range (contiguousRange);
 			} else {
 				lhs = .unordered (Set ([day] + range));
 			}
+		
+		case (.single (.some (let day)), .range (let range)):
+			lhs = rhs + lhs; // FIXME: merge with previous parrent when `SR-5377` is fixed.
 			
 		case (.range (let range1), .range (let range2)):
 			if let contiguousRange = range1.contiguousUnion (range2) {
@@ -131,8 +134,11 @@ public extension CPCViewSelection {
 				lhs = .unordered (Set (Array (range1) + range2));
 			}
 			
-		case (.range (let range), .unordered (let days)), (.unordered (let days), .range (let range)):
+		case (.range (let range), .unordered (let days)):
 			lhs = .unordered (days.union (range));
+			
+		case (.unordered (let days), .range (let range)):
+			lhs = rhs + lhs; // FIXME: merge with previous parrent when `SR-5377` is fixed.
 		
 		case (.range (let range), .ordered (let days)):
 			lhs = .ordered (range.filter { !days.contains ($0) } + days);
@@ -140,8 +146,11 @@ public extension CPCViewSelection {
 		case (.ordered (let days), .range (let range)):
 			lhs = .ordered (days.filter { !range.contains ($0) } + range);
 			
-		case (.unordered (let days), .single (.some (let day))), (.single (.some (let day)), .unordered (let days)):
+		case (.unordered (let days), .single (.some (let day))):
 			lhs = .unordered (days.union (day));
+			
+		case  (.single (.some (let day)), .unordered (let days)):
+			lhs = rhs + rhs; // FIXME: merge with previous parrent when `SR-5377` is fixed.
 			
 		case (.unordered (let days1), .unordered (let days2)):
 			lhs = .unordered (days1.union (days2));
