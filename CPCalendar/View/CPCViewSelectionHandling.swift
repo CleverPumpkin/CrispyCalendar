@@ -63,10 +63,10 @@ extension CPCViewSelectionHandling {
 	}	
 }
 
-fileprivate enum CPCViewSelectionHandler {}
+internal enum CPCViewSelectionHandler {}
 
 extension CPCViewSelectionHandler {
-	fileprivate static func primitive (for selection: CPCViewSelection) -> CPCViewSelectionHandlerProtocol {
+	internal static func primitive (for selection: CPCViewSelection) -> CPCViewSelectionHandlerProtocol {
 		struct Disabled: CPCPrimitiveSelectionHandler {
 			fileprivate var selection: Selection {
 				return .none;
@@ -201,22 +201,7 @@ internal protocol CPCViewDelegatingSelectionHandling: CPCViewSelectionHandling {
 }
 
 extension CPCViewDelegatingSelectionHandling {
-	private typealias CPCViewDelegatingSelectionHandler = CPCViewSelectionHandler.Delegating <Self>;
-	
-	public var selectionDelegate: SelectionDelegateType? {
-		get {
-			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? SelectionDelegateType;
-		}
-		set {
-			if let newValue = newValue {
-				let selectionHandler = CPCViewDelegatingSelectionHandler (self);
-				selectionHandler.delegate = newValue as AnyObject;
-				self.selectionHandler = selectionHandler;
-			} else {
-				self.selectionHandler = CPCViewSelectionHandler.primitive (for: self.selection);
-			}
-		}
-	}
+	internal typealias CPCViewDelegatingSelectionHandler = CPCViewSelectionHandler.Delegating <Self>;
 	
 	public var selection: CPCViewSelection {
 		get {
@@ -233,10 +218,10 @@ extension CPCViewDelegatingSelectionHandling {
 }
 
 extension CPCViewSelectionHandler {
-	fileprivate final class Delegating <View>: CPCViewSelectionHandlerProtocol where View: CPCViewDelegatingSelectionHandling {
-		fileprivate weak var delegate: AnyObject?;
+	internal final class Delegating <View>: CPCViewSelectionHandlerProtocol where View: CPCViewDelegatingSelectionHandling {
+		internal weak var delegate: AnyObject?;
 		
-		fileprivate var selection: Selection {
+		internal var selection: Selection {
 			get {
 				return self.performWithDelegate { self.view.selectionValue (of: $0) } ?? .none;
 			}
@@ -248,16 +233,16 @@ extension CPCViewSelectionHandler {
 		
 		private unowned let view: View;
 		
-		fileprivate init (_ view: View) {
+		internal init (_ view: View) {
 			self.view = view;
 		}
 		
-		fileprivate func clearingSelection () -> Self {
+		internal func clearingSelection () -> Self {
 			self.performWithDelegate { self.view.resetSelection (in: $0) };
 			return self;
 		}
 		
-		fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
+		internal func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
 			let method = (self.selection.isDaySelected (day) ? self.view.handlerShouldDeselectDayCell : self.view.handlerShouldSelectDayCell);
 			return self.performWithDelegate { method (day, $0) }.map { _ in self };
 		}

@@ -116,15 +116,6 @@ extension CPCCalendarUnit {
 		calendar.locale = .current;
 		self.init (containing: date, timeZone: timeZone, calendar: calendar);
 	}
-
-	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - calendar: Calendar to perform calculations with.
-	public init <Unit> (containing date: Date, calendarOf otherUnit: Unit) where Unit: CPCCalendarUnit {
-		self.init (containing: date, calendar: otherUnit.calendarWrapper);
-	}
 }
 
 /// Test equivalence of units' calendars and abort if they differ.

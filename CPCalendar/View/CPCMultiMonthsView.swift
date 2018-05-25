@@ -139,6 +139,21 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 		}
 	}
 	
+	open var selectionDelegate: SelectionDelegateType? {
+		get {
+			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? SelectionDelegateType;
+		}
+		set {
+			if let newValue = newValue {
+				let selectionHandler = CPCViewDelegatingSelectionHandler (self);
+				selectionHandler.delegate = newValue as AnyObject;
+				self.selectionHandler = selectionHandler;
+			} else {
+				self.selectionHandler = CPCViewSelectionHandler.primitive (for: self.selection);
+			}
+		}
+	}
+
 	internal private (set) var monthViews = UnownedArray <CPCMonthView> ();
 	internal var appearanceStorage = CPCViewAppearanceStorage ();
 	

@@ -133,6 +133,42 @@ public struct CPCMonth: CPCCompoundCalendarUnit {
 		self.backingValue = value;
 		self.indices = CPCMonth.indices (for: value, using: calendar.calendar);
 	}
+	
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	public init (containing date: Date, calendarOf otherUnit: CPCDay) {
+		self.init (containing: date, calendar: otherUnit.calendarWrapper);
+	}
+	
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	public init (containing date: Date, calendarOf otherUnit: CPCWeek) {
+		self.init (containing: date, calendar: otherUnit.calendarWrapper);
+	}
+	
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	public init (containing date: Date, calendarOf otherUnit: CPCMonth) {
+		self.init (containing: date, calendar: otherUnit.calendarWrapper);
+	}
+	
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	public init (containing date: Date, calendarOf otherUnit: CPCYear) {
+		self.init (containing: date, calendar: otherUnit.calendarWrapper);
+	}
 }
 
 extension CPCMonth.BackingStorage: ExpressibleByDateComponents {

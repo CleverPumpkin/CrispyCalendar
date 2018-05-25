@@ -138,6 +138,21 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
+	open var selectionDelegate: SelectionDelegateType? {
+		get {
+			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? SelectionDelegateType;
+		}
+		set {
+			if let newValue = newValue {
+				let selectionHandler = CPCViewDelegatingSelectionHandler (self);
+				selectionHandler.delegate = newValue as AnyObject;
+				self.selectionHandler = selectionHandler;
+			} else {
+				self.selectionHandler = CPCViewSelectionHandler.primitive (for: self.selection);
+			}
+		}
+	}
+	
 	internal var layout: Layout? {
 		if let info = self.layoutStorage, info.isValid (for: self) {
 			return info;
