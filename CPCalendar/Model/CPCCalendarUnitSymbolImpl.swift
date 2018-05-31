@@ -80,7 +80,8 @@ extension CPCDay.Weekday: CPCCalendarUnitSymbol {
 	}
 
 	public func symbol (style: Style, standalone: Bool) -> String {
-		return self.day.calendar [keyPath: guarantee ((standalone ? Weekday.standaloneSymbolKeyPaths : Weekday.symbolKeyPaths) [style])] [self.weekday - 1];
+		let weekdaySymbols = self.day.calendar [keyPath: guarantee ((standalone ? Weekday.standaloneSymbolKeyPaths : Weekday.symbolKeyPaths) [style])];
+		return weekdaySymbols [self.weekday % weekdaySymbols.count];
 	}
 }
 
