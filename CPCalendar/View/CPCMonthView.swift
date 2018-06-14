@@ -372,6 +372,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		if let updatedHandler = self.selectionHandler.handleTap (day: month [ordinal: touchUpCellIndex.row] [ordinal: touchUpCellIndex.column]) {
 			self.selectionHandler = updatedHandler;
 			self.selectionDidChange (oldValue: oldSelection);
+			self.sendActions (for: .valueChanged);
 		}
 	}
 	

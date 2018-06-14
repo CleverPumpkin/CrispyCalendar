@@ -23,6 +23,12 @@
 
 import UIKit
 
+fileprivate extension UIScrollView {
+	fileprivate func stopScrollAnimations () {
+		self.setContentOffset (self.contentOffset, animated: false);
+	}
+}
+
 public protocol CPCCalendarViewSelectionDelegate: AnyObject {
 	var selection: CPCViewSelection { get set };
 	
@@ -52,6 +58,8 @@ open class CPCCalendarView: UIView {
 	
 	internal unowned let contentView: CPCMultiMonthsView;
 	internal unowned let scrollView: UIScrollView;
+	
+	internal var calendarViewController: CPCCalendarViewController?;
 
 	private var calendarWrapper = CPCYear.current.calendarWrapper {
 		didSet {
@@ -59,7 +67,6 @@ open class CPCCalendarView: UIView {
 		}
 	}
 	private var scrollViewController: ScrollViewController!;
-	
 	
 	public override init (frame: CGRect) {
 		let (scrollView, contentView) = CPCCalendarView.makeSubviews (frame);
@@ -123,8 +130,17 @@ extension CPCCalendarView {
 			}
 		}
 		private var pendingPageCalculations = UnfairThreadsafeStorage ([Int: DispatchWorkItem] ());
-		private var scrollingToTop = false;
-		
+		private var scrollView: UIScrollView {
+			return self.calendarView.scrollView;
+		}
+		private var scrollingToTop = false {
+			didSet {
+				if (self.scrollingToTop) {
+					self.scrollView.stopScrollAnimations ();
+				}
+			}
+		}
+
 		fileprivate init (_ calendarView: CPCCalendarView) {
 			self.calendarView = calendarView;
 			self.prevOffset = calendarView.scrollView.contentOffset.y;
@@ -184,6 +200,7 @@ extension CPCCalendarView.ScrollViewController {
 	fileprivate typealias ScrollViewController = CPCCalendarView.ScrollViewController;
 
 	fileprivate struct Layout {
+		fileprivate let layoutID: Int;
 		fileprivate let columnSize: CGSize;
 		
 		private let columnCount: Int;
@@ -229,7 +246,7 @@ extension CPCCalendarView.ScrollViewController {
 	
 	private var layout: Layout {
 		get {
-			let scrollView = self.calendarView.scrollView, targetContentOffset: CGFloat;
+			let scrollView = self.scrollView, targetContentOffset: CGFloat;
 			if let storedValue = self.layoutStorage, storedValue.columnSize.height > 0.0 {
 				if storedValue.isValid (for: self) {
 					return storedValue;
@@ -242,8 +259,12 @@ extension CPCCalendarView.ScrollViewController {
 			let updatedLayout = Layout (controller: self);
 			self.layoutStorage = updatedLayout;
 			let columnHeight = updatedLayout.columnSize.height;
-			scrollView.contentOffset.y = targetContentOffset.remainder (dividingBy: columnHeight);
-			self.presentedPageIndex = (targetContentOffset / columnHeight).integerRounded (.down);
+			if (columnHeight > 0.0) {
+				scrollView.contentOffset.y = targetContentOffset.remainder (dividingBy: columnHeight);
+				self.presentedPageIndex = (targetContentOffset / columnHeight).integerRounded (.down);
+			} else {
+				scrollView.contentOffset.y = targetContentOffset;
+			}
 			return updatedLayout;
 		}
 		set {
@@ -263,6 +284,10 @@ extension CPCCalendarView.ScrollViewController {
 	}
 	
 	fileprivate func scrollViewShouldScrollToTop (_ scrollView: UIScrollView) -> Bool {
+		guard !self.scrollingToTop else {
+			return false;
+		}
+
 		let shouldSwitchPage = (self.presentedPageIndex != 0), currentPositionIsBelow = (shouldSwitchPage && self.presentedPageIndex > 0), zeroPage = self.layout [0];
 		let middleRowCenterY = zeroPage.row (month: CPCMonth (containing: Date (), calendar: self.calendarView.calendarWrapper))?.frame.midY ?? zeroPage.midY;
 		let zeroPageTargetOffset = middleRowCenterY - scrollView.bounds.height / 2.0;
@@ -271,6 +296,7 @@ extension CPCCalendarView.ScrollViewController {
 		}
 
 		self.scrollingToTop = true;
+		scrollView.stopScrollAnimations ();
 		if shouldSwitchPage {
 			let currentPage = self.layout [self.presentedPageIndex];
 			UIView.animateKeyframes (withDuration: 0.3, delay: 0.0, options: .calculationModeCubic, animations: {
@@ -300,21 +326,23 @@ extension CPCCalendarView.ScrollViewController {
 	}
 	
 	fileprivate func scrollViewDidScroll (_ scrollView: UIScrollView) {
-		guard !self.scrollingToTop else {
-			return;
-		}
-		
 		let currentOffset = scrollView.contentOffset.y, offsetDiff = currentOffset - self.prevOffset;
 		self.prevOffset = currentOffset;
 		self.updatePresentedPageIndexIfNeeded (offset: currentOffset, offsetDiff: offsetDiff);
 	}
 	
+	@objc private func monthViewValueChanged () {
+		let calendarView = self.calendarView;
+		calendarView.selectionDidChange ();
+		calendarView.calendarViewController?.selectionDidChange ();
+	}
+	
 	private func updatePresentedPageIndexIfNeeded (offset: CGFloat, offsetDiff: CGFloat) {
-		let scrollView = self.calendarView.scrollView, boundsHeight = scrollView.bounds.height, columnHeight = self.columnSize.height;
-		if ((offset < 0.0) && (offsetDiff < -1e-3)) {
+		let scrollView = self.scrollView, boundsHeight = scrollView.bounds.height, columnHeight = self.columnSize.height, canSwitchPage = !self.scrollingToTop;
+		if ((offset < 0.0) && (offsetDiff < -1e-3) && canSwitchPage) {
 			self.presentedPageIndex -= 1;
 			self.prevOffset = offset + columnHeight - boundsHeight;
-		} else if ((offset > columnHeight - boundsHeight) && (offsetDiff > 1e-3)) {
+		} else if ((offset > columnHeight - boundsHeight) && (offsetDiff > 1e-3) && canSwitchPage) {
 			self.presentedPageIndex += 1;
 			self.prevOffset = offset - columnHeight + boundsHeight;
 		} else {
@@ -325,14 +353,16 @@ extension CPCCalendarView.ScrollViewController {
 		self.reloadMonthViews ();
 	}
 	
-	private func dequeueOrMakeMonthView (month: CPCMonth) -> CPCMonthView {
-		if self.reusableMonthViews.isEmpty {
-			return CPCMonthView (frame: .zero, month: month);
-		} else {
-			let result = self.reusableMonthViews.removeLast ();
-			result.month = month;
+	private func dequeueOrMakeMonthView (frame: CGRect, month: CPCMonth) -> CPCMonthView {
+		guard let result = self.reusableMonthViews.popLast () else {
+			let result = CPCMonthView (frame: frame, month: month);
+			result.addTarget (self, action: #selector (monthViewValueChanged), for: .valueChanged);
 			return result;
 		}
+		
+		result.frame = frame;
+		result.month = month;
+		return result;
 	}
 
 	private func reloadMonthViews () {
@@ -343,12 +373,13 @@ extension CPCCalendarView.ScrollViewController {
 		}
 		self.reusableMonthViews.append (contentsOf: monthViews);
 		
+		guard self.layout.columnSize.height > 0.0 else {
+			return;
+		}
 		let page = self.layout [self.presentedPageIndex];
 		for row in page {
 			for month in row.months {
-				let monthView = self.dequeueOrMakeMonthView (month: month);
-				monthView.frame = row.viewFrame (for: month);
-				contentView.addMonthView (monthView);
+				contentView.addMonthView (self.dequeueOrMakeMonthView (frame: row.viewFrame (for: month), month: month));
 			}
 		}
 		self.startMonthViewUpdatesWhereNeeded ();
@@ -368,7 +399,7 @@ extension CPCCalendarView.ScrollViewController {
 			return DispatchQueue.main.async { self.precalculateNextPageIfNeeed () };
 		}
 		
-		let currentPage = self.presentedPageIndex, maxPages = ScrollViewController.maxPrecalculatedPages, currentOffset = self.calendarView.scrollView.contentOffset.y;
+		let currentPage = self.presentedPageIndex, maxPages = ScrollViewController.maxPrecalculatedPages, currentOffset = self.scrollView.contentOffset.y;
 		let alreadyCalculated = self.layout.calculatedPageIndexes, desiredPages: [[Int]];
 		if (currentOffset > self.prevOffset) {
 			desiredPages = [
@@ -387,7 +418,7 @@ extension CPCCalendarView.ScrollViewController {
 			];
 		}
 		
-		let queue = ScrollViewController.sharedQueue;
+		let queue = ScrollViewController.sharedQueue, layoutID = self.layout.layoutID;
 		self.pendingPageCalculations.withMutableStoredValue {
 			for pagesSubsequence in desiredPages where !pagesSubsequence.isEmpty {
 				var prevItem: DispatchWorkItem?;
@@ -402,6 +433,9 @@ extension CPCCalendarView.ScrollViewController {
 							return;
 						}
 						
+						guard let layoutStorage = strongSelf.layoutStorage, layoutStorage.layoutID == layoutID, layoutStorage.isValid (for: strongSelf) else {
+							return;
+						}
 						strongSelf.layout.ensurePageCalculated (page);
 						strongSelf.completePageCalculation (page);
 					};
@@ -444,7 +478,20 @@ extension CPCCalendarView.ScrollViewController.Layout {
 		return self.calendarView.contentView;
 	}
 	
+	private static func makeNextID () -> Int {
+		os_unfair_lock_lock (&self.lastIDLock);
+		let result = self.lastID + 1;
+		self.lastID = result;
+		os_unfair_lock_unlock (&self.lastIDLock);
+		
+		return result;
+	}
+	
+	private static var lastID = 0;
+	private static var lastIDLock = os_unfair_lock ();
+
 	fileprivate init (controller: CPCCalendarView.ScrollViewController) {
+		self.layoutID = Layout.makeNextID ();
 		self.columnCount = controller.columnCount;
 		self.columnSize = controller.columnSize;
 		self.firstInset = controller.columnContentInsets.left;

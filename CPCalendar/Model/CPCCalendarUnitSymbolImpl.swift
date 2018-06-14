@@ -71,7 +71,8 @@ extension CPCDay.Weekday: CPCCalendarUnitSymbol {
 	
 	/// Day of week for represented day.
 	public var weekday: Int {
-		return guarantee (self.day.containingWeek.index (of: self.day));
+		let week = self.day.containingWeek;
+		return (guarantee (week.first).distance (to: self.day) + self.day.calendar.firstWeekday - 1) % week.count + 1;
 	}
 	
 	/// Indicates whether represented day belongs to weekend.
@@ -81,7 +82,7 @@ extension CPCDay.Weekday: CPCCalendarUnitSymbol {
 
 	public func symbol (style: Style, standalone: Bool) -> String {
 		let weekdaySymbols = self.day.calendar [keyPath: guarantee ((standalone ? Weekday.standaloneSymbolKeyPaths : Weekday.symbolKeyPaths) [style])];
-		return weekdaySymbols [self.weekday % weekdaySymbols.count];
+		return weekdaySymbols [(self.weekday - 1) % weekdaySymbols.count];
 	}
 }
 

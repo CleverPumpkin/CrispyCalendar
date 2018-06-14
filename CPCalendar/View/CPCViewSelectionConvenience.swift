@@ -124,7 +124,7 @@ public extension CPCViewSelection {
 				lhs = .unordered (Set ([day] + range));
 			}
 		
-		case (.single (.some (let day)), .range (let range)):
+		case (.single (.some /*(let day)*/), .range /*(let range)*/):
 			lhs = rhs + lhs; // FIXME: merge with previous parrent when `SR-5377` is fixed.
 			
 		case (.range (let range1), .range (let range2)):
@@ -137,7 +137,7 @@ public extension CPCViewSelection {
 		case (.range (let range), .unordered (let days)):
 			lhs = .unordered (days.union (range));
 			
-		case (.unordered (let days), .range (let range)):
+		case (.unordered /*(let days)*/, .range /*(let range)*/):
 			lhs = rhs + lhs; // FIXME: merge with previous parrent when `SR-5377` is fixed.
 		
 		case (.range (let range), .ordered (let days)):
@@ -149,7 +149,7 @@ public extension CPCViewSelection {
 		case (.unordered (let days), .single (.some (let day))):
 			lhs = .unordered (days.union (day));
 			
-		case  (.single (.some (let day)), .unordered (let days)):
+		case  (.single (.some /*(let day)*/), .unordered /*(let days)*/):
 			lhs = rhs + rhs; // FIXME: merge with previous parrent when `SR-5377` is fixed.
 			
 		case (.unordered (let days1), .unordered (let days2)):

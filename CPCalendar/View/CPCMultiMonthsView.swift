@@ -153,8 +153,8 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 			}
 		}
 	}
-
-	internal private (set) var monthViews = UnownedArray <CPCMonthView> ();
+	
+	internal private (set) var unownedMonthViews = UnownedArray <CPCMonthView> ();
 	internal var appearanceStorage = CPCViewAppearanceStorage ();
 	
 	private var multiSelectionHandler = CPCViewDefaultSelectionHandler;
@@ -185,24 +185,28 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 	}
 
 	private func updateManagedMonthViews (using block: (CPCMonthView) -> ()) {
-		self.monthViews.forEach (block);
+		self.unownedMonthViews.forEach (block);
 	}
 }
 
 extension CPCMultiMonthsView: UIContentSizeCategoryAdjusting {}
 
 extension CPCMultiMonthsView {
+	open var monthViews: [CPCMonthView] {
+		return Array (self.unownedMonthViews);
+	}
+	
 	open func addMonthView (_ monthView: CPCMonthView) {
-		self.insertMonthView (monthView, at: self.monthViews.count);
+		self.insertMonthView (monthView, at: self.unownedMonthViews.count);
 	}
 	
 	open func insertMonthView (_ monthView: CPCMonthView, at index: Int) {
-		if (index == self.monthViews.count) {
+		if (index == self.unownedMonthViews.count) {
 			self.addSubview (monthView);
-			self.monthViews.append (monthView);
+			self.unownedMonthViews.append (monthView);
 		} else {
-			self.insertSubview (monthView, belowSubview: self.monthViews [index]);
-			self.monthViews.insert (monthView, at: index);
+			self.insertSubview (monthView, belowSubview: self.unownedMonthViews [index]);
+			self.unownedMonthViews.insert (monthView, at: index);
 		}
 		monthView.copyStyle (from: self);
 		monthView.cellRenderer = self.cellRenderer;
@@ -213,7 +217,7 @@ extension CPCMultiMonthsView {
 	}
 	
 	open func removeMonthView (_ monthView: CPCMonthView) {
-		guard let removedView = self.monthViews.remove (where: { $0 === monthView }) else {
+		guard let removedView = self.unownedMonthViews.remove (where: { $0 === monthView }) else {
 			return;
 		}
 		removedView.selectionHandler = CPCViewDefaultSelectionHandler;
@@ -268,7 +272,7 @@ extension CPCMultiMonthsView: CPCViewDelegatingSelectionHandling {
 	
 	private func setMultiSelectionHandler (_ multiSelectionHandler: SelectionHandler, sender: CPCMonthView? = nil) {
 		self.multiSelectionHandler = multiSelectionHandler;
-		for monthView in self.monthViews where monthView !== sender {
+		for monthView in self.unownedMonthViews where monthView !== sender {
 			monthView.selectionHandler = self.selectionHandler (for: monthView);
 		}
 	}

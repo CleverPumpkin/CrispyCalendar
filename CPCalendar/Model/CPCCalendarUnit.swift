@@ -170,7 +170,7 @@ extension CPCCalendarUnit {
 	
 	public var description: String {
 		let intervalFormatter = self.dateIntervalFormatter;
-		return "<\(Self.self): \(intervalFormatter.string (from: self.start, to: self.end))>";
+		return "\(intervalFormatter.string (from: self.start, to: self.start))";
 	}
 	
 	public var debugDescription: String {

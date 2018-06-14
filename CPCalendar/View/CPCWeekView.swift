@@ -52,6 +52,12 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 		}
 	};
 	
+	open var calendar = Calendar.current {
+		didSet {
+			self.setNeedsDisplay ();
+		}
+	}
+	
 	/// Style of rendered symbols.
 	open var style: CPCDay.Weekday.Style {
 		get {
@@ -112,7 +118,7 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	}
 	
 	open override func draw (_ rect: CGRect) {
-		let style = self.style, week = CPCWeek.current, font = self.effectiveFont, lineHeight = font.lineHeight, scale = self.separatorWidth;
+		let style = self.style, week = CPCWeek (containing: Date (), calendar: self.calendar), font = self.effectiveFont, lineHeight = font.lineHeight, scale = self.separatorWidth;
 		let cellOriginY = (self.bounds.midY - lineHeight / 2).rounded (.down, scale: scale);
 		let cellWidth = self.bounds.width / CGFloat (week.count), cellHeight = lineHeight.rounded (.up, scale: scale);
 		let weekdayAttributes: [NSAttributedStringKey: Any] = [

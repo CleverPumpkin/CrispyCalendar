@@ -243,7 +243,9 @@ internal extension CPCCalendarWrapper {
 		
 		fileprivate func calendarUnit (_ unit: Unit, cacheDistance distance: Unit.Stride, to otherUnit: Unit) {
 			self.distancesCache [UnitDistancesStorage.Key (unit, pairedWith: otherUnit)] = distance;
+			self.distancesCache [UnitDistancesStorage.Key (otherUnit, pairedWith: unit)] = -distance;
 			self.advancedUnitsCache [UnitAdvancesStorage.Key (unit, pairedWith: distance)] = otherUnit;
+			self.advancedUnitsCache [UnitAdvancesStorage.Key (otherUnit, pairedWith: -distance)] = unit;
 			self.purgeAllCachesIfNeeded ();
 		}
 		
@@ -253,7 +255,9 @@ internal extension CPCCalendarWrapper {
 		
 		fileprivate func calendarUnit (_ unit: Unit, cacheUnit otherUnit: Unit, asAdvancedBy value: Unit.Stride) {
 			self.advancedUnitsCache [UnitAdvancesStorage.Key (unit, pairedWith: value)] = otherUnit;
+			self.advancedUnitsCache [UnitAdvancesStorage.Key (otherUnit, pairedWith: -value)] = unit;
 			self.distancesCache [UnitDistancesStorage.Key (unit, pairedWith: otherUnit)] = value;
+			self.distancesCache [UnitDistancesStorage.Key (otherUnit, pairedWith: unit)] = -value;
 			self.purgeAllCachesIfNeeded ();
 		}
 		

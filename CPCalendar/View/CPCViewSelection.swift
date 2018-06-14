@@ -21,6 +21,7 @@
 //  THE SOFTWARE.
 //
 
+import os
 import Swift
 
 /// A value that describes view selection mode and currently selected days simultaneously.
@@ -37,21 +38,61 @@ public enum CPCViewSelection: Equatable {
 	case ordered ([CPCDay]);
 }
 
-extension CPCViewSelection: CustomStringConvertible {
+#if DEBUG
+private func logSelectionIsEmptyInconsistencyOnce () {
+	struct OnceWrapper {
+		fileprivate static let token: Void = {
+			os_log ("[CPCalendar] Non-empty selection should not produce an empty description, but it just happened. Break on %@ to debug.", type: .error, #function);
+		} ();
+	}
+	
+	_ = OnceWrapper.token;
+}
+#endif
+
+fileprivate extension Collection where Element: CustomStringConvertible {
+	fileprivate func joinedDescription (separator: String = ", ", edgeDelimiters: (String, String)? = nil) -> String {
+		let joinedElementDescriptions = self.map { $0.description }.joined (separator: separator);
+		guard let edgeDelimiters = edgeDelimiters else {
+			return joinedElementDescriptions;
+		}
+		return edgeDelimiters.0 + joinedElementDescriptions + edgeDelimiters.1;
+	}
+}
+
+extension CPCViewSelection: CustomStringConvertible, CustomDebugStringConvertible {
 	public var description: String {
 		switch (self) {
-		case .none:
-			return "none";
-		case .single (nil):
-			return "nil";
 		case .single (.some (let day)):
-			return "\(day.description)";
-		case .range (let range):
-			return "<Range: \(range.isEmpty ? "empty" : "\(range.lowerBound.description) ..< \(range.upperBound.description)")>";
+			return day.description;
+		case .range (let days):
+			return "[\(days.lowerBound), \(days.upperBound))";
 		case .unordered (let days):
-			return "<Unordered: \(days.isEmpty ? "empty" : "\(days.sorted ().map { $0.description }.joined (separator: ", "))")>";
+			return days.joinedDescription (edgeDelimiters: ("{", "}"));
 		case .ordered (let days):
-			return "<Ordered: \(days.isEmpty ? "empty" : "\(days.sorted ().map { $0.description }.joined (separator: ", "))")>";
+			return days.joinedDescription ();
+		default:
+#if DEBUG
+			if !self.isEmpty {
+				logSelectionIsEmptyInconsistencyOnce ();
+			}
+#endif
+			return "";
+		}
+	}
+	
+	public var debugDescription: String {
+		switch (self) {
+		case .none:
+			return "<None>";
+		case .single (let day):
+			return "<Single \(day.debugDescription)>";
+		case .range (let range):
+			return "<Range: \(range.debugDescription)>";
+		case .unordered (let days):
+			return "<Unordered: \(days.debugDescription)>";
+		case .ordered (let days):
+			return "<Ordered: \(days.debugDescription)>";
 		}
 	}
 }

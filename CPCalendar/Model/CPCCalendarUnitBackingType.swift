@@ -99,9 +99,7 @@ extension CPCCalendarUnitBackingType where Self: ExpressibleByDateComponents, Se
 			return self;
 		}
 		
-		let backedUnit = BackedType.representedUnit;
-		var denormalizedComps = self.dateComponents (calendar);
-		denormalizedComps.setValue (guarantee (denormalizedComps.value (for: backedUnit)) + value, for: backedUnit);
-		return Self (containing: guarantee (denormalizedComps.date), calendar: calendar);
+		let advancedUnitStart = guarantee (calendar.date (byAdding: BackedType.representedUnit, value: value, to: self.startDate (using: calendar)));
+		return Self (calendar.dateComponents (Self.requiredComponents, from: advancedUnitStart));
 	}
 }

@@ -126,6 +126,8 @@ extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
 		}
 	}
 	
+	open func selectionDidChange () {}
+	
 	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
 		return delegate.selection;
 	}

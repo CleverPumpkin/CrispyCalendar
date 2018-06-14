@@ -88,6 +88,7 @@ fileprivate extension DateFormatter {
 		
 		let dateFormatter = DateFormatter ();
 		dateFormatter.calendar = month.calendar;
+		dateFormatter.locale = month.calendar.locale;
 		dateFormatter.dateFormat = format;
 		dateFormatter.formattingContext = .standalone;
 		return dateFormatter;

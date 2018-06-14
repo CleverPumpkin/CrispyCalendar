@@ -248,21 +248,3 @@ public extension CPCDay {
 		self = CPCDay.today.advanced (by: daysSinceNow);
 	}
 }
-
-public extension CPCDay {
-	private static let dateFormatter: DateFormatter = {
-		let result = DateFormatter ();
-		result.setLocalizedDateFormatFromTemplate (CPCDay.descriptionDateFormatTemplate);
-		return result;
-	} ();
-	
-	private var dateFormatter: DateFormatter {
-		let result = CPCDay.dateFormatter.copy () as! DateFormatter;
-		result.calendar = self.calendar;
-		return result;
-	}
-	
-	public var description: String {
-		return "<\(CPCDay.self): \(self.dateFormatter.string (from: self.start))>";
-	}
-}
