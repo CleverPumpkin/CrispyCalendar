@@ -29,7 +29,7 @@ fileprivate extension Int {
 	fileprivate static let maxUnsignedQuarter = Int (bitPattern: UInt.max >> (UInt.bitWidth * 3 / 4));
 }
 
-private protocol CPCMonthBackingStorageProtocol {
+private protocol CPCMonthBackingStorageProtocol: CustomStringConvertible {
 	var year: Int { get }
 	var month: Int { get }
 	
@@ -42,13 +42,19 @@ private protocol CPCMonthBackingStorageProtocol {
 #endif
 }
 
+extension CPCMonthBackingStorageProtocol {
+	fileprivate var description: String {
+		return "\(self.year)-\(self.month)";
+	}
+}
+
 /// Calendar unit that repsesents a month.
 public struct CPCMonth: CPCCompoundCalendarUnit {
 	public typealias Element = CPCWeek;
 	internal typealias UnitBackingType = BackingStorage;
 	
-	internal struct BackingStorage: Hashable, CPCMonthBackingStorageProtocol {
-		fileprivate struct Packed: Hashable, CPCMonthBackingStorageProtocol {
+	internal struct BackingStorage: Hashable, CustomStringConvertible, CPCMonthBackingStorageProtocol {
+		fileprivate struct Packed: Hashable, CustomStringConvertible, CPCMonthBackingStorageProtocol {
 			fileprivate static let acceptableYears = Int.minSignedThreeQuarters ... .maxSignedThreeQuarters;
 			fileprivate static let acceptableMonths = 0 ... .maxUnsignedQuarter;
 
@@ -66,7 +72,7 @@ public struct CPCMonth: CPCCompoundCalendarUnit {
 			}
 		}
 		
-		fileprivate struct Default: Hashable, CPCMonthBackingStorageProtocol {
+		fileprivate struct Default: Hashable, CustomStringConvertible, CPCMonthBackingStorageProtocol {
 			fileprivate let year: Int;
 			fileprivate let month: Int;
 		}
@@ -75,7 +81,7 @@ public struct CPCMonth: CPCCompoundCalendarUnit {
 			return (lhs.month == rhs.month) && (lhs.year == rhs.year);
 		}
 		
-		private let storage: CPCMonthBackingStorageProtocol;
+		private let storage: CustomStringConvertible & CPCMonthBackingStorageProtocol;
 		
 		internal var year: Int {
 			return self.storage.year;
@@ -190,6 +196,10 @@ extension CPCMonth.BackingStorage: DateComponentsConvertible {
 
 extension CPCMonth.BackingStorage: CPCCalendarUnitBackingType {
 	internal typealias BackedType = CPCMonth;
+	
+	internal var description: String {
+		return self.storage.description;
+	}
 }
 
 public extension CPCMonth {

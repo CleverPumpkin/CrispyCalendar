@@ -123,7 +123,7 @@ extension CPCCalendarView {
 		
 		private var reusableMonthViews = [CPCMonthView] ();
 		private var prevOffset: CGFloat;
-		private var layoutStorage: Layout?;
+		private var layoutStorage: UnfairThreadsafeStorage <Layout>?;
 		private var presentedPageIndex = 0 {
 			didSet {
 				self.precalculateNextPageIfNeeed ();
@@ -247,7 +247,7 @@ extension CPCCalendarView.ScrollViewController {
 	private var layout: Layout {
 		get {
 			let scrollView = self.scrollView, targetContentOffset: CGFloat;
-			if let storedValue = self.layoutStorage, storedValue.columnSize.height > 0.0 {
+			if let storedValue = self.layoutStorage?.value, storedValue.columnSize.height > 0.0 {
 				if storedValue.isValid (for: self) {
 					return storedValue;
 				}
@@ -257,7 +257,7 @@ extension CPCCalendarView.ScrollViewController {
 			}
 			
 			let updatedLayout = Layout (controller: self);
-			self.layoutStorage = updatedLayout;
+			self.layout = updatedLayout;
 			let columnHeight = updatedLayout.columnSize.height;
 			if (columnHeight > 0.0) {
 				scrollView.contentOffset.y = targetContentOffset.remainder (dividingBy: columnHeight);
@@ -268,12 +268,12 @@ extension CPCCalendarView.ScrollViewController {
 			return updatedLayout;
 		}
 		set {
-			self.layoutStorage = newValue;
+			(self.layoutStorage?.value = newValue) ?? (self.layoutStorage = UnfairThreadsafeStorage (newValue));
 		}
 	}
 	
 	private var isMonthViewsReloadNeeded: Bool {
-		return !(self.layoutStorage?.isValid (for: self) ?? false);
+		return self.layoutStorage?.withStoredValue { $0.isValid (for: self) } ?? true;
 	}
 	
 	fileprivate func reloadMonthViewsIfNeeded () {
@@ -396,7 +396,7 @@ extension CPCCalendarView.ScrollViewController {
 	
 	private func precalculateNextPageIfNeeed () {
 		if !Thread.isMainThread {
-			return DispatchQueue.main.async { self.precalculateNextPageIfNeeed () };
+			return DispatchQueue.main.sync { self.precalculateNextPageIfNeeed () };
 		}
 		
 		let currentPage = self.presentedPageIndex, maxPages = ScrollViewController.maxPrecalculatedPages, currentOffset = self.scrollView.contentOffset.y;
@@ -433,7 +433,7 @@ extension CPCCalendarView.ScrollViewController {
 							return;
 						}
 						
-						guard let layoutStorage = strongSelf.layoutStorage, layoutStorage.layoutID == layoutID, layoutStorage.isValid (for: strongSelf) else {
+						guard let layout = strongSelf.layoutStorage?.value, layout.layoutID == layoutID, layout.isValid (for: strongSelf) else {
 							return;
 						}
 						strongSelf.layout.ensurePageCalculated (page);

@@ -29,7 +29,7 @@ fileprivate extension Int {
 	fileprivate static let maxUnsignedQuarter = Int (bitPattern: UInt.max >> (UInt.bitWidth * 3 / 4));
 }
 
-private protocol CPCDayBackingStorageProtocol {
+private protocol CPCDayBackingStorageProtocol: CustomStringConvertible {
 	var year: Int { get }
 	var month: Int { get }
 	var day: Int { get }
@@ -41,6 +41,12 @@ private protocol CPCDayBackingStorageProtocol {
 #else
 	var hashValue: Int { get }
 #endif
+}
+
+extension CPCDayBackingStorageProtocol {
+	fileprivate var description: String {
+		return "\(self.year)-\(self.month)-\(self.day)";
+	}
 }
 
 /// Calendar unit that repsesents a single day.
@@ -223,6 +229,10 @@ extension CPCDay.BackingStorage: DateComponentsConvertible {
 
 extension CPCDay.BackingStorage: CPCCalendarUnitBackingType {
 	internal typealias BackedType = CPCDay;
+
+	internal var description: String {
+		return self.storage.description;
+	}
 }
 
 public extension CPCDay {

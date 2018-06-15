@@ -23,6 +23,32 @@
 
 import UIKit
 
+fileprivate extension BinaryInteger {
+	fileprivate var usedBitCount: Int {
+		guard self > 0 else {
+			return (self == 0) ? 0 : self.bitWidth;
+		}
+		
+		let words = self.words;
+		var iterator = words.makeIterator ();
+		guard var lastWord = iterator.next () else {
+			return 0;
+		}
+		var result = 0;
+		while let word = iterator.next () {
+			result += UInt.bitWidth;
+			lastWord = word;
+		}
+		return result + lastWord.usedBitCount;
+	}
+}
+
+fileprivate extension FixedWidthInteger {
+	fileprivate var usedBitCount: Int {
+		return Self.bitWidth - self.leadingZeroBitCount;
+	}
+}
+
 internal extension CPCDayCellState {
 	internal var appearanceValues: (Int, Int) {
 		return (self.backgroundState.rawValue, self.isToday ? 1 : 0);

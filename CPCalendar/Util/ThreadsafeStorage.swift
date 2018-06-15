@@ -97,15 +97,26 @@ internal struct ThreadsafeStorage <Lock, Value> {
 	internal typealias ValueType = Value;
 	
 	private var lockWrapper: ThreadsafeStorageLockWrapper;
-	private var value: Value;
+	private var valueStorage: Value;
 	
 	private init (lockWrapper: ThreadsafeStorageLockWrapper, value: Value) {
 		self.lockWrapper = lockWrapper;
-		self.value = value;
+		self.valueStorage = value;
 	}
 }
 
 extension ThreadsafeStorage: ThreadsafeStorageProtocol where Lock: ThreadsafeStorageLock {
+	internal var value: Value {
+		get {
+			return self.withStoredValue { $0 };
+		}
+		set {
+			self.withMutableStoredValue {
+				$0 = newValue;
+			};
+		}
+	}
+	
 	internal init (_ value: ValueType) {
 		fatalError ("Cannot instantiate \(ThreadsafeStorage.self) with Lock == \(Lock.self)");
 	}
@@ -120,7 +131,7 @@ extension ThreadsafeStorage: ThreadsafeStorageProtocol where Lock: ThreadsafeSto
 			self.lockWrapper.unlock ();
 		}
 		
-		return block (self.value);
+		return block (self.valueStorage);
 	}
 
 	internal mutating func withMutableStoredValue <T> (perform block: (inout Value) -> T) -> T {
@@ -129,7 +140,7 @@ extension ThreadsafeStorage: ThreadsafeStorageProtocol where Lock: ThreadsafeSto
 			self.lockWrapper.unlock ();
 		}
 		
-		return block (&self.value);
+		return block (&self.valueStorage);
 	}
 }
 

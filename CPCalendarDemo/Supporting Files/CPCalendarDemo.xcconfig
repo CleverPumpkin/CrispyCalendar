@@ -27,4 +27,4 @@ SWIFT_VERSION = 4.0
 
 CODE_SIGN_IDENTITY = iPhone Developer
 CODE_SIGN_STYLE = Automatic
-DEVELOPMENT_TEAM = YOUR_TEAM_ID // See https://developer.apple.com/account/#/membership to find out your Team ID.
+DEVELOPMENT_TEAM = LSKU6K4UN2 // See https://developer.apple.com/account/#/membership to find out your Team ID.

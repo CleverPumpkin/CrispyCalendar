@@ -100,8 +100,12 @@ extension CPCYear.BackingStorage: DateComponentsConvertible {
 	}
 }
 
-extension CPCYear.BackingStorage: CPCCalendarUnitBackingType {
+extension CPCYear.BackingStorage: CustomStringConvertible, CPCCalendarUnitBackingType {
 	internal typealias BackedType = CPCYear;
+	
+	internal var description: String {
+		return self.year.description;
+	}
 }
 
 public extension CPCYear {

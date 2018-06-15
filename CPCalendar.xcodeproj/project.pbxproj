@@ -12,7 +12,6 @@
 		43101B93209CDFBD00904529 /* GridIndices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101B92209CDFBD00904529 /* GridIndices.swift */; };
 		43101B95209CFBB400904529 /* CPCMonthView_Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101B94209CFBB400904529 /* CPCMonthView_Layout.swift */; };
 		43101B97209CFBC100904529 /* CPCMonthView_RedrawContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101B96209CFBC100904529 /* CPCMonthView_RedrawContext.swift */; };
-		43101B9C209D037500904529 /* hash.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101B9B209D037500904529 /* hash.swift */; };
 		4314534E20AEEE7F0019EB01 /* CPCCalendarView_ProtocolConformances.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4314534C20AEEE7E0019EB01 /* CPCCalendarView_ProtocolConformances.swift */; };
 		4314535020AEEE7F0019EB01 /* CPCViewProtocol_ObjCSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4314534D20AEEE7F0019EB01 /* CPCViewProtocol_ObjCSupport.swift */; };
 		4314535320AEEEAC0019EB01 /* CPCViewTitleStyle.m in Sources */ = {isa = PBXBuildFile; fileRef = 4314535220AEEEAC0019EB01 /* CPCViewTitleStyle.m */; };
@@ -92,7 +91,6 @@
 		43101B92209CDFBD00904529 /* GridIndices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridIndices.swift; sourceTree = "<group>"; };
 		43101B94209CFBB400904529 /* CPCMonthView_Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMonthView_Layout.swift; sourceTree = "<group>"; };
 		43101B96209CFBC100904529 /* CPCMonthView_RedrawContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMonthView_RedrawContext.swift; sourceTree = "<group>"; };
-		43101B9B209D037500904529 /* hash.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = hash.swift; sourceTree = "<group>"; };
 		4314534C20AEEE7E0019EB01 /* CPCCalendarView_ProtocolConformances.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCCalendarView_ProtocolConformances.swift; sourceTree = "<group>"; };
 		4314534D20AEEE7F0019EB01 /* CPCViewProtocol_ObjCSupport.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCViewProtocol_ObjCSupport.swift; sourceTree = "<group>"; };
 		4314535220AEEEAC0019EB01 /* CPCViewTitleStyle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPCViewTitleStyle.m; sourceTree = "<group>"; };
@@ -169,7 +167,6 @@
 		430492A82094720100A4F1F1 /* Util */ = {
 			isa = PBXGroup;
 			children = (
-				43101B9B209D037500904529 /* hash.swift */,
 				43C0700F2092F85200202ED8 /* guarantee.swift */,
 				436F53B720A4C14900ACE40A /* UnownedArray.swift */,
 				43B6E72020A0615400A7403B /* ThreadsafeStorage.swift */,
@@ -387,6 +384,9 @@
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
 			mainGroup = 43AF4AC32092311B001A0F40;
 			productRefGroup = 43AF4ACE2092311B001A0F40 /* Products */;
 			projectDirPath = "";
@@ -431,7 +431,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				43101B9C209D037500904529 /* hash.swift in Sources */,
 				43C070102092F85200202ED8 /* guarantee.swift in Sources */,
 				436F53B820A4C14900ACE40A /* UnownedArray.swift in Sources */,
 				43B6E72120A0615400A7403B /* ThreadsafeStorage.swift in Sources */,

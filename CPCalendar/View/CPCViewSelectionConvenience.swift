@@ -80,9 +80,9 @@ public extension CPCViewSelection {
 		case .none, .single:
 			return self;
 		case .range (let range):
-			let lowerBound = range.lowerBound, upperBound = range.upperBound, calendar = lowerBound.calendar;
+			let lowerBound = range.lowerBound, upperBound = range.upperBound;
 			let clampedRange = (lowerBound.start ..< upperBound.start).clamped (to: datesRange);
-			return .range (CPCDay (containing: clampedRange.lowerBound, calendar: calendar) ..< CPCDay (containing: clampedRange.upperBound, calendar: calendar));
+			return .range (CPCDay (containing: clampedRange.lowerBound, calendarOf: lowerBound) ..< CPCDay (containing: clampedRange.upperBound, calendarOf: lowerBound));
 		case .unordered (let days):
 			return .unordered (days.filter { datesRange.contains ($0) });
 		case .ordered (let days):

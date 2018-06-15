@@ -163,14 +163,11 @@ extension CPCCalendarUnit {
 
 extension CPCCalendarUnit {
 	private var dateIntervalFormatter: DateIntervalFormatter {
-		let result = DateIntervalFormatter.calendarUnitIntervalFormatter (for: Self.self).copy () as! DateIntervalFormatter;
-		result.calendar = self.calendar;
-		return result;
+		return DateIntervalFormatter.calendarUnitIntervalFormatter (for: Self.self, calendar: self.calendarWrapper);
 	}
 	
 	public var description: String {
-		let intervalFormatter = self.dateIntervalFormatter;
-		return "\(intervalFormatter.string (from: self.start, to: self.start))";
+		return self.dateIntervalFormatter.string (from: self.start, to: self.start);
 	}
 	
 	public var debugDescription: String {
@@ -180,10 +177,35 @@ extension CPCCalendarUnit {
 }
 
 fileprivate extension DateIntervalFormatter {
-	private static var calendarUnitIntervalFormatters = UnfairThreadsafeStorage ([ObjectIdentifier: DateIntervalFormatter] ());
+	private struct CacheKey: Hashable {
+		private let unitType: ObjectIdentifier;
+		private unowned let calendar: CPCCalendarWrapper;
+		
+#if swift(>=4.2)
+		public func hash (into hasher: inout Hasher) {
+			self.unitType.hash (into: &hasher);
+			self.calendar.hash (into: &hasher);
+		}
+#else
+		public var hashValue: Int {
+			return self.unitType.hashValue ^ self.calendar.hashValue;
+		}
+#endif
+		
+		fileprivate static func == (lhs: CacheKey, rhs: CacheKey) -> Bool {
+			return (lhs.unitType == rhs.unitType) && (lhs.calendar == rhs.calendar);
+		}
+		
+		fileprivate init <Unit> (for unitType: Unit.Type, calendar: CPCCalendarWrapper) where Unit: CPCCalendarUnit {
+			self.unitType = ObjectIdentifier (unitType);
+			self.calendar = calendar;
+		}
+	}
 	
-	fileprivate static func calendarUnitIntervalFormatter <Unit> (for unitType: Unit.Type = Unit.self) -> DateIntervalFormatter where Unit: CPCCalendarUnit {
-		let key = ObjectIdentifier (unitType);
+	private static var calendarUnitIntervalFormatters = UnfairThreadsafeStorage ([CacheKey: DateIntervalFormatter] ());
+	
+	fileprivate static func calendarUnitIntervalFormatter <Unit> (for unitType: Unit.Type, calendar: CPCCalendarWrapper) -> DateIntervalFormatter where Unit: CPCCalendarUnit {
+		let key = CacheKey (for: unitType, calendar: calendar);
 		return self.calendarUnitIntervalFormatters.withMutableStoredValue {
 			if let storedValue = $0 [key] {
 				return storedValue;
