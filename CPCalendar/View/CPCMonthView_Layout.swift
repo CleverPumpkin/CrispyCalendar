@@ -122,7 +122,7 @@ internal extension CPCMonthView {
 				return false;
 			}
 			
-			let separatorWidth = self.separatorWidth, viewBounds = view.bounds.standardized, viewSeparatorWidth = view.separatorWidth;
+			let separatorWidth = self.separatorWidth, viewBounds = view.bounds, viewSeparatorWidth = view.separatorWidth;
 			guard (separatorWidth - viewSeparatorWidth).magnitude < 1e-3 else {
 				return false;
 			}

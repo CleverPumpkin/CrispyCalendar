@@ -25,6 +25,8 @@ import Swift
 
 /// Wraps a Calendar instance into a reference type to enable short-circuit equality evaluation using identity operator.
 internal final class CPCCalendarWrapper: Hashable {
+	private static var instances = UnfairThreadsafeStorage (UnownedDictionary <Calendar, CPCCalendarWrapper> ());
+	
 	/// Wrapped Calendar instance
 	internal let calendar: Calendar;
 	private let calendarHashValue: Int;
@@ -42,27 +44,38 @@ internal final class CPCCalendarWrapper: Hashable {
 	internal var unitSpecificCaches = UnfairThreadsafeStorage ([ObjectIdentifier: UnitSpecificCacheProtocol] ());
 
 	internal static func == (lhs: CPCCalendarWrapper, rhs: CPCCalendarWrapper) -> Bool {
-		return (lhs === rhs) || (lhs.calendar == rhs.calendar);
+		return (lhs === rhs);
 	}
-
+	
+	fileprivate static func wrap (_ calendar: Calendar) -> CPCCalendarWrapper {
+		return self.instances.withMutableStoredValue {
+			if let existingWrapper = $0 [calendar] {
+				return existingWrapper;
+			}
+			
+			let wrapper = CPCCalendarWrapper (calendar);
+			$0 [calendar] = wrapper;
+			return wrapper;
+		};
+	}
+	
 	/// Initializes a new CalendarWrapper
 	///
 	/// - Parameter calendar: Calendar to wrap
-	fileprivate init (_ calendar: Calendar) {
+	private init (_ calendar: Calendar) {
 		self.calendar = calendar;
 		self.calendarHashValue = calendar.hashValue;
 	}
+	
+	deinit {
+		CPCCalendarWrapper.instances.withMutableStoredValue {
+			$0 [self.calendar] = nil;
+		};
+	}
 }
 
-extension CPCCalendarUnit {
-	internal typealias CalendarWrapper = CPCCalendarWrapper;
-
-	/// Creates a new calendar unit that contains a given date according to supplied calendar.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - calendar: Calendar to perform calculations with.
-	public init (containing date: Date, calendar: Calendar) {
-		self.init (containing: date, calendar: CalendarWrapper (calendar));
+public extension Calendar {
+	internal func wrapped () -> CPCCalendarWrapper {
+		return CPCCalendarWrapper.wrap (self);
 	}
 }

@@ -25,87 +25,46 @@ import Swift
 import os.lock
 import Dispatch
 
-internal protocol ThreadsafeStorageLockWrapper {
-	func lock ();
-	func unlock ();
-}
-
-internal protocol ThreadsafeStorageLock {
-	func makeLockWrapper () -> ThreadsafeStorageLockWrapper;
-}
-
-private protocol ThreadsafeStorageLockObject: ThreadsafeStorageLock, AnyObject {
-	func lock ();
-	func unlock ();
-}
-
-private protocol ThreadsafeStorageLockValue: ThreadsafeStorageLock {
-	static func lock (_ lock: inout Self);
-	static func unlock (_ lock: inout Self);
-}
-
-private struct UnavailableLockWrapper: ThreadsafeStorageLockWrapper {
-	fileprivate init () {
-		fatalError ();
-	}
-	
-	internal func lock () {}
-	internal func unlock () {}
-}
-
-private struct ThreadsafeStorageLockObjectWrapper <Lock>: ThreadsafeStorageLockWrapper where Lock: ThreadsafeStorageLockObject {
-	private let lockObject: Lock;
-	
-	fileprivate init (_ lock: Lock) {
-		self.lockObject = lock;
-	}
-
-	internal func lock () {
-		self.lockObject.lock ();
-	}
-	
-	internal func unlock () {
-		self.lockObject.unlock ();
-	}
-}
-
-private final class ThreadsafeStorageLockValueWrapper <Lock>: ThreadsafeStorageLockWrapper where Lock: ThreadsafeStorageLockValue {
-	private var lockValue: Lock;
-	
-	fileprivate init (_ lock: Lock) {
-		self.lockValue = lock;
-	}
-
-	internal func lock () {
-		Lock.lock (&self.lockValue);
-	}
-	
-	internal func unlock () {
-		Lock.unlock (&self.lockValue);
-	}
-}
-
 internal protocol ThreadsafeStorageProtocol {
 	associatedtype ValueType;
+	
+	var value: ValueType { get set };
 	
 	func withStoredValue <T> (perform block: (ValueType) -> T) -> T;
 	mutating func withMutableStoredValue <T> (perform block: (inout ValueType) -> T) -> T;
 }
 
 internal struct ThreadsafeStorage <Lock, Value> {
-	internal typealias LockType = Lock;
 	internal typealias ValueType = Value;
 	
-	private var lockWrapper: ThreadsafeStorageLockWrapper;
+	private let wrappedLock: LockWrapperProtocol;
 	private var valueStorage: Value;
 	
-	private init (lockWrapper: ThreadsafeStorageLockWrapper, value: Value) {
-		self.lockWrapper = lockWrapper;
+	fileprivate init (lock: LockWrapperProtocol, value: Value) {
+		self.wrappedLock = lock;
 		self.valueStorage = value;
 	}
 }
 
-extension ThreadsafeStorage: ThreadsafeStorageProtocol where Lock: ThreadsafeStorageLock {
+internal extension ThreadsafeStorage where Lock == os_unfair_lock {
+	internal init (_ value: Value) {
+		self.init (lock: UnfairLockWrapper (), value: value);
+	}
+}
+
+internal extension ThreadsafeStorage where Lock == DispatchSemaphore {
+	internal init (_ value: Value) {
+		self.init (lock: DispatchSemaphore (asLockWrapper: ()), value: value);
+	}
+}
+
+internal extension ThreadsafeStorage where Lock == pthread_rwlock_t {
+	internal init (_ value: Value) {
+		self.init (lock: PThreadRWLockWrapper (), value: value);
+	}
+}
+
+extension ThreadsafeStorage: ThreadsafeStorageProtocol {
 	internal var value: Value {
 		get {
 			return self.withStoredValue { $0 };
@@ -117,71 +76,94 @@ extension ThreadsafeStorage: ThreadsafeStorageProtocol where Lock: ThreadsafeSto
 		}
 	}
 	
-	internal init (_ value: ValueType) {
-		fatalError ("Cannot instantiate \(ThreadsafeStorage.self) with Lock == \(Lock.self)");
-	}
-	
-	private init (lock: Lock, value: ValueType) {
-		self.init (lockWrapper: lock.makeLockWrapper (), value: value);
-	}
-	
 	internal func withStoredValue <T> (perform block: (Value) -> T) -> T {
-		self.lockWrapper.lock ();
-		defer {
-			self.lockWrapper.unlock ();
-		}
-		
-		return block (self.valueStorage);
-	}
-
-	internal mutating func withMutableStoredValue <T> (perform block: (inout Value) -> T) -> T {
-		self.lockWrapper.lock ();
-		defer {
-			self.lockWrapper.unlock ();
-		}
-		
-		return block (&self.valueStorage);
-	}
-}
-
-extension os_unfair_lock: ThreadsafeStorageLockValue {
-	fileprivate static func lock (_ lock: inout os_unfair_lock) {
-		os_unfair_lock_lock (&lock);
-	}
-
-	fileprivate static func unlock (_ lock: inout os_unfair_lock) {
-		os_unfair_lock_unlock (&lock);
+		self.wrappedLock.beginAccessingValue ();
+		let result = block (self.valueStorage);
+		self.wrappedLock.endAccessingValue ();
+		return result;
 	}
 	
-	internal func makeLockWrapper () -> ThreadsafeStorageLockWrapper {
-		return ThreadsafeStorageLockValueWrapper (self);
-	}
-}
-
-internal extension ThreadsafeStorage where Lock == os_unfair_lock {
-	internal init (_ value: Value) {
-		self.init (lock: os_unfair_lock (), value: value);
+	internal mutating func withMutableStoredValue <T> (perform block: (inout Value) -> T) -> T {
+		self.wrappedLock.beginAccessingValue ();
+		let result = block (&self.valueStorage);
+		self.wrappedLock.endAccessingValue ();
+		return result;
 	}
 }
 
 internal typealias UnfairThreadsafeStorage <Value> = ThreadsafeStorage <os_unfair_lock, Value>;
+internal typealias DispatchSemaphoreStorage <Value> = ThreadsafeStorage <DispatchSemaphore, Value>;
+internal typealias PThreadRWLockStorage <Value> = ThreadsafeStorage <pthread_rwlock_t, Value>;
 
-extension DispatchSemaphore: ThreadsafeStorageLockObject {
-	fileprivate func lock () {
+private protocol LockWrapperProtocol: AnyObject {
+	func beginAccessingValue ();
+	func endAccessingValue ();
+	func beginAccessingMutableValue ();
+	func endAccessingMutableValue ();
+}
+
+extension LockWrapperProtocol {
+	fileprivate func beginAccessingMutableValue () {
+		self.beginAccessingValue ();
+	}
+	
+	fileprivate func endAccessingMutableValue () {
+		self.endAccessingValue ();
+	}
+}
+
+private final class UnfairLockWrapper: LockWrapperProtocol {
+	private var lock: os_unfair_lock;
+	
+	fileprivate init () {
+		self.lock = os_unfair_lock ();
+	}
+	
+	fileprivate func beginAccessingValue () {
+		os_unfair_lock_lock (&self.lock);
+	}
+	
+	fileprivate func endAccessingValue () {
+		os_unfair_lock_unlock (&self.lock);
+	}
+}
+
+extension DispatchSemaphore: LockWrapperProtocol {
+	fileprivate convenience init (asLockWrapper: ()) {
+		self.init (value: 1);
+	}
+
+	fileprivate func beginAccessingValue () {
 		self.wait ();
 	}
 	
-	fileprivate func unlock () {
+	fileprivate func endAccessingValue () {
 		self.signal ();
-	}
-	
-	internal func makeLockWrapper () -> ThreadsafeStorageLockWrapper {
-		return ThreadsafeStorageLockObjectWrapper (self);
 	}
 }
 
-extension ThreadsafeStorage where Lock == DispatchSemaphore {
-	internal init (_ value: Value) {
-		self.init (lock: DispatchSemaphore (value: 1), value: value);
+private final class PThreadRWLockWrapper: LockWrapperProtocol {
+	private var lock: pthread_rwlock_t;
+
+	fileprivate init () {
+		self.lock = pthread_rwlock_t ();
+		pthread_rwlock_init (&self.lock, nil);
+	}
+	
+	deinit {
+		pthread_rwlock_destroy (&self.lock);
+	}
+	
+	fileprivate func beginAccessingValue () {
+		pthread_rwlock_rdlock (&self.lock);
+	}
+	
+	fileprivate func beginAccessingMutableValue () {
+		pthread_rwlock_wrlock (&self.lock);
+	}
+	
+	fileprivate func endAccessingValue () {
+		pthread_rwlock_unlock (&self.lock);
 	}
 }
+

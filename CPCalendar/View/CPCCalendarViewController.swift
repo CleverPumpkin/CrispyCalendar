@@ -117,7 +117,7 @@ open class CPCCalendarViewController: UIViewController {
 	}
 	
 	open var calendarView: CPCCalendarView {
-		return unsafeBitCast (self.view, to: CPCCalendarView.self);
+		return unsafeDowncast (self.view);
 	}
 	
 	open var weekView: CPCWeekView!;

@@ -53,6 +53,8 @@ internal protocol CPCCalendarUnit: CustomStringConvertible, CustomDebugStringCon
 // MARK: - Default implementations
 
 extension CPCCalendarUnit {
+	internal typealias CalendarWrapper = CPCCalendarWrapper;
+	
 	public var calendar: Calendar {
 		return self.calendarWrapper.calendar;
 	}
@@ -82,6 +84,15 @@ extension CPCCalendarUnit {
 	///   - calendar: Calendar to perform calculations with.
 	internal init (containing date: Date, calendar: CalendarWrapper) {
 		self.init (backedBy: BackingType (containing: date, calendar: calendar.calendar), calendar: calendar);
+	}
+
+	/// Creates a new calendar unit that contains a given date according to supplied calendar.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - calendar: Calendar to perform calculations with.
+	public init (containing date: Date, calendar: Calendar) {
+		self.init (containing: date, calendar: calendar.wrapped ());
 	}
 
 	/// Creates a new calendar unit that contains a given date according to supplied calendar and time zone.

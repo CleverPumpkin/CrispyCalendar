@@ -25,53 +25,66 @@ import UIKit
 
 extension CPCCalendarView: CPCViewProtocol {
 	@IBInspectable open dynamic var titleFont: UIFont {
-		get { return self.contentView.titleFont }
-		set { self.contentView.titleFont = newValue }
+		get { return self.monthViewsManager.titleFont }
+		set {
+			self.monthViewsManager.titleFont = newValue;
+			self.invalidateLayout ();
+		}
 	}
 	
 	@IBInspectable open dynamic var titleColor: UIColor {
-		get { return self.contentView.titleColor }
-		set { self.contentView.titleColor = newValue }
+		get { return self.monthViewsManager.titleColor }
+		set { self.monthViewsManager.titleColor = newValue }
 	}
 	
 	@IBInspectable open dynamic var titleAlignment: NSTextAlignment {
-		get { return self.contentView.titleAlignment }
-		set { self.contentView.titleAlignment = newValue }
+		get { return self.monthViewsManager.titleAlignment }
+		set { self.monthViewsManager.titleAlignment = newValue }
 	}
 
 	open var titleStyle: TitleStyle {
-		get { return self.contentView.titleStyle }
+		get { return self.monthViewsManager.titleStyle }
 		set {
-			guard !self.isAppearanceProxy else {
-				return self.titleFormat = newValue.rawValue;
+			guard newValue != self.titleStyle else {
+				return;
 			}
-			self.contentView.titleStyle = newValue;
+			self.monthViewsManager.titleStyle = newValue;
+			self.invalidateLayout ();
 		}
 	}
 	
 	@IBInspectable open dynamic var titleMargins: UIEdgeInsets {
-		get { return self.contentView.titleMargins }
-		set { self.contentView.titleMargins = newValue }
+		get { return self.monthViewsManager.titleMargins }
+		set {
+			guard newValue != self.titleMargins else {
+				return;
+			}
+			self.monthViewsManager.titleMargins = newValue;
+			self.invalidateLayout ();
+		}
 	}
 	
 	@IBInspectable open dynamic var dayCellFont: UIFont {
-		get { return self.contentView.dayCellFont }
-		set { self.contentView.dayCellFont = newValue }
+		get { return self.monthViewsManager.dayCellFont }
+		set {
+			self.monthViewsManager.dayCellFont = newValue;
+			self.invalidateLayout ();
+		}
 	}
 	
 	@IBInspectable open dynamic var dayCellTextColor: UIColor {
-		get { return self.contentView.dayCellTextColor }
-		set { self.contentView.dayCellTextColor = newValue }
+		get { return self.monthViewsManager.dayCellTextColor }
+		set { self.monthViewsManager.dayCellTextColor = newValue }
 	}
 	
 	@IBInspectable open dynamic var separatorColor: UIColor {
-		get { return self.contentView.separatorColor }
-		set { self.contentView.separatorColor = newValue }
+		get { return self.monthViewsManager.separatorColor }
+		set { self.monthViewsManager.separatorColor = newValue }
 	}
 	
 	open var cellRenderer: CellRenderer {
-		get { return self.contentView.cellRenderer }
-		set { self.contentView.cellRenderer = newValue }
+		get { return self.monthViewsManager.cellRenderer }
+		set { self.monthViewsManager.cellRenderer = newValue }
 	}
 	
 	@objc dynamic internal func dayCellBackgroundColor (for backgroundStateValue: Int, isTodayValue: Int) -> UIColor? {
@@ -83,7 +96,7 @@ extension CPCCalendarView: CPCViewProtocol {
 			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
 			return self.dayCellBackgroundColor (for: backgroundStateValue, isTodayValue: isTodayValue);
 		}
-		return self.contentView.dayCellBackgroundColor (for: state);
+		return self.monthViewsManager.dayCellBackgroundColor (for: state);
 	}
 	
 	@objc dynamic internal func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for backgroundStateValue: Int, isTodayValue: Int) {
@@ -95,7 +108,7 @@ extension CPCCalendarView: CPCViewProtocol {
 			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
 			return self.setDayCellBackgroundColor (backgroundColor, for: backgroundStateValue, isTodayValue: isTodayValue);
 		}
-		self.contentView.setDayCellBackgroundColor (backgroundColor, for: state);
+		self.monthViewsManager.setDayCellBackgroundColor (backgroundColor, for: state);
 	}
 }
 
@@ -117,15 +130,6 @@ extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
 		}
 	}
 
-	internal var selectionHandler: SelectionHandler {
-		get {
-			return self.contentView.selectionHandler;
-		}
-		set {
-			self.contentView.selectionHandler = newValue;
-		}
-	}
-	
 	open func selectionDidChange () {}
 	
 	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
@@ -147,24 +151,4 @@ extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
 	}
 }
 
-extension CPCCalendarView: UIContentSizeCategoryAdjusting {
-	open var adjustsFontForContentSizeCategory: Bool {
-		get {
-			return self.contentView.adjustsFontForContentSizeCategory;
-		}
-		set {
-			self.contentView.adjustsFontForContentSizeCategory = newValue;
-		}
-	}
-}
-
-extension CPCCalendarView /* UIScrollViewProtocol */ {
-	open var scrollsToToday: Bool {
-		get {
-			return self.scrollView.scrollsToTop;
-		}
-		set {
-			self.scrollView.scrollsToTop = newValue;
-		}
-	}
-}
+extension CPCCalendarView: UIContentSizeCategoryAdjusting {}

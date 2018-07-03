@@ -210,6 +210,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 	internal var contentSizeCategoryObserver: NSObjectProtocol?;
 	internal var appearanceStorage: AppearanceStorage;
+	internal var managingView: CPCMultiMonthsViewProtocol?;
 	internal var highlightedDayIndex: CellIndex? {
 		didSet {
 			self.highlightedDayIndexDidChange (oldValue: oldValue);
@@ -344,6 +345,14 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		
 		self.titleRedrawContext (rect)?.run ();
 		self.gridRedrawContext (rect)?.run ();
+	}
+	
+	open override func removeFromSuperview () {
+		if let managingView = self.managingView {
+			managingView.monthViewsManager.removeMonthView (self);
+			self.managingView = nil;
+		}
+		super.removeFromSuperview ();
 	}
 	
 	open override func beginTracking (_ touch: UITouch, with event: UIEvent?) -> Bool {

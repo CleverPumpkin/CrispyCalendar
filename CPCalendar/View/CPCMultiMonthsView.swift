@@ -23,12 +23,6 @@
 
 import UIKit
 
-fileprivate extension RangeReplaceableCollection {
-	fileprivate mutating func remove (where predicate: (Element) throws -> Bool) rethrows -> Element? {
-		return try self.index (where: predicate).map { self.remove (at: $0) };
-	}
-}
-
 public protocol CPCMultiMonthsViewSelectionDelegate: AnyObject {
 	var selection: CPCViewSelection { get set };
 	
@@ -36,7 +30,7 @@ public protocol CPCMultiMonthsViewSelectionDelegate: AnyObject {
 	func multiMonthView (_ multiMonthView: CPCMultiMonthsView, shouldDeselect day: CPCDay) -> Bool;
 }
 
-open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanceStorage {
+open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 	open override var backgroundColor: UIColor? {
 		didSet {
 			self.updateManagedMonthViews { $0.backgroundColor = self.backgroundColor };
@@ -44,93 +38,52 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 	}
 	
 	@IBInspectable open dynamic var titleFont: UIFont {
-		get {
-			return self.appearanceStorage.titleFont;
-		}
-		set {
-			self.appearanceStorage.titleFont = newValue;
-			self.updateManagedMonthViews { $0.titleFont = newValue };
-		}
+		get { return self.monthViewsManager.titleFont }
+		set { self.monthViewsManager.titleFont = newValue }
 	}
 	@IBInspectable open dynamic var titleColor: UIColor {
-		get {
-			return self.appearanceStorage.titleColor;
-		}
-		set {
-			self.appearanceStorage.titleColor = newValue;
-			self.updateManagedMonthViews { $0.titleColor = newValue };
-		}
+		get { return self.monthViewsManager.titleColor }
+		set { self.monthViewsManager.titleColor = newValue }
 	}
 	@IBInspectable open dynamic var titleAlignment: NSTextAlignment {
-		get {
-			return self.appearanceStorage.titleAlignment;
-		}
+		get { return self.monthViewsManager.titleAlignment }
 		set {
 			guard (self.titleAlignment != newValue) else {
 				return;
 			}
-			self.appearanceStorage.titleAlignment = newValue;
-			self.updateManagedMonthViews { $0.titleAlignment = newValue };
+			self.monthViewsManager.titleAlignment = newValue;
 		}
 	}
 	open var titleStyle: TitleStyle {
-		get {
-			return self.appearanceStorage.titleStyle;
-		}
+		get { return self.monthViewsManager.titleStyle }
 		set {
 			guard !self.isAppearanceProxy else {
 				return self.titleFormat = newValue.rawValue;
 			}
-			self.appearanceStorage.titleStyle = newValue;
-			self.updateManagedMonthViews { $0.titleStyle = newValue };
+			self.monthViewsManager.titleStyle = newValue;
 		}
 	}
 	@IBInspectable open dynamic var titleMargins: UIEdgeInsets {
-		get {
-			return self.appearanceStorage.titleMargins;
-		}
-		set {
-			self.appearanceStorage.titleMargins = newValue;
-			self.updateManagedMonthViews { $0.titleMargins = newValue };
-		}
+		get { return self.monthViewsManager.titleMargins }
+		set { self.monthViewsManager.titleMargins = newValue }
 	}
 	
 	@IBInspectable open dynamic var dayCellFont: UIFont {
-		get {
-			return self.appearanceStorage.dayCellFont;
-		}
-		set {
-			self.appearanceStorage.dayCellFont = newValue;
-			self.updateManagedMonthViews { $0.dayCellFont = newValue };
-		}
+		get { return self.monthViewsManager.dayCellFont }
+		set { self.monthViewsManager.dayCellFont = newValue }
 	}
 	@IBInspectable open dynamic var dayCellTextColor: UIColor {
-		get {
-			return self.appearanceStorage.dayCellTextColor;
-		}
-		set {
-			self.appearanceStorage.dayCellTextColor = newValue;
-			self.updateManagedMonthViews { $0.dayCellTextColor = newValue };
-		}
+		get { return self.monthViewsManager.dayCellTextColor }
+		set { self.monthViewsManager.dayCellTextColor = newValue }
 	}
 	@IBInspectable open dynamic var separatorColor: UIColor {
-		get {
-			return self.appearanceStorage.separatorColor;
-		}
-		set {
-			self.appearanceStorage.separatorColor = newValue;
-			self.updateManagedMonthViews { $0.separatorColor = newValue };
-		}
+		get { return self.monthViewsManager.separatorColor }
+		set { self.monthViewsManager.separatorColor = newValue }
 	}
 	
 	open var cellRenderer: CPCDayCellRenderer {
-		get {
-			return self.appearanceStorage.cellRenderer;
-		}
-		set {
-			self.appearanceStorage.cellRenderer = newValue;
-			self.updateManagedMonthViews { $0.cellRenderer = newValue };
-		}
+		get { return self.monthViewsManager.cellRenderer }
+		set { self.monthViewsManager.cellRenderer = newValue }
 	}
 
 	open var adjustsFontForContentSizeCategory = false {
@@ -153,12 +106,7 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 			}
 		}
 	}
-	
-	internal private (set) var unownedMonthViews = UnownedArray <CPCMonthView> ();
-	internal var appearanceStorage = CPCViewAppearanceStorage ();
-	
-	private var multiSelectionHandler = CPCViewDefaultSelectionHandler;
-	
+
 	@objc dynamic internal func dayCellBackgroundColor (for backgroundStateValue: Int, isTodayValue: Int) -> UIColor? {
 		return self.dayCellBackgroundColorImpl (backgroundStateValue, isTodayValue);
 	}
@@ -168,7 +116,7 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
 			return self.dayCellBackgroundColor (for: backgroundStateValue, isTodayValue: isTodayValue);
 		}
-		return self.appearanceStorage.cellBackgroundColors [state];
+		return self.monthViewsManager.dayCellBackgroundColor (for: state);
 	}
 	
 	@objc dynamic internal func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for backgroundStateValue: Int, isTodayValue: Int) {
@@ -180,111 +128,38 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol, CPCViewBackedByAppearanc
 			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
 			return self.setDayCellBackgroundColor (backgroundColor, for: backgroundStateValue, isTodayValue: isTodayValue);
 		}
-		self.appearanceStorage.cellBackgroundColors [state] = backgroundColor;
-		self.updateManagedMonthViews { $0.setDayCellBackgroundColor (backgroundColor, for: state) };
-	}
-
-	private func updateManagedMonthViews (using block: (CPCMonthView) -> ()) {
-		self.unownedMonthViews.forEach (block);
-	}
-}
-
-extension CPCMultiMonthsView: UIContentSizeCategoryAdjusting {}
-
-extension CPCMultiMonthsView {
-	open var monthViews: [CPCMonthView] {
-		return Array (self.unownedMonthViews);
+		self.monthViewsManager.setDayCellBackgroundColor (backgroundColor, for: state);
 	}
 	
-	open func addMonthView (_ monthView: CPCMonthView) {
+	internal let monthViewsManager = CPCMonthViewsManager ();
+}
+
+extension CPCMultiMonthsView: CPCMultiMonthsViewProtocol {
+	@objc open var monthViews: [CPCMonthView] {
+		return self.monthViewsManager.monthViews;
+	}
+	
+	@objc open func addMonthView (_ monthView: CPCMonthView) {
 		self.insertMonthView (monthView, at: self.unownedMonthViews.count);
 	}
 	
-	open func insertMonthView (_ monthView: CPCMonthView, at index: Int) {
+	@objc open func insertMonthView (_ monthView: CPCMonthView, at index: Int) {
 		if (index == self.unownedMonthViews.count) {
 			self.addSubview (monthView);
-			self.unownedMonthViews.append (monthView);
 		} else {
 			self.insertSubview (monthView, belowSubview: self.unownedMonthViews [index]);
-			self.unownedMonthViews.insert (monthView, at: index);
 		}
-		monthView.copyStyle (from: self);
-		monthView.cellRenderer = self.cellRenderer;
-		monthView.backgroundColor = self.backgroundColor;
-		monthView.selectionHandler = self.selectionHandler (for: monthView);
 		monthView.adjustsFontForContentSizeCategory = self.adjustsFontForContentSizeCategory;
-		monthView.setNeedsDisplay ();
+		self.monthViewsManager.insertMonthView (monthView, at: index);
 	}
 	
-	open func removeMonthView (_ monthView: CPCMonthView) {
-		guard let removedView = self.unownedMonthViews.remove (where: { $0 === monthView }) else {
-			return;
-		}
-		removedView.selectionHandler = CPCViewDefaultSelectionHandler;
-	}
-	
-	open override func willRemoveSubview (_ subview: UIView) {
-		super.willRemoveSubview (subview);
-		
-		guard let monthView = subview as? CPCMonthView else {
-			return;
-		}
-		self.removeMonthView (monthView);
+	@objc open func removeMonthView (_ monthView: CPCMonthView) {
+		self.monthViewsManager.removeMonthView (monthView);
 	}
 }
 
 extension CPCMultiMonthsView: CPCViewDelegatingSelectionHandling {
 	public typealias SelectionDelegateType = CPCMultiMonthsViewSelectionDelegate;
-	
-	private struct MonthViewHandler: CPCViewSelectionHandlerProtocol {
-		fileprivate let selection: Selection;
-		fileprivate unowned let monthView: CPCMonthView;
-
-		private unowned let parent: CPCMultiMonthsView;
-
-		fileprivate init (_ parent: CPCMultiMonthsView, for monthView: CPCMonthView) {
-			self.parent = parent;
-			self.monthView = monthView;
-			self.selection = monthView.month.map { parent.selection.clamped (to: $0) } ?? .none;
-		}
-		
-		fileprivate func clearingSelection () -> CPCMultiMonthsView.MonthViewHandler {
-			return self;
-		}
-		
-		fileprivate func handleTap (day: CPCDay) -> CPCViewSelectionHandlerProtocol? {
-			return self.parent.selectionHandler (self, handleTapOn: day);
-		}
-	}
-	
-	internal var selectionHandler: SelectionHandler {
-		get {
-			return self.multiSelectionHandler;
-		}
-		set {
-			self.setMultiSelectionHandler (newValue);
-		}
-	}
-	
-	fileprivate func selectionHandler (for monthView: CPCMonthView) -> SelectionHandler {
-		return MonthViewHandler (self, for: monthView);
-	}
-	
-	private func setMultiSelectionHandler (_ multiSelectionHandler: SelectionHandler, sender: CPCMonthView? = nil) {
-		self.multiSelectionHandler = multiSelectionHandler;
-		for monthView in self.unownedMonthViews where monthView !== sender {
-			monthView.selectionHandler = self.selectionHandler (for: monthView);
-		}
-	}
-
-	private func selectionHandler (_ handler: MonthViewHandler, handleTapOn day: CPCDay) -> SelectionHandler? {
-		guard let newHandler = self.selectionHandler.handleTap (day: day) else {
-			return nil;
-		}
-		let monthView = handler.monthView;
-		self.setMultiSelectionHandler (newHandler, sender: monthView);
-		return self.selectionHandler (for: monthView);
-	}
 
 	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
 		return delegate.selection;
@@ -304,3 +179,6 @@ extension CPCMultiMonthsView: CPCViewDelegatingSelectionHandling {
 		return delegate.multiMonthView (self, shouldDeselect: day);
 	}
 }
+
+extension CPCMultiMonthsView: CPCViewBackedByAppearanceStorage {}
+extension CPCMultiMonthsView: UIContentSizeCategoryAdjusting {}

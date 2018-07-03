@@ -52,6 +52,10 @@
 		438454D320D2A27200CDC209 /* CPCalendar.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43C06FE820924E7400202ED8 /* CPCalendar.framework */; };
 		438454D420D2A27200CDC209 /* CPCalendar.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 43C06FE820924E7400202ED8 /* CPCalendar.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		438454D920D2A41B00CDC209 /* CPCCalendarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438454D820D2A41A00CDC209 /* CPCCalendarViewController.swift */; };
+		438AAB5B20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438AAB5A20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift */; };
+		43B53ABF20D4166000AA27BB /* CPCCalendarView_Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B53ABE20D4166000AA27BB /* CPCCalendarView_Layout.swift */; };
+		43B53AC120D4194900AA27BB /* CPCCalendarView_Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B53AC020D4194900AA27BB /* CPCCalendarView_Cell.swift */; };
+		43B53AC320D421D900AA27BB /* unsafeCastConvenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B53AC220D421D900AA27BB /* unsafeCastConvenience.swift */; };
 		43B6E72120A0615400A7403B /* ThreadsafeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B6E72020A0615400A7403B /* ThreadsafeStorage.swift */; };
 		43C07001209259B900202ED8 /* CPCDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C07000209259B900202ED8 /* CPCDay.swift */; };
 		43C070042092ED9C00202ED8 /* CPCMonth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C070032092ED9C00202ED8 /* CPCMonth.swift */; };
@@ -132,6 +136,10 @@
 		438454D020D27E8800CDC209 /* CPCalendarDemo.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CPCalendarDemo.xcconfig; sourceTree = "<group>"; };
 		438454D120D2880D00CDC209 /* LaunchScreen.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		438454D820D2A41A00CDC209 /* CPCCalendarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarViewController.swift; sourceTree = "<group>"; };
+		438AAB5A20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMultiMonthsViewProtocol.swift; sourceTree = "<group>"; };
+		43B53ABE20D4166000AA27BB /* CPCCalendarView_Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarView_Layout.swift; sourceTree = "<group>"; };
+		43B53AC020D4194900AA27BB /* CPCCalendarView_Cell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarView_Cell.swift; sourceTree = "<group>"; };
+		43B53AC220D421D900AA27BB /* unsafeCastConvenience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = unsafeCastConvenience.swift; sourceTree = "<group>"; };
 		43B6E72020A0615400A7403B /* ThreadsafeStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadsafeStorage.swift; sourceTree = "<group>"; };
 		43B6E72320A0902700A7403B /* CPCalendar.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; path = CPCalendar.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		43B6E72920A0B93F00A7403B /* CPCalendar.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CPCalendar.modulemap; sourceTree = "<group>"; };
@@ -168,6 +176,7 @@
 			isa = PBXGroup;
 			children = (
 				43C0700F2092F85200202ED8 /* guarantee.swift */,
+				43B53AC220D421D900AA27BB /* unsafeCastConvenience.swift */,
 				436F53B720A4C14900ACE40A /* UnownedArray.swift */,
 				43B6E72020A0615400A7403B /* ThreadsafeStorage.swift */,
 				43584B1020A4F18D00035A81 /* FloatingPointRounding.swift */,
@@ -299,8 +308,11 @@
 				43689DBD20936F2500052C7A /* CPCMonthView.swift */,
 				43101B94209CFBB400904529 /* CPCMonthView_Layout.swift */,
 				43101B96209CFBC100904529 /* CPCMonthView_RedrawContext.swift */,
+				438AAB5A20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift */,
 				436F53BC20A4D8B900ACE40A /* CPCMultiMonthsView.swift */,
 				43689DBE20936F2500052C7A /* CPCCalendarView.swift */,
+				43B53AC020D4194900AA27BB /* CPCCalendarView_Cell.swift */,
+				43B53ABE20D4166000AA27BB /* CPCCalendarView_Layout.swift */,
 				4314534C20AEEE7E0019EB01 /* CPCCalendarView_ProtocolConformances.swift */,
 				438454D820D2A41A00CDC209 /* CPCCalendarViewController.swift */,
 			);
@@ -432,6 +444,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				43C070102092F85200202ED8 /* guarantee.swift in Sources */,
+				43B53AC320D421D900AA27BB /* unsafeCastConvenience.swift in Sources */,
 				436F53B820A4C14900ACE40A /* UnownedArray.swift in Sources */,
 				43B6E72120A0615400A7403B /* ThreadsafeStorage.swift in Sources */,
 				43584B1120A4F18E00035A81 /* FloatingPointRounding.swift in Sources */,
@@ -470,8 +483,11 @@
 				438454D920D2A41B00CDC209 /* CPCCalendarViewController.swift in Sources */,
 				43101B95209CFBB400904529 /* CPCMonthView_Layout.swift in Sources */,
 				43101B97209CFBC100904529 /* CPCMonthView_RedrawContext.swift in Sources */,
+				438AAB5B20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift in Sources */,
 				436F53BD20A4D8B900ACE40A /* CPCMultiMonthsView.swift in Sources */,
 				43689DC020936F2600052C7A /* CPCCalendarView.swift in Sources */,
+				43B53AC120D4194900AA27BB /* CPCCalendarView_Cell.swift in Sources */,
+				43B53ABF20D4166000AA27BB /* CPCCalendarView_Layout.swift in Sources */,
 				4314534E20AEEE7F0019EB01 /* CPCCalendarView_ProtocolConformances.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

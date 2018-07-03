@@ -23,12 +23,16 @@
 
 import Swift
 
+internal struct UnownedStorage <Element> where Element: AnyObject {
+	internal unowned let value: Element;
+}
+
 internal struct UnownedArray <Element> where Element: AnyObject {
-	private struct UnownedStorage {
-		fileprivate unowned let value: Element;
-	}
-	
-	private var storage: [UnownedStorage];
+	private var storage: [UnownedStorage <Element>];
+}
+
+internal struct UnownedDictionary <Key, Value> where Key: Hashable, Value: AnyObject {
+	private var storage: [Key: UnownedStorage <Value>];
 }
 
 extension UnownedArray: MutableCollection, RangeReplaceableCollection {
@@ -65,5 +69,44 @@ extension UnownedArray: MutableCollection, RangeReplaceableCollection {
 	
 	internal mutating func replaceSubrange <C, R> (_ subrange: R, with newElements: C) where C: Collection, C.Element == Element, R: RangeExpression, R.Bound == Index {
 		self.storage.replaceSubrange (subrange, with: newElements.map { UnownedStorage (value: $0) });
+	}
+}
+
+extension UnownedDictionary: Collection, ExpressibleByDictionaryLiteral {
+	internal typealias Index = Dictionary <Key, UnownedStorage <Value>>.Index;
+	internal typealias Element = (key: Key, value: Value);
+	
+	internal var startIndex: Index {
+		return self.storage.startIndex;
+	}
+	
+	internal var endIndex: Index {
+		return self.storage.endIndex;
+	}
+	
+	internal init () {
+		self.storage = [:];
+	}
+	
+	internal init (dictionaryLiteral elements: (Key, Value)...) {
+		self.storage = Dictionary (uniqueKeysWithValues: elements.map { (key: $0.0, value: UnownedStorage (value: $0.1) ) });
+	}
+	
+	internal subscript (key: Key) -> Value? {
+		get {
+			return self.storage [key]?.value;
+		}
+		set {
+			self.storage [key] = newValue.map { UnownedStorage (value: $0) };
+		}
+	}
+	
+	internal subscript (position: Index) -> (key: Key, value: Value) {
+		let (key, value) = self.storage [position];
+		return (key: key, value: value.value);
+	}
+	
+	internal func index (after i: Index) -> Index {
+		return self.storage.index (after: i);
 	}
 }
