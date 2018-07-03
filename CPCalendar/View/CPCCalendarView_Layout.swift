@@ -40,6 +40,13 @@ extension CPCCalendarView {
 		internal let calendar: CPCCalendarWrapper;
 		
 		private var storage: Storage = EmptyStorage ();
+		private var monthViewsManagerRef: CPCMonthViewsManager?;
+		private var monthViewsManager: CPCMonthViewsManager {
+			guard let monthViewsManager = self.monthViewsManagerRef else {
+				fatalError ("[CPCalendar] Internal error: \(CPCCalendarView.Layout.self) is being used before prepare (collectionView:in:) call");
+			}
+			return monthViewsManager;
+		}
 		
 		internal init (calendar: CPCCalendarWrapper) {
 			self.calendar = calendar;
@@ -54,9 +61,10 @@ extension CPCCalendarView {
 }
 
 extension CPCCalendarView.Layout: UICollectionViewDataSource {
-	internal func prepare (collectionView: UICollectionView) {
+	internal func prepare (collectionView: UICollectionView, in calendarView: CPCCalendarView) {
 		collectionView.register (CPCCalendarView.Cell.self, forCellWithReuseIdentifier: .cellIdentifier);
 		collectionView.dataSource = self;
+		self.monthViewsManagerRef = calendarView.monthViewsManager;
 	}
 	
 	internal func numberOfSections (in collectionView: UICollectionView) -> Int {
@@ -68,7 +76,9 @@ extension CPCCalendarView.Layout: UICollectionViewDataSource {
 	}
 	
 	internal func collectionView (_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-		return collectionView.dequeueReusableCell (withReuseIdentifier: .cellIdentifier, for: indexPath);
+		let cell = collectionView.dequeueReusableCell (withReuseIdentifier: .cellIdentifier, for: indexPath) as! CPCCalendarView.Cell;
+		cell.monthViewsManager = self.monthViewsManager;
+		return cell;
 	}
 }
 

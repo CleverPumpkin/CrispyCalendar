@@ -25,6 +25,20 @@ import UIKit
 
 extension CPCCalendarView {
 	internal class Cell: UICollectionViewCell {
+		internal weak var monthViewsManager: CPCMonthViewsManager? {
+			didSet {
+				guard self.monthViewsManager !== oldValue else {
+					return;
+				}
+				
+				if let monthViewsManager = self.monthViewsManager {
+					monthViewsManager.addMonthView (self.monthView);
+				} else {
+					self.monthView.removeFromManagingView ();
+				}
+			}
+		}
+		
 		private unowned let monthView: CPCMonthView;
 		
 		private static func makeMonthView (frame: CGRect = .zero) -> CPCMonthView {
@@ -48,14 +62,14 @@ extension CPCCalendarView {
 			self.contentView.addSubview (monthView);
 		}
 		
-		override func layoutSubviews () {
-			super.layoutSubviews ();
-			self.monthView.frame = self.contentView.bounds;
-		}
-		
 		internal override func apply (_ layoutAttributes: UICollectionViewLayoutAttributes) {
 			super.apply (layoutAttributes);
 			self.monthView.month = (layoutAttributes as? Layout.Attributes)?.month;
+		}
+		
+		internal override func prepareForReuse () {
+			super.prepareForReuse ();
+			self.monthView.removeFromManagingView ();
 		}
 	}
 }

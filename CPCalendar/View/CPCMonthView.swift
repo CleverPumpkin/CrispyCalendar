@@ -348,10 +348,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 	
 	open override func removeFromSuperview () {
-		if let managingView = self.managingView {
-			managingView.monthViewsManager.removeMonthView (self);
-			self.managingView = nil;
-		}
+		self.removeFromManagingView ();
 		super.removeFromSuperview ();
 	}
 	
@@ -387,6 +384,13 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	open override func cancelTracking (with event: UIEvent?) {
 		self.highlightedDayIndex = nil;
+	}
+	
+	internal func removeFromManagingView () {
+		if let managingView = self.managingView {
+			managingView.monthViewsManager.removeMonthView (self);
+			self.managingView = nil;
+		}
 	}
 	
 	private func gridCellIndex (for touch: UITouch?) -> CellIndex? {

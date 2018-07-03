@@ -81,7 +81,11 @@ open class CPCCalendarView: UIView {
 	}
 	
 	private func commonInit (_ collectionView: UICollectionView) {
-		self.layout.prepare (collectionView: collectionView);
+		self.monthViewsManager.selectionDidChangeBlock = { [unowned self] in
+			self.selectionDidChange ();
+			self.calendarViewController?.selectionDidChange ();
+		};
+		self.layout.prepare (collectionView: collectionView, in: self);
 		self.addSubview (collectionView);
 	}
 

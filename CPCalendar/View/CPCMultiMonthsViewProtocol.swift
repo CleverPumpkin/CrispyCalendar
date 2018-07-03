@@ -60,6 +60,19 @@ internal extension CPCMultiMonthsViewProtocol where Self: CPCViewDelegatingSelec
 }
 
 internal final class CPCMonthViewsManager {
+	internal var selectionDidChangeBlock: (() -> ())? {
+		didSet {
+			switch (self.selectionDidChangeBlock, oldValue) {
+			case (.none, .some):
+				self.updateManagedMonthViews { $0.addTarget (self, action: #selector (monthViewValueChanged), for: .valueChanged) };
+			case (.some, .none):
+				self.updateManagedMonthViews { $0.removeTarget (self, action: #selector (monthViewValueChanged), for: .valueChanged) };
+			case (.none, .none), (.some, .some):
+				break;
+			}
+		}
+	}
+	
 	fileprivate private (set) var unownedMonthViews = UnownedArray <CPCMonthView> ();
 	fileprivate var appearanceStorage = CPCViewAppearanceStorage ();
 	
@@ -81,6 +94,9 @@ internal extension CPCMonthViewsManager {
 		} else {
 			self.unownedMonthViews.insert (monthView, at: index);
 		}
+		if (self.selectionDidChangeBlock != nil) {
+			monthView.addTarget (self, action: #selector (monthViewValueChanged), for: .valueChanged);
+		}
 		monthView.appearanceStorage = self.appearanceStorage;
 		monthView.cellRenderer = self.appearanceStorage.cellRenderer;
 		monthView.selectionHandler = self.selectionHandler (for: monthView);
@@ -91,11 +107,16 @@ internal extension CPCMonthViewsManager {
 		guard let removedView = self.unownedMonthViews.remove (where: { $0 === monthView }) else {
 			return;
 		}
+		removedView.removeTarget (self, action: #selector (monthViewValueChanged), for: .valueChanged);
 		removedView.selectionHandler = CPCViewDefaultSelectionHandler;
 	}
 	
 	internal func updateManagedMonthViews (using block: (CPCMonthView) -> ()) {
 		self.unownedMonthViews.forEach (block);
+	}
+	
+	@objc private func monthViewValueChanged () {
+		self.selectionDidChangeBlock? ();
 	}
 }
 
@@ -205,12 +226,8 @@ internal extension CPCMonthViewsManager {
 	}
 	
 	internal var selection: CPCViewSelection {
-		get {
-			return self.multiSelectionHandler.selection;
-		}
-		set {
-			fatalError ("Not implemented");
-		}
+		get { return self.multiSelectionHandler.selection }
+		set { fatalError ("Not implemented") }
 	}
 	
 	fileprivate func selectionHandler (for monthView: CPCMonthView) -> CPCViewSelectionHandlerProtocol {
