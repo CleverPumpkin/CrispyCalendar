@@ -73,7 +73,6 @@ extension CPCMultiMonthsView {
 	}
 }
 
-/*
 extension CPCCalendarView {
 	@IBInspectable open dynamic var titleTemplate: String! {
 		get { return self.titleStyle.rawValue }
@@ -94,4 +93,4 @@ extension CPCCalendarView {
 	open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
 		self.setDayCellBackgroundColor (backgroundColor, for: CPCDayCellState (state));
 	}
-}*/
+}

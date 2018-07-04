@@ -60,6 +60,24 @@ open class CPCCalendarView: UIView {
 			self.updateManagedMonthViews (using: { $0.adjustsFontForContentSizeCategory = self.adjustsFontForContentSizeCategory });
 		}
 	}
+	
+	open var minimumDate: Date? {
+		get {
+			return self.layout.minimumDate;
+		}
+		set {
+			self.layout.minimumDate = newValue;
+		}
+	}
+	
+	open var maximumDate: Date? {
+		get {
+			return self.layout.maximumDate;
+		}
+		set {
+			self.layout.maximumDate = newValue;
+		}
+	}
 
 	internal unowned let collectionView: UICollectionView;
 

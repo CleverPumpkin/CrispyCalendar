@@ -63,6 +63,7 @@
 		43C0700A2092F26500202ED8 /* CPCWeek.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C070092092F26500202ED8 /* CPCWeek.swift */; };
 		43C0700C2092F49D00202ED8 /* CPCCalendarUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C0700B2092F49D00202ED8 /* CPCCalendarUnit.swift */; };
 		43C070102092F85200202ED8 /* guarantee.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C0700F2092F85200202ED8 /* guarantee.swift */; };
+		43C80F2720ED3A7000845440 /* CPCCalendarView_Layout_Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C80F2620ED3A7000845440 /* CPCCalendarView_Layout_Storage.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -151,6 +152,7 @@
 		43C070092092F26500202ED8 /* CPCWeek.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCWeek.swift; sourceTree = "<group>"; };
 		43C0700B2092F49D00202ED8 /* CPCCalendarUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarUnit.swift; sourceTree = "<group>"; };
 		43C0700F2092F85200202ED8 /* guarantee.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = guarantee.swift; sourceTree = "<group>"; };
+		43C80F2620ED3A7000845440 /* CPCCalendarView_Layout_Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarView_Layout_Storage.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -313,6 +315,7 @@
 				43689DBE20936F2500052C7A /* CPCCalendarView.swift */,
 				43B53AC020D4194900AA27BB /* CPCCalendarView_Cell.swift */,
 				43B53ABE20D4166000AA27BB /* CPCCalendarView_Layout.swift */,
+				43C80F2620ED3A7000845440 /* CPCCalendarView_Layout_Storage.swift */,
 				4314534C20AEEE7E0019EB01 /* CPCCalendarView_ProtocolConformances.swift */,
 				438454D820D2A41A00CDC209 /* CPCCalendarViewController.swift */,
 			);
@@ -488,6 +491,7 @@
 				43689DC020936F2600052C7A /* CPCCalendarView.swift in Sources */,
 				43B53AC120D4194900AA27BB /* CPCCalendarView_Cell.swift in Sources */,
 				43B53ABF20D4166000AA27BB /* CPCCalendarView_Layout.swift in Sources */,
+				43C80F2720ED3A7000845440 /* CPCCalendarView_Layout_Storage.swift in Sources */,
 				4314534E20AEEE7F0019EB01 /* CPCCalendarView_ProtocolConformances.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

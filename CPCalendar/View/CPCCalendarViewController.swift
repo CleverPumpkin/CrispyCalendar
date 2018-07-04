@@ -131,6 +131,24 @@ open class CPCCalendarViewController: UIViewController {
 		}
 	}
 	
+	open var minimumDate: Date? {
+		get {
+			return self.calendarView.minimumDate;
+		}
+		set {
+			self.calendarView.minimumDate = newValue;
+		}
+	}
+	
+	open var maximumDate: Date? {
+		get {
+			return self.calendarView.maximumDate;
+		}
+		set {
+			self.calendarView.maximumDate = newValue;
+		}
+	}
+	
 	private var selectionStorage: SelectionStorageProtocol!;
 	private var viewDelegate: ViewDelegate?;
 	
