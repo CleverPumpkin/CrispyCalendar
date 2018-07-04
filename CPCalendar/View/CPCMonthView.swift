@@ -190,26 +190,8 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
-	internal var contentsUpdatesPaused: Bool {
-		get {
-			return self.postponedUpdatesFrame != nil;
-		}
-		set {
-			switch (self.postponedUpdatesFrame, newValue) {
-			case (nil, true):
-				self.postponedUpdatesFrame = .null;
-			case (.some (let frame), false):
-				self.postponedUpdatesFrame = nil;
-				if (!(frame.isNull || frame.isEmpty)) {
-					self.setNeedsDisplay (frame);
-				}
-			default:
-				break;
-			}
-		}
-	}
 	internal var contentSizeCategoryObserver: NSObjectProtocol?;
-	internal var appearanceStorage: AppearanceStorage;
+	internal var appearanceStorage = AppearanceStorage ();
 	internal var managingView: CPCMultiMonthsViewProtocol?;
 	internal var highlightedDayIndex: CellIndex? {
 		didSet {
@@ -218,18 +200,11 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 	
 	private var layoutStorage: Layout?;
-	private var postponedUpdatesFrame: CGRect?;
 	private unowned var aspectRatioConstraint: NSLayoutConstraint;
 	
 	public override init (frame: CGRect) {
 		self.aspectRatioConstraint = .placeholder;
-		
-		let appearanceStorage = AppearanceStorage ();
-		self.effectiveTitleFont = appearanceStorage.titleFont;
-		self.effectiveTitleMargins = appearanceStorage.titleMargins;
-		self.effectiveDayCellFont = appearanceStorage.dayCellFont;
-		self.appearanceStorage = appearanceStorage;
-		
+		(self.effectiveTitleFont, self.effectiveTitleMargins, self.effectiveDayCellFont) = self.appearanceStorage.monthViewInitializationValues;
 		super.init (frame: frame);
 		self.commonInit ();
 	}
@@ -245,13 +220,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	public required init? (coder aDecoder: NSCoder) {
 		self.aspectRatioConstraint = .placeholder;
-
-		let appearanceStorage = AppearanceStorage ();
-		self.effectiveTitleFont = appearanceStorage.titleFont;
-		self.effectiveTitleMargins = appearanceStorage.titleMargins;
-		self.effectiveDayCellFont = appearanceStorage.dayCellFont;
-		self.appearanceStorage = appearanceStorage;
-
+		(self.effectiveTitleFont, self.effectiveTitleMargins, self.effectiveDayCellFont) = self.appearanceStorage.monthViewInitializationValues;
 		super.init (coder: aDecoder);
 		self.commonInit ();
 	}
@@ -327,20 +296,8 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	public func setDefaultCellRendeder () {
 		self.cellRenderer = CPCDefaultDayCellRenderer ();
 	}
-	
-	open override func setNeedsDisplay (_ rect: CGRect) {
-		if let postponedUpdatesFrame = self.postponedUpdatesFrame {
-			return self.postponedUpdatesFrame = (postponedUpdatesFrame.isNull ? rect : rect.union (postponedUpdatesFrame));
-		}
-		
-		super.setNeedsDisplay (rect);
-	}
 
 	open override func draw (_ rect: CGRect) {
-		if let postponedUpdatesFrame = self.postponedUpdatesFrame {
-			return self.postponedUpdatesFrame = (postponedUpdatesFrame.isNull ? rect : rect.union (postponedUpdatesFrame));
-		}
-
 		super.draw (rect);
 		
 		self.titleRedrawContext (rect)?.run ();
@@ -529,5 +486,11 @@ extension CPCMonthView {
 		for day in selectionDiff {
 			self.setNeedsDisplay (layout.cellFrames [firstDayIndex.advanced (by: firstDay.distance (to: day))]);
 		}
+	}
+}
+
+fileprivate extension CPCViewAppearanceStorage {
+	fileprivate var monthViewInitializationValues: (UIFont, UIEdgeInsets, UIFont) {
+		return (self.titleFont, self.titleMargins, self.dayCellFont);
 	}
 }

@@ -61,10 +61,12 @@ open class CPCCalendarView: UIView {
 		}
 	}
 
-	internal let monthViewsManager = CPCMonthViewsManager ();
 	internal unowned let collectionView: UICollectionView;
 
 	internal var calendarViewController: CPCCalendarViewController?;
+	internal var monthViewsManager: CPCMonthViewsManager {
+		return self.layout.monthViewsManager;
+	}
 	
 	public override init (frame: CGRect) {
 		let collectionView = CPCCalendarView.makeCollectionView (frame);
@@ -85,7 +87,7 @@ open class CPCCalendarView: UIView {
 			self.selectionDidChange ();
 			self.calendarViewController?.selectionDidChange ();
 		};
-		self.layout.prepare (collectionView: collectionView, in: self);
+		self.layout.prepare (collectionView: collectionView);
 		self.addSubview (collectionView);
 	}
 
@@ -112,8 +114,6 @@ extension CPCCalendarView {
 	private static func makeCollectionView (_ frame: CGRect, calendar: Calendar = .current) -> UICollectionView {
 		let collectionView = UICollectionView (frame: frame.bounds, collectionViewLayout: Layout (calendar: calendar.wrapped ()));
 		collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight];
-		collectionView.showsVerticalScrollIndicator = false;
-		collectionView.showsHorizontalScrollIndicator = false;
 		collectionView.allowsSelection = false;
 		return collectionView;
 	}

@@ -44,6 +44,7 @@ extension CPCCalendarView {
 		private static func makeMonthView (frame: CGRect = .zero) -> CPCMonthView {
 			let monthView = CPCMonthView (frame: frame.bounds);
 			monthView.autoresizingMask = [.flexibleWidth, .flexibleHeight];
+			monthView.isUserInteractionEnabled = false;
 			return monthView;
 		}
 		
