@@ -39,6 +39,15 @@ extension CPCCalendarView {
 			}
 		}
 		
+		internal var enabledRegion: CountableRange <CPCDay>? {
+			get {
+				return self.monthView.enabledRegion;
+			}
+			set {
+				self.monthView.enabledRegion = newValue;
+			}
+		}
+		
 		private unowned let monthView: CPCMonthView;
 		
 		private static func makeMonthView (frame: CGRect = .zero) -> CPCMonthView {

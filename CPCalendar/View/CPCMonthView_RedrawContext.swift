@@ -229,6 +229,8 @@ fileprivate extension CPCDayCellState {
 		switch (self.backgroundState) {
 		case .selected, .highlighted:
 			return CPCDayCellState (backgroundState: .normal, isToday: false);
+		case .disabled:
+			return .normal;
 		case .normal:
 			return nil;
 		}

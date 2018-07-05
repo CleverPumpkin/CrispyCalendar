@@ -80,6 +80,7 @@ internal struct CPCViewDayCellStateBackgroundColors {
 		.normal: .white,
 		.highlighted: UIColor.yellow.withAlphaComponent (0.125),
 		.selected: UIColor.yellow.withAlphaComponent (0.25),
+		.disabled: .darkGray,
 		.today: .lightGray,
 	];
 	

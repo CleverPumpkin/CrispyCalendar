@@ -33,6 +33,8 @@ public struct CPCDayCellState: Hashable {
 		case highlighted;
 		/// Selected state of a cell (cell is part of current selection).
 		case selected;
+		/// Disabled state of a cell (cell is displayed but cannot be a part of selection).
+		case disabled;
 	}
 	
 	/// State part, corresponding to user actions.
@@ -58,6 +60,8 @@ public extension CPCDayCellState {
 	public static let highlighted = CPCDayCellState (backgroundState: .highlighted);
 	/// Selected state of a cell that renders any day except current.
 	public static let selected = CPCDayCellState (backgroundState: .selected);
+	/// Disabled state of a cell that renders any day except current.
+	public static let disabled = CPCDayCellState (backgroundState: .disabled);
 	/// Normal state of a cell that renders current day.
 	public static let today = CPCDayCellState (isToday: true);
 }
@@ -72,6 +76,8 @@ public extension CPCDayCellState.BackgroundState {
 			return .highlighted;
 		case .selected:
 			return .selected;
+		case .disabled:
+			return .disabled;
 		}
 	}
 	
@@ -86,6 +92,8 @@ public extension CPCDayCellState.BackgroundState {
 			self = .highlighted;
 		case .selected:
 			self = .selected;
+		case .disabled:
+			self = .disabled;
 		}
 	}
 }
@@ -198,7 +206,7 @@ extension CPCDayCellState: CaseIterable {}
 #else
 
 public extension CPCDayCellState.BackgroundState {
-	public static let allCases: [CPCDayCellState.BackgroundState] = [.normal, .highlighted, .selected];
+	public static let allCases: [CPCDayCellState.BackgroundState] = [.normal, .highlighted, .selected, .disabled];
 }
 
 #endif

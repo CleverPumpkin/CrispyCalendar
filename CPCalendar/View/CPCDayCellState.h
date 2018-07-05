@@ -36,6 +36,9 @@ typedef NS_ENUM (uint8_t, CPCDayCellBackgroundState) {
 	/** Selected cell state, equivalent of `CPCDayCellState.BackgroundState.selected`.
 	 */
 	CPCDayCellBackgroundStateSelected,
+	/** Selected cell state, equivalent of `CPCDayCellState.BackgroundState.disabled`.
+	 */
+	CPCDayCellBackgroundStateDisabled,
 } NS_REFINED_FOR_SWIFT;
 
 /**

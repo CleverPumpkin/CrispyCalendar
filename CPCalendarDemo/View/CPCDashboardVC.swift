@@ -34,6 +34,12 @@ class CPCDashboardVC: UIViewController, UITableViewDataSource, UITableViewDelega
 		CustomSelectionHandlingItem (localizedTitle: "Custom selection handling", calendarTitle: "Custom selection"),
 		CustomDrawingItem (localizedTitle: "Custom drawing", calendarTitle: "Custom drawing"),
 		WeirdCalendarItem (localizedTitle: "Hebrew calendar", calendarTitle: "Hebrew calendar"),
+		DefaultConfigItem (
+			localizedTitle: "Prev, current & next months",
+			calendarTitle: "Constrained dates",
+			initialSelection: .single (nil),
+			enabledDates: (Date (timeIntervalSinceNow: -30 * 86400.0) ..< Date (timeIntervalSinceNow: 30 * 86400.0))
+		),
 	];
 	
 	internal override func viewDidLoad () {
@@ -96,8 +102,9 @@ extension ConfigItemPushingViewController {
 
 private protocol ConfigItemPushingCalendarController: ConfigItemPushingViewController {
 	var calendarViewControllerClass: SelectionTrackingCalendarVC.Type { get };
-	var calendarTitle: String { get }
-	var initialSelection: CPCViewSelection { get }
+	var calendarTitle: String { get };
+	var initialSelection: CPCViewSelection { get };
+	var enabledDates: Range <Date>? { get };
 }
 
 extension ConfigItemPushingCalendarController {
@@ -108,7 +115,13 @@ extension ConfigItemPushingCalendarController {
 	fileprivate var targetViewController: UIViewController {
 		let result = self.calendarViewControllerClass.init (title: self.calendarTitle);
 		result.selection = self.initialSelection;
+		result.minimumDate = self.enabledDates?.lowerBound;
+		result.maximumDate = self.enabledDates?.upperBound;
 		return result;
+	}
+	
+	fileprivate var enabledDates: Range <Date>? {
+		return nil;
 	}
 }
 
@@ -251,6 +264,14 @@ private struct DefaultConfigItem: ConfigItemPushingCalendarController {
 	fileprivate let localizedTitle: String;
 	fileprivate let calendarTitle: String;
 	fileprivate let initialSelection: CPCViewSelection;
+	fileprivate let enabledDates: Range <Date>?;
+	
+	fileprivate init (localizedTitle: String, calendarTitle: String, initialSelection: CPCViewSelection, enabledDates: Range <Date>? = nil) {
+		self.localizedTitle = localizedTitle;
+		self.calendarTitle = calendarTitle;
+		self.initialSelection = initialSelection;
+		self.enabledDates = enabledDates;
+	}
 }
 
 private struct CustomSelectionHandlingItem: ConfigItemPushingCalendarController {

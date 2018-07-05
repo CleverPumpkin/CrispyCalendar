@@ -90,6 +90,9 @@ extension CPCCalendarView.Layout: UICollectionViewDataSource {
 	internal func collectionView (_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		let cell = collectionView.dequeueReusableCell (withReuseIdentifier: .cellIdentifier, for: indexPath) as! CPCCalendarView.Cell;
 		cell.monthViewsManager = self.monthViewsManager;
+		let enabledRegionStart = CPCDay (containing: (self.minimumDate ?? .distantPast), calendar: self.calendar);
+		let enabledRegionEnd = CPCDay (containing: (self.maximumDate ?? .distantFuture), calendar: self.calendar);
+		cell.enabledRegion = enabledRegionStart ..< enabledRegionEnd;
 		return cell;
 	}
 }
@@ -144,6 +147,12 @@ extension CPCCalendarView.Layout {
 		self.currentInvalidationContext = nil;
 		self.performPostUpdateActions (for: self.storage);
 	}
+	
+	private func allowedDatesRangeDidChange () {
+		// TODO: constrain already calculated month views instead of performing full relayout
+		self.invalidateLayout ();
+		self.collectionView?.reloadData ();
+	}
 }
 
 extension CPCCalendarView.Layout {
@@ -179,10 +188,10 @@ extension CPCCalendarView.Layout {
 				return InvalidationContext ();
 			}
 			
-			guard (newBounds.minY > newBounds.height) else {
+			guard (newBounds.minY > newBounds.height) || currentStorage.isTopBoundReached else {
 				return InvalidationContext (verticalOffset: 5.0 * newBounds.height);
 			}
-			guard (newBounds.maxY < contentSize.height - newBounds.height) else {
+			guard (newBounds.maxY < contentSize.height - newBounds.height) || currentStorage.isBottomBoundReached else {
 				return InvalidationContext (verticalOffset: -5.0 * newBounds.height);
 			}
 			

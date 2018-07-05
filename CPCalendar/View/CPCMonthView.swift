@@ -48,6 +48,12 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
+	open var enabledRegion: CountableRange <CPCDay>? {
+		didSet {
+			self.setNeedsFullAppearanceUpdate ();
+		}
+	}
+	
 	@IBInspectable open dynamic var titleFont: UIFont {
 		get {
 			return self.appearanceStorage.titleFont;
@@ -353,13 +359,20 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	private func gridCellIndex (for touch: UITouch?) -> CellIndex? {
 		guard
 			let layout = self.layout,
+			let firstIndex = layout.cellFrames.indices.first,
 			let point = touch?.location (in: self),
 			let index = layout.cellIndex (at: point),
-			layout.cellFrames.indices.contains (index) else {
+			layout.cellFrames.indices.contains (index),
+			let month = self.month else {
 			return nil;
 		}
 		
-		return index;
+		let firstDay = month [ordinal: firstIndex.row] [ordinal: firstIndex.column];
+		if let enabledRegion = self.enabledRegion, !enabledRegion.contains (firstDay.advanced (by: firstIndex.distance (to: index))) {
+			return nil;
+		} else {
+			return index;
+		}
 	}
 }
 
@@ -456,6 +469,7 @@ extension CPCMonthView {
 	
 	private func monthDidChange () {
 		self.highlightedDayIndex = nil;
+		self.enabledRegion = nil;
 		self.selectionHandler = self.selectionHandler.clearingSelection ();
 		self.setNeedsFullAppearanceUpdate ();
 	}

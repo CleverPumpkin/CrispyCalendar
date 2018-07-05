@@ -45,7 +45,7 @@ open class CPCCalendarView: UIView {
 			guard self.calendarWrapper.calendar != newValue else {
 				return;
 			}
-			self.calendarWrapper = calendar.wrapped ();
+			self.calendarWrapper = newValue.wrapped ();
 		}
 	}
 	
@@ -125,7 +125,9 @@ extension CPCCalendarView {
 			return self.layout.calendar;
 		}
 		set {
-			self.collectionView.collectionViewLayout = Layout (calendar: self.calendarWrapper);
+			let layout = Layout (calendar: newValue);
+			layout.prepare (collectionView: self.collectionView);
+			self.collectionView.collectionViewLayout = layout;
 		}
 	}
 	
