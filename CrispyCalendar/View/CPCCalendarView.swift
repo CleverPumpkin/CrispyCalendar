@@ -341,6 +341,6 @@ extension CPCCalendarView /* UIScrollViewProtocol */ {
 		} else {
 			scrollDestination = month;
 		}
-		
+		self.layout.scrollToMonth (month: scrollDestination);
 	}
 }

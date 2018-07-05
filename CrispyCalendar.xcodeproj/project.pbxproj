@@ -12,7 +12,6 @@
 		43101B93209CDFBD00904529 /* GridIndices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101B92209CDFBD00904529 /* GridIndices.swift */; };
 		43101B95209CFBB400904529 /* CPCMonthView_Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101B94209CFBB400904529 /* CPCMonthView_Layout.swift */; };
 		43101B97209CFBC100904529 /* CPCMonthView_RedrawContext.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101B96209CFBC100904529 /* CPCMonthView_RedrawContext.swift */; };
-		4314534E20AEEE7F0019EB01 /* CPCCalendarView_ProtocolConformances.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4314534C20AEEE7E0019EB01 /* CPCCalendarView_ProtocolConformances.swift */; };
 		4314535020AEEE7F0019EB01 /* CPCViewProtocol_ObjCSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4314534D20AEEE7F0019EB01 /* CPCViewProtocol_ObjCSupport.swift */; };
 		4314535320AEEEAC0019EB01 /* CPCViewTitleStyle.m in Sources */ = {isa = PBXBuildFile; fileRef = 4314535220AEEEAC0019EB01 /* CPCViewTitleStyle.m */; };
 		4314535720AEF0200019EB01 /* CPCViewTitleStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4314535620AEF0200019EB01 /* CPCViewTitleStyle.swift */; };
@@ -96,7 +95,6 @@
 		43101B92209CDFBD00904529 /* GridIndices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridIndices.swift; sourceTree = "<group>"; };
 		43101B94209CFBB400904529 /* CPCMonthView_Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMonthView_Layout.swift; sourceTree = "<group>"; };
 		43101B96209CFBC100904529 /* CPCMonthView_RedrawContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMonthView_RedrawContext.swift; sourceTree = "<group>"; };
-		4314534C20AEEE7E0019EB01 /* CPCCalendarView_ProtocolConformances.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCCalendarView_ProtocolConformances.swift; sourceTree = "<group>"; };
 		4314534D20AEEE7F0019EB01 /* CPCViewProtocol_ObjCSupport.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCViewProtocol_ObjCSupport.swift; sourceTree = "<group>"; };
 		4314535220AEEEAC0019EB01 /* CPCViewTitleStyle.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPCViewTitleStyle.m; sourceTree = "<group>"; };
 		4314535520AEEEBD0019EB01 /* CPCViewTitleStyle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPCViewTitleStyle.h; sourceTree = "<group>"; };
@@ -324,7 +322,6 @@
 				43B53AC020D4194900AA27BB /* CPCCalendarView_Cell.swift */,
 				43B53ABE20D4166000AA27BB /* CPCCalendarView_Layout.swift */,
 				43C80F2620ED3A7000845440 /* CPCCalendarView_Layout_Storage.swift */,
-				4314534C20AEEE7E0019EB01 /* CPCCalendarView_ProtocolConformances.swift */,
 				438454D820D2A41A00CDC209 /* CPCCalendarViewController.swift */,
 			);
 			path = View;
@@ -500,7 +497,6 @@
 				43B53AC120D4194900AA27BB /* CPCCalendarView_Cell.swift in Sources */,
 				43B53ABF20D4166000AA27BB /* CPCCalendarView_Layout.swift in Sources */,
 				43C80F2720ED3A7000845440 /* CPCCalendarView_Layout_Storage.swift in Sources */,
-				4314534E20AEEE7F0019EB01 /* CPCCalendarView_ProtocolConformances.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
