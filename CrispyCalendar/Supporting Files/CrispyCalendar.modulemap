@@ -1,0 +1,6 @@
+framework module CrispyCalendar {
+	umbrella header "CrispyCalendar.h"
+	
+	export *
+	module * { export * }
+}

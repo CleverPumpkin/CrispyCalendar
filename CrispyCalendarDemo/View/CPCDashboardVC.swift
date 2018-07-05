@@ -22,7 +22,7 @@
 //
 
 import UIKit
-import CPCalendar
+import CrispyCalendar
 
 class CPCDashboardVC: UIViewController, UITableViewDataSource, UITableViewDelegate {
 	private static let configItems: [ConfigItemProtocol] = [
@@ -45,7 +45,7 @@ class CPCDashboardVC: UIViewController, UITableViewDataSource, UITableViewDelega
 	internal override func viewDidLoad () {
 		super.viewDidLoad ();
 		
-		self.navigationItem.title = "CPCalendar Demo App";
+		self.navigationItem.title = "CrispyCalendar Demo App";
 		self.navigationItem.backBarButtonItem = UIBarButtonItem (title: "", style: .plain, target: nil, action: nil);
 		
 		let tableView = UITableView (frame: self.view.bounds);

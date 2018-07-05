@@ -1,5 +1,5 @@
 //
-//  CPCalendar.h
+//  CrispyCalendar.h
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,10 +21,10 @@
 //  THE SOFTWARE.
 //
 
-#import <CPCalendar/CPCCalendarUnitSymbolStyle.h>
-#import <CPCalendar/CPCDayCellState.h>
-#import <CPCalendar/CPCViewTitleStyle.h>
+#import <CrispyCalendar/CPCCalendarUnitSymbolStyle.h>
+#import <CrispyCalendar/CPCDayCellState.h>
+#import <CrispyCalendar/CPCViewTitleStyle.h>
 
-#if __has_include(<CPCalendar/CPCalendar-Swift.h>)
-#	import <CPCalendar/CPCalendar-Swift.h>
+#if __has_include(<CrispyCalendar/CrispyCalendar-Swift.h>)
+#	import <CrispyCalendar/CrispyCalendar-Swift.h>
 #endif

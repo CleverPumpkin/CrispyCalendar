@@ -1,6 +1,0 @@
-framework module CPCalendar {
-	umbrella header "CPCalendar.h"
-	
-	export *
-	module * { export * }
-}

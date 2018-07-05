@@ -53,12 +53,12 @@
 		}
 	],
 	"exclude": [
-		"CPCalendar/Model/CPCCalendarUnit.swift",
-		"CPCalendar/Model/CPCCalendarUnit_CalendarWrapper.swift",
-		"CPCalendar/Model/CPCCompoundCalendarUnit.swift",
-		"CPCalendar/Model/CPCCalendarUnitSymbolImpl.swift",
-		"CPCalendar/View/CPCViewSelectionHandling.swift",
-		"CPCalendar/View/CPCViewDelegatingSelectionHandler.swift"
+		"CrispyCalendar/Model/CPCCalendarUnit.swift",
+		"CrispyCalendar/Model/CPCCalendarUnit_CalendarWrapper.swift",
+		"CrispyCalendar/Model/CPCCompoundCalendarUnit.swift",
+		"CrispyCalendar/Model/CPCCalendarUnitSymbolImpl.swift",
+		"CrispyCalendar/View/CPCViewSelectionHandling.swift",
+		"CrispyCalendar/View/CPCViewDelegatingSelectionHandler.swift"
 	],
 
 	"clean": true,
@@ -66,13 +66,13 @@
 	"swift_version": "4.1",
 	"module_version": "1.0.0",
 
-	"module": "CPCalendar",
-	"podspec": "CPCalendar.podspec",
-	"source_directory": "CPCalendar/",
+	"module": "CrispyCalendar",
+	"podspec": "CrispyCalendar.podspec",
+	"source_directory": "CrispyCalendar/",
 
 	"author": "Cleverpumpkin, Ltd.",
 	"author_url": "http://cleverpumpkin.ru",
-	"root_url": "https://cleverpumpkin.github.io/cpcalendar-ios-docs/public/",
-	"github_url": "https://github.com/cleverpumpkin/cpcalendar-ios",
-	"github_file_prefix": "https://github.com/cleverpumpkin/cpcalendar-ios/tree/master/CPCalendar"
+	"root_url": "https://cleverpumpkin.github.io/crispycalendar-docs/public/",
+	"github_url": "https://github.com/cleverpumpkin/crispycalendar",
+	"github_file_prefix": "https://github.com/cleverpumpkin/crispycalendar/tree/master/CrispyCalendar"
 }

@@ -64,7 +64,7 @@ internal extension CPCCalendarView.Layout {
 	
 	private func performScrollLayoutCalculations (using context: InvalidationContext, with verticalOffset: CGFloat, updating storage: Storage) -> Storage {
 		guard let storage = storage as? DefaultStorage else {
-			fatalError ("[CPCalendar] Internal error: cannot update empty storage");
+			fatalError ("[CrispyCalendar] Internal error: cannot update empty storage");
 		}
 		
 		let columns = self.makeColumns (self.columnCount);
@@ -346,7 +346,7 @@ fileprivate extension CPCCalendarView.Layout.DefaultStorage {
 
 	fileprivate func prependingFinalRows (_ rows: [RowInfo], in context: InvalidationContext) -> DefaultStorage {
 		guard let correctedAdjustments = (rows.first?.frame.minY).map ({ -$0 }) else {
-			fatalError ("[CPCalendar] Internal error: cannot prepend empty rows array");
+			fatalError ("[CrispyCalendar] Internal error: cannot prepend empty rows array");
 		}
 		context.contentOffsetAdjustment.y = correctedAdjustments;
 		context.contentSizeAdjustment.height = correctedAdjustments;
@@ -359,7 +359,7 @@ fileprivate extension CPCCalendarView.Layout.DefaultStorage {
 	
 	fileprivate func appendingFinalRows (_ rows: [RowInfo], with currentContentHeight: CGFloat, in context: InvalidationContext) -> DefaultStorage {
 		guard let correctedAdjustment = (rows.last?.frame.maxY).map ({ $0 - currentContentHeight }) else {
-			fatalError ("[CPCalendar] Internal error: cannot append empty rows array");
+			fatalError ("[CrispyCalendar] Internal error: cannot append empty rows array");
 		}
 		context.contentSizeAdjustment.height = correctedAdjustment;
 		return self.appending (rows, verticalOffset: correctedAdjustment, bottomBoundReached: true);

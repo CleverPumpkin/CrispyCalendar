@@ -42,7 +42,7 @@ public enum CPCViewSelection: Equatable {
 private func logSelectionIsEmptyInconsistencyOnce () {
 	struct OnceWrapper {
 		fileprivate static let token: Void = {
-			os_log ("[CPCalendar] Non-empty selection should not produce an empty description, but it just happened. Break on %@ to debug.", type: .error, #function);
+			os_log ("[CrispyCalendar] Non-empty selection should not produce an empty description, but it just happened. Break on %@ to debug.", type: .error, #function);
 		} ();
 	}
 	
