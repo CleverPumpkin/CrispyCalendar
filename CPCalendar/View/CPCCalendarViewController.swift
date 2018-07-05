@@ -200,13 +200,20 @@ open class CPCCalendarViewController: UIViewController {
 	open func selectionDidChange () {}
 	
 	private func layoutWeekView () {
-		let weekView = self.weekView!, weekViewTop: CGFloat;
+		let weekView = self.weekView!, oldWeekViewHeight = weekView.bounds.height, weekViewTop: CGFloat;
 		if #available (iOS 11.0, *) {
-			weekViewTop = self.view.safeAreaInsets.top + self.additionalSafeAreaInsets.top;
+			weekViewTop = self.view.safeAreaInsets.top - self.additionalSafeAreaInsets.top;
 		} else {
 			weekViewTop = self.topLayoutGuide.length;
 		}
-		let fittingSize = self.view.bounds.size;
-		weekView.frame = CGRect (x: 0.0, y: weekViewTop, width: fittingSize.width, height: weekView.sizeThatFits (fittingSize).height + 15.0);
+		
+		let fittingSize = self.view.bounds.size, weekViewHeight = weekView.sizeThatFits (fittingSize).height + 15.0;
+		weekView.frame = CGRect (x: 0.0, y: weekViewTop, width: fittingSize.width, height: weekViewHeight);
+		if #available (iOS 11.0, *) {
+			self.additionalSafeAreaInsets.top += weekViewHeight - oldWeekViewHeight;
+		} else {
+			self.calendarView.contentInset.top += weekViewHeight - oldWeekViewHeight;
+			self.calendarView.scrollIndicatorInsets.top += weekViewHeight - oldWeekViewHeight;
+		};
 	}
 }

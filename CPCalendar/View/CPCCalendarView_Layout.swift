@@ -77,6 +77,7 @@ extension CPCCalendarView.Layout: UICollectionViewDataSource {
 	internal func prepare (collectionView: UICollectionView) {
 		collectionView.register (CPCCalendarView.Cell.self, forCellWithReuseIdentifier: .cellIdentifier);
 		collectionView.dataSource = self;
+		collectionView.delegate = self;
 	}
 	
 	internal func numberOfSections (in collectionView: UICollectionView) -> Int {
@@ -98,7 +99,31 @@ extension CPCCalendarView.Layout: UICollectionViewDataSource {
 }
 
 extension CPCCalendarView.Layout: UICollectionViewDelegate {
+	private var scrollToTodayDate: Date {
+		if let minimumDate = self.minimumDate, minimumDate.timeIntervalSinceNow > 0.0 {
+			return minimumDate;
+		} else if let maximumDate = self.maximumDate, maximumDate.timeIntervalSinceNow < 0.0 {
+			return maximumDate;
+		} else {
+			return Date ();
+		}
+	}
 	
+	internal func scrollViewShouldScrollToTop (_ scrollView: UIScrollView) -> Bool {
+		return (scrollView !== self.collectionView) || !self.scrollToToday ();
+	}
+	
+	@discardableResult
+	internal func scrollToToday (animated: Bool = true) -> Bool {
+		guard
+			let collectionView = self.collectionView,
+			let indexPath = self.storage.indexPath (for: CPCMonth (containing: self.scrollToTodayDate, calendar: self.calendar)) else {
+			return false;
+		}
+		
+		collectionView.scrollToItem (at: indexPath, at: .centeredVertically, animated: animated);
+		return true;
+	}
 }
 
 extension CPCCalendarView.Layout {

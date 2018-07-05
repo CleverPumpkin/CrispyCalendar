@@ -43,7 +43,7 @@ internal extension CPCCalendarView.Layout {
 			self.collectionView?.reloadData ();
 		} else {
 			DispatchQueue.main.async {
-				self.collectionView?.scrollToItem (at: IndexPath (item: 0, section: (layoutStorage.sectionCount + 1) / 2), at: .centeredVertically, animated: false);
+				self.scrollToToday (animated: false);
 			};
 		}
 	}
@@ -188,6 +188,7 @@ internal protocol CPCCalendarViewLayoutStorage {
 	subscript (indexPath: IndexPath) -> Attributes? { get };
 	
 	func numberOfItems (in section: Int) -> Int;
+	func indexPath (for month: CPCMonth) -> IndexPath?;
 }
 
 extension CPCCalendarView.Layout {
@@ -278,6 +279,10 @@ extension CPCCalendarView.Layout.EmptyStorage: CPCCalendarViewLayoutStorage {
 
 	fileprivate func numberOfItems (in section: Int) -> Int {
 		fatalError ("Not implemented");
+	}
+	
+	fileprivate func indexPath (for month: CPCMonth) -> IndexPath? {
+		return nil;
 	}
 }
 
@@ -436,6 +441,10 @@ extension CPCCalendarView.Layout.DefaultStorage: CPCCalendarViewLayoutStorage {
 				$0 += 1;
 			};
 		};
+	}
+	
+	fileprivate func indexPath (for month: CPCMonth) -> IndexPath? {
+		return self.attributes.first { $0.month == month }?.indexPath;
 	}
 	
 	private func column (for x: CGFloat) -> Int {

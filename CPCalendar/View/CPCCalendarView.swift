@@ -38,9 +38,7 @@ public protocol CPCCalendarViewSelectionDelegate: AnyObject {
 
 open class CPCCalendarView: UIView {
 	open var calendar: Calendar {
-		get {
-			return self.calendarWrapper.calendar;
-		}
+		get { return self.calendarWrapper.calendar }
 		set {
 			guard self.calendarWrapper.calendar != newValue else {
 				return;
@@ -62,21 +60,13 @@ open class CPCCalendarView: UIView {
 	}
 	
 	open var minimumDate: Date? {
-		get {
-			return self.layout.minimumDate;
-		}
-		set {
-			self.layout.minimumDate = newValue;
-		}
+		get { return self.layout.minimumDate }
+		set { self.layout.minimumDate = newValue }
 	}
 	
 	open var maximumDate: Date? {
-		get {
-			return self.layout.maximumDate;
-		}
-		set {
-			self.layout.maximumDate = newValue;
-		}
+		get { return self.layout.maximumDate }
+		set { self.layout.maximumDate = newValue }
 	}
 
 	internal unowned let collectionView: UICollectionView;
@@ -121,9 +111,7 @@ extension CPCCalendarView {
 	}
 	
 	private var calendarWrapper: CPCCalendarWrapper {
-		get {
-			return self.layout.calendar;
-		}
+		get { return self.layout.calendar }
 		set {
 			let layout = Layout (calendar: newValue);
 			layout.prepare (collectionView: self.collectionView);
@@ -153,12 +141,49 @@ extension CPCCalendarView: CPCMultiMonthsViewProtocol {
 extension CPCCalendarView: CPCViewBackedByAppearanceStorage {}
 
 extension CPCCalendarView /* UIScrollViewProtocol */ {
-	open var scrollsToToday: Bool {
-		get {
-			return self.collectionView.scrollsToTop;
-		}
-		set {
-			self.collectionView.scrollsToTop = newValue;
-		}
+	open var bounces: Bool {
+		get { return self.collectionView.bounces }
+		set { self.collectionView.bounces = newValue }
 	}
+	open var alwaysBounceVertical: Bool {
+		get { return self.collectionView.alwaysBounceVertical }
+		set { self.collectionView.alwaysBounceVertical = newValue }
+	}
+	open var alwaysBounceHorizontal: Bool {
+		get { return self.collectionView.alwaysBounceHorizontal }
+		set { self.collectionView.alwaysBounceHorizontal = newValue }
+	}
+
+	open var scrollsToToday: Bool {
+		get { return self.collectionView.scrollsToTop }
+		set { self.collectionView.scrollsToTop = newValue }
+	}
+	
+	open var contentInset: UIEdgeInsets {
+		get { return self.collectionView.contentInset }
+		set { self.collectionView.contentInset = newValue }
+	}
+	open var scrollIndicatorInsets: UIEdgeInsets {
+		get { return self.collectionView.scrollIndicatorInsets }
+		set { self.collectionView.scrollIndicatorInsets = newValue }
+	}
+	@available (iOS 11.0, *)
+	open var adjustedContentInset: UIEdgeInsets {
+		return self.collectionView.adjustedContentInset;
+	}
+	@available (iOS 11.0, *)
+	open var contentInsetAdjustmentBehavior: UIScrollViewContentInsetAdjustmentBehavior {
+		get { return self.collectionView.contentInsetAdjustmentBehavior }
+		set { self.collectionView.contentInsetAdjustmentBehavior = newValue }
+	}
+
+	open var showsHorizontalScrollIndicator: Bool {
+		get { return self.collectionView.showsHorizontalScrollIndicator }
+		set { self.collectionView.showsHorizontalScrollIndicator = newValue }
+	}
+	open var showsVerticalScrollIndicator: Bool {
+		get { return self.collectionView.showsVerticalScrollIndicator }
+		set { self.collectionView.showsVerticalScrollIndicator = newValue }
+	}
+
 }
