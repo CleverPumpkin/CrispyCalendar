@@ -141,7 +141,12 @@ internal extension CPCMonthView {
 	}
 	
 	fileprivate struct GridRedrawContext {
-		private typealias AffectedIndices = (affected: CellIndices, highlighted: CellIndex?, selected: CellIndices?);
+		private struct AffectedIndices {
+			fileprivate let affected: CellIndices;
+			fileprivate let highlighted: CellIndex?;
+			fileprivate let selected: CellIndices?;
+			fileprivate let enabled: CellIndices?;
+		};
 		
 		fileprivate let month: CPCMonth;
 		private let backgroundColor: UIColor?;
@@ -240,6 +245,7 @@ fileprivate extension CPCDayCellState {
 extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 	private typealias Layout = CPCMonthView.Layout;
 	private typealias CellIndex = CPCMonthView.CellIndex;
+	private typealias CellIndices = CPCMonthView.CellIndices;
 	private typealias DayCellState = CPCMonthView.DayCellState;
 	private typealias GridRedrawContext = CPCMonthView.GridRedrawContext;
 	
@@ -298,8 +304,15 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		
 		let selection = view.selection;
 		let selected = (selection.clamped (to: month).isEmpty ? nil : affected.indices { selection.isDaySelected (month [ordinal: $0.row] [ordinal: $0.column]) });
+		
+		let enabled: CellIndices?;
+		if let enabledRegion = view.enabledRegion {
+			enabled = affected.indices { enabledRegion.contains (month [ordinal: $0.row] [ordinal: $0.column]) };
+		} else {
+			enabled = nil;
+		}
 
-		return (affected: affected, highlighted: highlighted, selected: selected);
+		return AffectedIndices (affected: affected, highlighted: highlighted, selected: selected, enabled: enabled);
 	}
 	
 	fileprivate var reusableFormatters: [DateFormatter] {
@@ -394,6 +407,9 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 	}
 
 	private func dayCellState (for day: CPCDay, at index: CellIndex) -> DayCellState {
+		if let enabledIndices = self.cellIndices.enabled, !enabledIndices.contains (index) {
+			return .disabled;
+		}
 		if let selectedIndices = self.cellIndices.selected, selectedIndices.contains (index) {
 			return .selected;
 		}
