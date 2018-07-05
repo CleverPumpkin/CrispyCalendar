@@ -72,7 +72,7 @@ internal extension CPCMonthView {
 				return nil;
 			}
 			guard !month.contains (where: { $0.count != width }) else {
-				fatalError ("\(month) is not representable as a rectangular grid");
+				fatalError ("[CrispyCalendar] Sanity check failure: \(month) is not representable as a rectangular grid");
 			}
 			
 			let separatorWidth = view.separatorWidth;

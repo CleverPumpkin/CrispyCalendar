@@ -80,7 +80,7 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 		
 		internal func distance (to other: Element) -> Stride {
 			guard self.info == other.info else {
-				fatalError ("Incompatible indexes \(self) and \(other): \(self.info) != \(other.info)");
+				fatalError ("[CrispyCalendar] Sanity check failure: incompatible indexes \(self) and \(other): \(self.info) != \(other.info)");
 			}
 			return self.index.distance (to: other.index);
 		}
@@ -327,7 +327,7 @@ extension GridIndices: RandomAccessCollection {
 	
 	internal func index (after i: Element) -> Element {
 		guard let indexIndex = self.values.index (of: i) else {
-			fatalError ("Invalid index \(i) for grid indices \(self)");
+			fatalError ("[CrispyCalendar] Internal error: invalid index \(i) for grid indices \(self)");
 		}
 		let nextIndexIndex = indexIndex + 1;
 		return ((nextIndexIndex == self.values.count) ? self.endIndex : self.values [nextIndexIndex]);
@@ -338,7 +338,7 @@ extension GridIndices: RandomAccessCollection {
 			return guarantee (self.values.last);
 		}
 		guard let indexIndex = self.values.index (of: i) else {
-			fatalError ("Invalid index \(i) for grid indices \(self)");
+			fatalError ("[CrispyCalendar] Internal error: invalid index \(i) for grid indices \(self)");
 		}
 		return self.values [indexIndex - 1];
 	}

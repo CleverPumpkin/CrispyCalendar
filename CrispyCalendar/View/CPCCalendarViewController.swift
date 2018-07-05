@@ -107,7 +107,7 @@ open class CPCCalendarViewController: UIViewController {
 	open override var view: UIView! {
 		willSet (newView) {
 			guard let newValue = newView as? CPCCalendarView else {
-				fatalError ("\(CPCCalendarViewController.self) is designed to manage \(CPCCalendarView.self) instances; \(newView) is given");
+				fatalError ("[CrispyCalendar] Sanity check failure: \(CPCCalendarViewController.self) is designed to manage \(CPCCalendarView.self) instances; \(newView) is given");
 			}
 			if self.isViewLoaded {
 				self.calendarView.calendarViewController = nil;

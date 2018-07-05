@@ -170,7 +170,7 @@ extension ComputedIndices: RandomAccessCollection {
 
 internal extension ComputedIndices where Element: Strideable {
 	fileprivate static var endIndexForEmptyCollection: Element {
-		fatalError ("Cannot instantiate \(self) with empty indices because their element \(Element.self) is not trivially initializable");
+		fatalError ("[CrispyCalendar] Internal error: cannot instantiate \(self) with empty indices because their element \(Element.self) is not trivially initializable");
 	}
 	
 	internal init <S> (_ indices: S) where S: Sequence, S.Element == Element {

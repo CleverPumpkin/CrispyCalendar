@@ -106,6 +106,10 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 			}
 		}
 	}
+	
+	deinit {
+		self.monthViewsManager.prepareForContainerDeallocation ();
+	}
 
 	@objc dynamic internal func dayCellBackgroundColor (for backgroundStateValue: Int, isTodayValue: Int) -> UIColor? {
 		return self.dayCellBackgroundColorImpl (backgroundStateValue, isTodayValue);
@@ -140,17 +144,18 @@ extension CPCMultiMonthsView: CPCMultiMonthsViewProtocol {
 	}
 	
 	@objc open func addMonthView (_ monthView: CPCMonthView) {
-		self.insertMonthView (monthView, at: self.unownedMonthViews.count);
+		self.addSubview (monthView);
+		self.startManagingMonthView (monthView);
 	}
 	
 	@objc open func insertMonthView (_ monthView: CPCMonthView, at index: Int) {
-		if (index == self.unownedMonthViews.count) {
-			self.addSubview (monthView);
-		} else {
-			self.insertSubview (monthView, belowSubview: self.unownedMonthViews [index]);
-		}
+		self.insertSubview (monthView, belowSubview: self.unownedMonthViews [index]);
+		self.startManagingMonthView (monthView);
+	}
+	
+	private func startManagingMonthView (_ monthView: CPCMonthView) {
 		monthView.adjustsFontForContentSizeCategory = self.adjustsFontForContentSizeCategory;
-		self.monthViewsManager.insertMonthView (monthView, at: index);
+		self.monthViewsManager.addMonthView (monthView);
 	}
 	
 	@objc open func removeMonthView (_ monthView: CPCMonthView) {

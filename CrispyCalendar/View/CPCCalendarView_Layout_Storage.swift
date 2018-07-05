@@ -48,12 +48,31 @@ internal extension CPCCalendarView.Layout {
 		}
 	}
 	
+	internal func tryCalculatingLayoutUntil (month: CPCMonth, for layoutStorage: Storage) -> Storage {
+		guard let storage = layoutStorage as? DefaultStorage else {
+			return layoutStorage;
+		}
+		
+		let columns = self.makeColumns (self.columnCount);
+		if let firstMonth = storage [IndexPath (item: 0, section: 0)]?.month, firstMonth > month {
+			let insertedRows = self.makeRows (before: storage.firstRowInfo, columns: columns) { $0.months.lowerBound <= month };
+			return storage.prepending (insertedRows, verticalOffset: -(insertedRows.first?.frame.minY ?? 0.0));
+		}
+		
+		let lastSection = storage.sectionCount - 1, lastItem = storage.numberOfItems (in: lastSection) - 1;
+		if let lastMonth = storage [IndexPath (item: lastItem, section: lastSection)]?.month, lastMonth < month {
+			let insertedRows = self.makeRows (after: storage.lastRowInfo, columns: columns) { $0.months.upperBound >= month };
+			return storage.appending (insertedRows, verticalOffset: (insertedRows.last?.frame.maxY).map { $0 - storage.contentSize.height } ?? 0.0);
+		}
+		return layoutStorage;
+	}
+	
 	private func performInitialLayoutCalculations () -> Storage {
 		let collectionView = guarantee (self.collectionView), layoutSize = CGSize (width: collectionView.bounds.width, height: collectionView.bounds.height * 5.0);
 		let columns = self.makeColumns (self.columnCount);
 		let middleRowInfo = self.makeMiddleRow (columns: columns, midY: layoutSize.height / 2);
-		let topRows = self.makeRows (before: middleRowInfo, columns: columns) { $0.minY < 0.0 };
-		let bottomRows = self.makeRows (after: middleRowInfo, columns: columns) { $0.maxY > layoutSize.height };
+		let topRows = self.makeRows (before: middleRowInfo, columns: columns) { $0.frame.minY < 0.0 };
+		let bottomRows = self.makeRows (after: middleRowInfo, columns: columns) { $0.frame.maxY > layoutSize.height };
 		
 		let rows = topRows + middleRowInfo + bottomRows;
 		guard let firstRow = rows.first, let lastRow = rows.last else {
@@ -69,7 +88,7 @@ internal extension CPCCalendarView.Layout {
 		
 		let columns = self.makeColumns (self.columnCount);
 		if (verticalOffset > 0.0) {
-			let insertedRows = self.makeRows (before: storage.firstRowInfo, columns: columns) { $0.minY < -verticalOffset };
+			let insertedRows = self.makeRows (before: storage.firstRowInfo, columns: columns) { $0.frame.minY < -verticalOffset };
 			if let topRow = insertedRows.first, self.isMinimumDateReached (for: topRow) {
 				return storage.prependingFinalRows (insertedRows, in: context);
 			} else {
@@ -77,7 +96,7 @@ internal extension CPCCalendarView.Layout {
 			}
 		} else {
 			let layoutSize = storage.contentSize;
-			let insertedRows = self.makeRows (after: storage.lastRowInfo, columns: columns) { $0.maxY > layoutSize.height - verticalOffset };
+			let insertedRows = self.makeRows (after: storage.lastRowInfo, columns: columns) { $0.frame.maxY > layoutSize.height - verticalOffset };
 			if let lastRow = insertedRows.last, self.isMaximumDateReached (for: lastRow) {
 				return storage.appendingFinalRows (insertedRows, with: layoutSize.height, in: context);
 			} else {
@@ -108,11 +127,11 @@ internal extension CPCCalendarView.Layout {
 		return (0 ..< columnCount).map { (col: Int) in (x: columnsX [col] + insets.left, width: columnsX [col + 1] - columnsX [col] - insets.left - insets.right) };
 	}
 	
-	private func makeRows (before rowInfo: RowInfo, columns: [Column], stop predicate: (CGRect) -> Bool) -> [RowInfo] {
+	private func makeRows (before rowInfo: RowInfo, columns: [Column], stop predicate: (RowInfo) -> Bool) -> [RowInfo] {
 		return withoutActuallyEscaping (predicate) { predicate in
 			sequence (first: rowInfo) {
 				let rowFrame = $0.frame, months = $0.months;
-				guard !self.isMinimumDateReached (for: months), !predicate (rowFrame) else {
+				guard !self.isMinimumDateReached (for: months), !predicate ($0) else {
 					return nil;
 				}
 				return self.makeRow (before: months.lowerBound, columns: columns, maxY: rowFrame.minY);
@@ -120,11 +139,11 @@ internal extension CPCCalendarView.Layout {
 		};
 	}
 	
-	private func makeRows (after rowInfo: RowInfo, columns: [Column], stop predicate: (CGRect) -> Bool) -> [RowInfo] {
+	private func makeRows (after rowInfo: RowInfo, columns: [Column], stop predicate: (RowInfo) -> Bool) -> [RowInfo] {
 		return withoutActuallyEscaping (predicate) { predicate in
 			Array (sequence (first: rowInfo) {
 				let rowFrame = $0.frame, months = $0.months;
-				guard !self.isMaximumDateReached (for: months), !predicate (rowFrame) else {
+				guard !self.isMaximumDateReached (for: months), !predicate ($0) else {
 					return nil;
 				}
 				return self.makeRow (after: months.upperBound, columns: columns, minY: rowFrame.maxY);
@@ -278,7 +297,7 @@ extension CPCCalendarView.Layout.EmptyStorage: CPCCalendarViewLayoutStorage {
 	}
 
 	fileprivate func numberOfItems (in section: Int) -> Int {
-		fatalError ("Not implemented");
+		fatalError ("[CrispyCalendar] Sanity check failure: \(#function) must not be called");
 	}
 	
 	fileprivate func indexPath (for month: CPCMonth) -> IndexPath? {

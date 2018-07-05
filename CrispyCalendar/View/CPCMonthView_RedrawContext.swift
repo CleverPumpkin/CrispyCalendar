@@ -133,6 +133,8 @@ internal extension CPCMonthView {
 	
 	fileprivate struct TitleRedrawContext {
 		fileprivate let month: CPCMonth;
+		fileprivate let clearingContext: ClearingContext?;
+		
 		private let backgroundColor: UIColor?;
 		private let formatter: DateFormatter;
 		private let titleFrame: CGRect;
@@ -149,6 +151,8 @@ internal extension CPCMonthView {
 		};
 		
 		fileprivate let month: CPCMonth;
+		fileprivate let clearingContext: ClearingContext?;
+		
 		private let backgroundColor: UIColor?;
 		private let layout: Layout;
 		private let cellIndices: AffectedIndices;
@@ -159,29 +163,84 @@ internal extension CPCMonthView {
 		private let cellRenderer: CellRenderer;
 		private let cellBackgroundColorGetter: (DayCellState) -> UIColor?;
 	}
-
+	
+	fileprivate struct ClearingContext: RedrawContext {
+		private let rect: CGRect;
+		private let backgroundColor: UIColor?;
+		
+		fileprivate init? (_ rect: CGRect, in view: CPCMonthView) {
+			guard view.needsFullAppearanceUpdate else {
+				return nil;
+			}
+			self.init (rect, backgroundColor: view.backgroundColor);
+		}
+			
+		fileprivate init (_ rect: CGRect, backgroundColor: UIColor?) {
+			self.rect = rect;
+			if let backgroundColor = backgroundColor, !backgroundColor.isInvisible {
+				self.backgroundColor = backgroundColor;
+			} else {
+				self.backgroundColor = nil;
+			}
+		}
+		
+		fileprivate func run () {
+			guard let context = UIGraphicsGetCurrentContext () else {
+				return;
+			}
+			self.run (context: context);
+		}
+		
+		fileprivate func run (context: CGContext) {
+			if let backgroundColor = self.backgroundColor {
+				context.setFillColor (backgroundColor.cgColor);
+				context.fill (self.rect);
+			} else {
+				context.clear (self.rect);
+			}
+		}
+	}
+	
+	internal func clearingContext (_ rect: CGRect) -> RedrawContext? {
+		return ClearingContext (rect, in: self);
+	}
+	
 	internal func titleRedrawContext (_ rect: CGRect) -> RedrawContext? {
-		return TitleRedrawContext (redrawing: rect, in: self);
+		guard let month = self.month else {
+			return ClearingContext (rect, in: self);
+		}
+		return TitleRedrawContext (redrawing: rect, of: month, in: self);
 	}
 	
 	internal func gridRedrawContext (_ rect: CGRect) -> RedrawContext? {
-		return GridRedrawContext (redrawing: rect, in: self);
+		guard let month = self.month else {
+			return ClearingContext (rect, in: self);
+		}
+		return GridRedrawContext (redrawing: rect, of: month, in: self);
 	}
 }
 
 private protocol CPCMonthViewRedrawContextImpl: CPCMonthViewRedrawContext {
 	var reusableFormatters: [DateFormatter] { get };
 	var month: CPCMonth { get };
+	var clearingContext: CPCMonthView.ClearingContext? { get }
 	
-	init? (redrawing rect: CGRect, in view: CPCMonthView);
+	static func makeClearingContext (for rect: CGRect, ifNeededIn view: CPCMonthView) -> CPCMonthView.ClearingContext?;
+	
+	init? (redrawing rect: CGRect, of month: CPCMonth, in view: CPCMonthView);
 	func run (context: CGContext);
 }
 
 extension CPCMonthViewRedrawContextImpl {
+	fileprivate static func makeClearingContext (for rect: CGRect, ifNeededIn view: CPCMonthView) -> CPCMonthView.ClearingContext? {
+		return (view.needsFullAppearanceUpdate ? nil : CPCMonthView.ClearingContext (rect, backgroundColor: view.backgroundColor));
+	}
+	
 	internal func run () {
 		guard let context = UIGraphicsGetCurrentContext () else {
 			return;
 		}
+		self.clearingContext?.run (context: context);
 		self.run (context: context);
 		DateFormatter.makeReusable (self.reusableFormatters, wrapper: self.month.calendarWrapper);
 	}
@@ -192,12 +251,8 @@ extension CPCMonthView.TitleRedrawContext: CPCMonthViewRedrawContextImpl {
 		return [self.formatter];
 	}
 	
-	fileprivate init? (redrawing rect: CGRect, in view: CPCMonthView) {
-		guard
-			let month = view.month,
-			let layout = view.layout,
-			let titleFrame = layout.titleFrame,
-			rect.intersects (titleFrame) else {
+	fileprivate init? (redrawing rect: CGRect, of month: CPCMonth, in view: CPCMonthView) {
+		guard let layout = view.layout, let titleFrame = layout.titleFrame, rect.intersects (titleFrame) else {
 			return nil;
 		}
 		
@@ -205,6 +260,7 @@ extension CPCMonthView.TitleRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.titleFrame = titleFrame;
 		self.titleContentFrame = layout.titleContentFrame;
 		self.backgroundColor = view.backgroundColor;
+		self.clearingContext = CPCMonthView.TitleRedrawContext.makeClearingContext (for: rect, ifNeededIn: view);
 		self.formatter = DateFormatter.dequeueFormatter (for: month, format: view.titleStyle.rawValue);
 		self.titleAttributes = [
 			.font: view.effectiveTitleFont,
@@ -319,14 +375,10 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		return [self.dayFormatter];
 	}
 
-	fileprivate init? (redrawing rect: CGRect, in view: CPCMonthView) {
-		guard
-			let month = view.month,
-			let layout = view.layout,
-			let indices = GridRedrawContext.calculateAffectedIndices (of: view, in: rect, for: month, using: layout) else {
+	fileprivate init? (redrawing rect: CGRect, of month: CPCMonth, in view: CPCMonthView) {
+		guard let layout = view.layout, let indices = GridRedrawContext.calculateAffectedIndices (of: view, in: rect, for: month, using: layout) else {
 			return nil;
 		}
-		let dayCellFont = view.effectiveDayCellFont;
 		
 		self.month = month;
 		self.layout = layout;
@@ -334,8 +386,10 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.cellRenderer = view.cellRenderer;
 		self.separatorColor = view.separatorColor;
 		self.backgroundColor = view.backgroundColor;
+		self.clearingContext = CPCMonthView.GridRedrawContext.makeClearingContext (for: rect, ifNeededIn: view);
 		self.cellBackgroundColorGetter = view.dayCellBackgroundColor;
 
+		let dayCellFont = view.effectiveDayCellFont;
 		self.dayFormatter = DateFormatter.dequeueFormatter (for: month, dateFormatTemplate: "d");
 		self.cellTitleHeight = dayCellFont.lineHeight.rounded (.up, scale: layout.separatorWidth);
 		self.cellTitleAttributes = [

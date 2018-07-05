@@ -138,7 +138,7 @@ extension CPCCalendarUnit {
 internal func resultingCalendarForOperation <T, U> (for first: T, _ second: U) -> CPCCalendarWrapper where T: CPCCalendarUnit, U: CPCCalendarUnit {
 	let calendar = first.calendarWrapper;
 	guard second.calendarWrapper == calendar else {
-		fatalError ("Cannot decide on resulting calendar for operation on \(T.self) and \(U.self) values: incompatible calendars \(calendar.calendar, second.calendar)");
+		fatalError ("[CrispyCalendar] Sanity check failure: cannot decide on resulting calendar for operation on \(T.self) and \(U.self) values: incompatible calendars \(calendar.calendar, second.calendar)");
 	}
 	return calendar;
 }

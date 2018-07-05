@@ -25,17 +25,12 @@ import UIKit
 
 extension CPCCalendarView {
 	internal class Cell: UICollectionViewCell {
-		internal weak var monthViewsManager: CPCMonthViewsManager? {
-			didSet {
-				guard self.monthViewsManager !== oldValue else {
-					return;
-				}
-				
-				if let monthViewsManager = self.monthViewsManager {
-					monthViewsManager.addMonthView (self.monthView);
-				} else {
-					self.monthView.removeFromManagingView ();
-				}
+		internal var monthViewsManager: CPCMonthViewsManager? {
+			get {
+				return self.monthViewsManagerRef?.value;
+			}
+			set {
+				self.monthViewsManagerRef = newValue.map { UnownedStorage (value: $0) };
 			}
 		}
 		
@@ -49,6 +44,15 @@ extension CPCCalendarView {
 		}
 		
 		private unowned let monthView: CPCMonthView;
+		
+		private var monthViewsManagerRef: UnownedStorage <CPCMonthViewsManager>? {
+			didSet {
+				guard oldValue !== self.monthViewsManagerRef else {
+					return;
+				}
+				self.updateMonthViewManagingStatus ();
+			}
+		}
 		
 		private static func makeMonthView (frame: CGRect = .zero) -> CPCMonthView {
 			let monthView = CPCMonthView (frame: frame.bounds);
@@ -74,11 +78,21 @@ extension CPCCalendarView {
 		internal override func apply (_ layoutAttributes: UICollectionViewLayoutAttributes) {
 			super.apply (layoutAttributes);
 			self.monthView.month = (layoutAttributes as? Layout.Attributes)?.month;
+			self.updateMonthViewManagingStatus ();
 		}
 		
 		internal override func prepareForReuse () {
 			super.prepareForReuse ();
-			self.monthView.removeFromManagingView ();
+			self.monthView.removeFromMultiMonthViewsManager ();
+			self.monthViewsManager = nil;
+		}
+		
+		private func updateMonthViewManagingStatus () {
+			if let monthViewsManager = self.monthViewsManager, self.monthView.month != nil {
+				monthViewsManager.addMonthView (self.monthView);
+			} else {
+				self.monthView.removeFromMultiMonthViewsManager ();
+			}
 		}
 	}
 }

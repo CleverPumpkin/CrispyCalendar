@@ -124,6 +124,20 @@ extension CPCCalendarView.Layout: UICollectionViewDelegate {
 		collectionView.scrollToItem (at: indexPath, at: .centeredVertically, animated: animated);
 		return true;
 	}
+
+	@discardableResult
+	internal func scrollToMonth (month: CPCMonth, animated: Bool = true) -> Bool {
+		var indexPath = self.storage.indexPath (for: month);
+		if (indexPath == nil) {
+			self.storage = self.tryCalculatingLayoutUntil (month: month, for: self.storage);
+			indexPath = self.storage.indexPath (for: month)
+		}
+		guard let targetIndexPath = indexPath, let collectionView = self.collectionView else {
+			return false;
+		}
+		collectionView.scrollToItem (at: targetIndexPath, at: .centeredVertically, animated: animated);
+		return true;
+	}
 }
 
 extension CPCCalendarView.Layout {

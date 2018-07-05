@@ -77,6 +77,10 @@ internal final class CPCMonthViewsManager {
 	fileprivate var appearanceStorage = CPCViewAppearanceStorage ();
 	
 	fileprivate var multiSelectionHandler = CPCViewDefaultSelectionHandler;
+	
+	internal func prepareForContainerDeallocation () {
+		self.monthViews.forEach (self.unassociateMonthView);
+	}
 }
 
 internal extension CPCMonthViewsManager {
@@ -85,18 +89,12 @@ internal extension CPCMonthViewsManager {
 	}
 	
 	internal func addMonthView (_ monthView: CPCMonthView) {
-		self.insertMonthView (monthView, at: self.unownedMonthViews.count);
-	}
-	
-	internal func insertMonthView (_ monthView: CPCMonthView, at index: Int) {
-		if (index == self.unownedMonthViews.count) {
-			self.unownedMonthViews.append (monthView);
-		} else {
-			self.unownedMonthViews.insert (monthView, at: index);
-		}
+		monthView.removeFromMultiMonthViewsManager ();
+		self.unownedMonthViews.append (monthView);
 		if (self.selectionDidChangeBlock != nil) {
 			monthView.addTarget (self, action: #selector (monthViewValueChanged), for: .valueChanged);
 		}
+		monthView.monthViewsManager = self;
 		monthView.appearanceStorage = self.appearanceStorage;
 		monthView.cellRenderer = self.appearanceStorage.cellRenderer;
 		monthView.selectionHandler = self.selectionHandler (for: monthView);
@@ -107,8 +105,7 @@ internal extension CPCMonthViewsManager {
 		guard let removedView = self.unownedMonthViews.remove (where: { $0 === monthView }) else {
 			return;
 		}
-		removedView.removeTarget (self, action: #selector (monthViewValueChanged), for: .valueChanged);
-		removedView.selectionHandler = CPCViewDefaultSelectionHandler;
+		self.unassociateMonthView (removedView);
 	}
 	
 	internal func updateManagedMonthViews (using block: (CPCMonthView) -> ()) {
@@ -117,6 +114,12 @@ internal extension CPCMonthViewsManager {
 	
 	@objc private func monthViewValueChanged () {
 		self.selectionDidChangeBlock? ();
+	}
+	
+	private func unassociateMonthView (_ monthView: CPCMonthView) {
+		monthView.removeTarget (self, action: #selector (monthViewValueChanged), for: .valueChanged);
+		monthView.selectionHandler = CPCViewDefaultSelectionHandler;
+		monthView.monthViewsManager = nil;
 	}
 }
 
@@ -227,7 +230,12 @@ internal extension CPCMonthViewsManager {
 	
 	internal var selection: CPCViewSelection {
 		get { return self.multiSelectionHandler.selection }
-		set { fatalError ("Not implemented") }
+		set { self.multiSelectionHandler = CPCViewSelectionHandler.primitive (for: newValue) }
+	}
+	
+	internal var selectionHandler: CPCViewSelectionHandlerProtocol {
+		get { return self.multiSelectionHandler }
+		set { self.setMultiSelectionHandler (newValue) }
 	}
 	
 	fileprivate func selectionHandler (for monthView: CPCMonthView) -> CPCViewSelectionHandlerProtocol {

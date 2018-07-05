@@ -25,6 +25,22 @@ import Swift
 
 internal struct UnownedStorage <Element> where Element: AnyObject {
 	internal unowned let value: Element;
+	
+	internal static func === (lhs: UnownedStorage, rhs: UnownedStorage) -> Bool {
+		return lhs.value === rhs.value;
+	}
+
+	internal static func !== (lhs: UnownedStorage, rhs: UnownedStorage) -> Bool {
+		return !(lhs === rhs);
+	}
+}
+
+internal func === <Element> (lhs: UnownedStorage <Element>?, rhs: UnownedStorage <Element>?) -> Bool where Element: AnyObject {
+	return lhs?.value === rhs?.value;
+}
+
+internal func !== <Element> (lhs: UnownedStorage <Element>?, rhs: UnownedStorage <Element>?) -> Bool where Element: AnyObject {
+	return !(lhs === rhs);
 }
 
 internal struct UnownedArray <Element> where Element: AnyObject {

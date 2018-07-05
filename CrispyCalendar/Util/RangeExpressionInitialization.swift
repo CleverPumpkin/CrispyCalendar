@@ -76,7 +76,7 @@ extension BoundedRangeProtocol {
 		case self.upperBound...:
 			return .afterUpperBound;
 		default:
-			fatalError ("Internal error: cannot determine location of \(value) in \(self)");
+			fatalError ("[CrispyCalendar] Internal error: cannot determine location of \(value) in \(self)");
 		}
 	}
 
@@ -194,7 +194,7 @@ internal extension BoundedRangeProtocol where Bound: Strideable {
 		case upperBound...:
 			return (self.contains (upperBound) ? upperBound : upperBound.advanced (by: -1));
 		default:
-			fatalError ("Internal error: cannot clamp \(value) to \(self)");
+			fatalError ("[CrispyCalendar] Internal error: cannot clamp \(value) to \(self)");
 		}
 	}
 }

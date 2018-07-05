@@ -44,6 +44,10 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	open var month: CPCMonth? {
 		didSet {
+			guard self.month != oldValue else {
+				return;
+			}
+			self.needsFullAppearanceUpdate = true;
 			self.monthDidChange ();
 		}
 	}
@@ -197,16 +201,29 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 	
 	internal var contentSizeCategoryObserver: NSObjectProtocol?;
-	internal var appearanceStorage = AppearanceStorage ();
-	internal var managingView: CPCMultiMonthsViewProtocol?;
+	internal var appearanceStorage = AppearanceStorage () {
+		didSet {
+			self.setNeedsFullAppearanceUpdate ();
+		}
+	}
+	internal var monthViewsManager: CPCMonthViewsManager? {
+		get {
+			return self.monthViewsManagerRef?.value;
+		}
+		set {
+			self.monthViewsManagerRef = newValue.map { UnownedStorage (value: $0) };
+		}
+	};
 	internal var highlightedDayIndex: CellIndex? {
 		didSet {
 			self.highlightedDayIndexDidChange (oldValue: oldValue);
 		}
 	}
+	internal var needsFullAppearanceUpdate = true;
 	
 	private var layoutStorage: Layout?;
 	private unowned var aspectRatioConstraint: NSLayoutConstraint;
+	private var monthViewsManagerRef: UnownedStorage <CPCMonthViewsManager>?;
 	
 	public override init (frame: CGRect) {
 		self.aspectRatioConstraint = .placeholder;
@@ -238,6 +255,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 	
 	deinit {
+		self.removeFromMultiMonthViewsManager ();
 		if let contentSizeCategoryObserver = self.contentSizeCategoryObserver {
 			NotificationCenter.default.removeObserver (contentSizeCategoryObserver);
 		}
@@ -306,13 +324,10 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	open override func draw (_ rect: CGRect) {
 		super.draw (rect);
 		
+		self.clearingContext (rect)?.run ();
 		self.titleRedrawContext (rect)?.run ();
 		self.gridRedrawContext (rect)?.run ();
-	}
-	
-	open override func removeFromSuperview () {
-		self.removeFromManagingView ();
-		super.removeFromSuperview ();
+		self.needsFullAppearanceUpdate = false;
 	}
 	
 	open override func beginTracking (_ touch: UITouch, with event: UIEvent?) -> Bool {
@@ -349,11 +364,8 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		self.highlightedDayIndex = nil;
 	}
 	
-	internal func removeFromManagingView () {
-		if let managingView = self.managingView {
-			managingView.monthViewsManager.removeMonthView (self);
-			self.managingView = nil;
-		}
+	internal func removeFromMultiMonthViewsManager () {
+		self.monthViewsManager?.removeMonthView (self);
 	}
 	
 	private func gridCellIndex (for touch: UITouch?) -> CellIndex? {
@@ -462,6 +474,7 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 
 extension CPCMonthView {
 	private func setNeedsFullAppearanceUpdate () {
+		self.needsFullAppearanceUpdate = true;
 		self.setNeedsUpdateConstraints ();
 		self.setNeedsLayout ();
 		self.setNeedsDisplay ();

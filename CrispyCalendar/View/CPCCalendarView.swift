@@ -98,6 +98,10 @@ open class CPCCalendarView: UIView {
 		self.layout.prepare (collectionView: collectionView);
 		self.addSubview (collectionView);
 	}
+	
+	deinit {
+		self.monthViewsManager.prepareForContainerDeallocation ();
+	}
 
 	open override func layoutSubviews () {
 		super.layoutSubviews ();
@@ -123,6 +127,8 @@ extension CPCCalendarView {
 		let collectionView = UICollectionView (frame: frame.bounds, collectionViewLayout: Layout (calendar: calendar.wrapped ()));
 		collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight];
 		collectionView.allowsSelection = false;
+		collectionView.isDirectionalLockEnabled = true;
+		collectionView.alwaysBounceVertical = true;
 		return collectionView;
 	}
 	
@@ -185,5 +191,24 @@ extension CPCCalendarView /* UIScrollViewProtocol */ {
 		get { return self.collectionView.showsVerticalScrollIndicator }
 		set { self.collectionView.showsVerticalScrollIndicator = newValue }
 	}
-
+	
+	open func scrollTo (date: Date, animated: Bool) {
+		return self.scrollTo (month: CPCMonth (containing: date, calendar: self.calendarWrapper), animated: animated);
+	}
+	
+	open func scrollTo (day: CPCDay, animated: Bool) {
+		return self.scrollTo (month: CPCMonth (containing: day.start, calendar: self.calendarWrapper), animated: animated);
+	}
+	
+	open func scrollTo (month: CPCMonth, animated: Bool) {
+		let scrollDestination: CPCMonth;
+		if let minimumDate = self.minimumDate, month.end <= minimumDate {
+			scrollDestination = CPCMonth (containing: minimumDate, calendarOf: month);
+		} else if let maximumDate = self.maximumDate, month.start >= maximumDate {
+			scrollDestination = CPCMonth (containing: maximumDate, calendarOf: month);
+		} else {
+			scrollDestination = month;
+		}
+		
+	}
 }

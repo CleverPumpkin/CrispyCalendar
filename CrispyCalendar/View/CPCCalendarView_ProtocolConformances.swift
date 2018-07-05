@@ -45,6 +45,9 @@ extension CPCCalendarView: CPCViewProtocol {
 	open var titleStyle: TitleStyle {
 		get { return self.monthViewsManager.titleStyle }
 		set {
+			guard !self.isAppearanceProxy else {
+				return self.titleFormat = newValue.rawValue;
+			}
 			guard newValue != self.titleStyle else {
 				return;
 			}
