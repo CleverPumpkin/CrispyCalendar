@@ -25,8 +25,54 @@ import Foundation
 
 // MARK: - Protocol declaration
 
+/// Protocol containing common interface for CPCDay, CPCWeek, CPCMonth and CPCYear.
+public protocol CPCCalendarUnitBase: CustomStringConvertible, CustomDebugStringConvertible, Strideable, Hashable, CPCDateInterval where Stride == Int {
+	/// Creates a new calendar unit that contains a given date in current time zone according to system calendar.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	init (containing date: Date);
+	
+	/// Creates a new calendar unit that contains a given date according to system calendar.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - timeZone: Time zone to perform calculations in.
+	init (containing date: Date, timeZone: TimeZone);
+	
+	/// Creates a new calendar unit that contains a given date in current time zone according to calendar with supplied identifier.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - calendarIdentifier: Identifier of calendar to perform calculations with.
+	init (containing date: Date, calendarIdentifier: Calendar.Identifier);
+
+	/// Creates a new calendar unit that contains a given date according to supplied calendar.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - calendar: Calendar to perform calculations with.
+	init (containing date: Date, calendar: Calendar);
+
+	/// Creates a new calendar unit that contains a given date according to calendar with supplied identifier.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - timeZone: Time zone to perform calculations in.
+	///   - calendarIdentifier: Identifier of calendar to perform calculations with.
+	init (containing date: Date, timeZone: TimeZone, calendarIdentifier: Calendar.Identifier);
+
+	/// Creates a new calendar unit that contains a given date according to supplied calendar and time zone.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - timeZone: Time zone to perform calculations in.
+	///   - calendar: Calendar to perform calculations with.
+	init (containing date: Date, timeZone: TimeZone, calendar: Calendar);
+}
+
 /// Common protocol implementing most of CPCDay, CPCWeek, CPCMonth and CPCYear functionality.
-internal protocol CPCCalendarUnit: CustomStringConvertible, CustomDebugStringConvertible, Strideable, Hashable, CPCDateInterval where Stride == Int {
+internal protocol CPCCalendarUnit: CPCCalendarUnitBase {
 	/// Type serving as a storage for calendar unit info.
 	associatedtype BackingType where BackingType: CPCCalendarUnitBackingType;
 	
@@ -52,6 +98,32 @@ internal protocol CPCCalendarUnit: CustomStringConvertible, CustomDebugStringCon
 
 // MARK: - Default implementations
 
+extension CPCCalendarUnitBase {
+	public init (containing date: Date, timeZone: TimeZone, calendar: Calendar) {
+		var calendar = calendar;
+		calendar.timeZone = timeZone;
+		self.init (containing: date, calendar: calendar);
+	}
+	
+	public init (containing date: Date, timeZone: TimeZone) {
+		self.init (containing: date, timeZone: timeZone, calendar: .current);
+	}
+	
+	public init (containing date: Date) {
+		self.init (containing: date, timeZone: .current);
+	}
+	
+	public init (containing date: Date, timeZone: TimeZone, calendarIdentifier: Calendar.Identifier) {
+		var calendar = Calendar (identifier: calendarIdentifier);
+		calendar.locale = .current;
+		self.init (containing: date, timeZone: timeZone, calendar: calendar);
+	}
+	
+	public init (containing date: Date, calendarIdentifier: Calendar.Identifier) {
+		self.init (containing: date, timeZone: .current, calendarIdentifier: calendarIdentifier);
+	}
+}
+
 extension CPCCalendarUnit {
 	internal typealias CalendarWrapper = CPCCalendarWrapper;
 	
@@ -59,11 +131,11 @@ extension CPCCalendarUnit {
 		return self.calendarWrapper.calendar;
 	}
 	
-	public var start: Date {
+	internal var startValue: Date {
 		return self.backingValue.startDate (using: self.calendar);
 	}
 	
-	public var end: Date {
+	internal var endValue: Date {
 		return guarantee (self.calendar.date (byAdding: Self.representedUnit, value: 1, to: self.start));
 	}
 	
@@ -77,55 +149,8 @@ extension CPCCalendarUnit {
 	}
 #endif
 	
-	/// Creates a new calendar unit that contains a given date according to supplied wrapped calendar.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - calendar: Calendar to perform calculations with.
 	internal init (containing date: Date, calendar: CalendarWrapper) {
 		self.init (backedBy: BackingType (containing: date, calendar: calendar.calendar), calendar: calendar);
-	}
-
-	/// Creates a new calendar unit that contains a given date according to supplied calendar.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - calendar: Calendar to perform calculations with.
-	public init (containing date: Date, calendar: Calendar) {
-		self.init (containing: date, calendar: calendar.wrapped ());
-	}
-
-	/// Creates a new calendar unit that contains a given date according to supplied calendar and time zone.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - timeZone: Time zone to perform calculations in.
-	///   - calendar: Calendar to perform calculations with.
-	public init (containing date: Date, timeZone: TimeZone, calendar: Calendar) {
-		var calendar = calendar;
-		calendar.timeZone = timeZone;
-		self.init (containing: date, calendar: calendar);
-	}
-	
-	/// Creates a new calendar unit that contains a given date according to system calendar.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - timeZone: Time zone to perform calculations in.
-	public init (containing date: Date, timeZone: TimeZone = .current) {
-		self.init (containing: date, timeZone: timeZone, calendar: .current);
-	}
-	
-	/// Creates a new calendar unit that contains a given date according to calendar with supplied identifier.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - timeZone: Time zone to perform calculations in.
-	///   - calendarIdentifier: Identifier of calendar to perform calculations with.
-	public init (containing date: Date, timeZone: TimeZone = .current, calendarIdentifier: Calendar.Identifier) {
-		var calendar = Calendar (identifier: calendarIdentifier);
-		calendar.locale = .current;
-		self.init (containing: date, timeZone: timeZone, calendar: calendar);
 	}
 }
 

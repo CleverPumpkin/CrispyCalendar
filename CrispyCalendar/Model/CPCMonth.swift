@@ -49,10 +49,7 @@ extension CPCMonthBackingStorageProtocol {
 }
 
 /// Calendar unit that repsesents a month.
-public struct CPCMonth: CPCCompoundCalendarUnit {
-	public typealias Element = CPCWeek;
-	internal typealias UnitBackingType = BackingStorage;
-	
+public struct CPCMonth {
 	internal struct BackingStorage: Hashable, CustomStringConvertible, CPCMonthBackingStorageProtocol {
 		fileprivate struct Packed: Hashable, CustomStringConvertible, CPCMonthBackingStorageProtocol {
 			fileprivate static let acceptableYears = Int.minSignedThreeQuarters ... .maxSignedThreeQuarters;
@@ -113,31 +110,19 @@ public struct CPCMonth: CPCCompoundCalendarUnit {
 		}
 	}
 
-	internal static let representedUnit = Calendar.Component.month;
-	internal static let descriptionDateFormatTemplate = "LLyyyy";
-	
 	public let indices: CountableRange <Int>;
-
-	/// Year of represented month.
-	public var year: Int {
-		return self.backingValue.year;
-	}
-	/// Month number of represented month.
-	public var month: Int {
-		return self.backingValue.month;
-	}
-	/// Year that contains represented month.
-	public var containingYear: CPCYear {
-		return self.backingValue.containingYear (self.calendarWrapper);
-	}
-	
 	internal let calendarWrapper: CalendarWrapper;
-	internal let backingValue: BackingStorage;
-	
-	internal init (backedBy value: BackingStorage, calendar: CalendarWrapper) {
-		self.calendarWrapper = calendar;
-		self.backingValue = value;
-		self.indices = CPCMonth.indices (for: value, using: calendar.calendar);
+	internal let backingValue: BackingStorage;	
+}
+
+extension CPCMonth: CPCDateInterval {
+	public var start: Date { return self.startValue }
+	public var end: Date { return self.endValue };
+}
+
+extension CPCMonth: CPCCalendarUnitBase {
+	public init (containing date: Date, calendar: Calendar) {
+		self.init (containing: date, calendar: calendar.wrapped ());
 	}
 	
 	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
@@ -174,6 +159,20 @@ public struct CPCMonth: CPCCompoundCalendarUnit {
 	///   - otherUnit: Calendar source.
 	public init (containing date: Date, calendarOf otherUnit: CPCYear) {
 		self.init (containing: date, calendar: otherUnit.calendarWrapper);
+	}
+}
+
+extension CPCMonth: CPCCompoundCalendarUnit {
+	public typealias Element = CPCWeek;
+	internal typealias UnitBackingType = BackingStorage;
+	
+	internal static let representedUnit = Calendar.Component.month;
+	internal static let descriptionDateFormatTemplate = "LLyyyy";
+	
+	internal init (backedBy value: BackingStorage, calendar: CalendarWrapper) {
+		self.calendarWrapper = calendar;
+		self.backingValue = value;
+		self.indices = CPCMonth.indices (for: value, using: calendar.calendar);
 	}
 }
 
@@ -216,6 +215,21 @@ public extension CPCMonth {
 	/// Value that represents a previous month.
 	public static var prev: CPCMonth {
 		return self.current.prev;
+	}
+	
+	/// Year of represented month.
+	public var year: Int {
+		return self.backingValue.year;
+	}
+	
+	/// Month number of represented month.
+	public var month: Int {
+		return self.backingValue.month;
+	}
+	
+	/// Year that contains represented month.
+	public var containingYear: CPCYear {
+		return self.backingValue.containingYear (self.calendarWrapper);
 	}
 	
 	/// Create a new value, corresponding to a month in the future or past.

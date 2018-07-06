@@ -231,7 +231,12 @@ extension CPCCalendarView: CPCViewProtocol {
 
 extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
 	public typealias SelectionDelegateType = CPCCalendarViewSelectionDelegate;
-	
+		
+	open var selection: CPCViewSelection {
+		get { return self.selectionHandler.selection }
+		set { self.setSelection (newValue) }
+	}
+
 	open var selectionDelegate: SelectionDelegateType? {
 		get {
 			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? SelectionDelegateType;

@@ -24,20 +24,11 @@
 import Foundation
 
 /// Calendar unit that repsesents a year.
-public struct CPCYear: CPCCompoundCalendarUnit {
-	public typealias Element = CPCMonth;
-	internal typealias UnitBackingType = BackingStorage;
-	
+public struct CPCYear {
 	internal struct BackingStorage: Hashable {
 		internal let year: Int;
 	}
-	internal static let representedUnit = Calendar.Component.year;
-	internal static let descriptionDateFormatTemplate = "yyyy";
 
-	/// Number of year represented by this value.
-	public var year: Int {
-		return self.backingValue.year;
-	}
 	public let indices: CountableRange <Int>;
 
 	internal let calendarWrapper: CalendarWrapper;
@@ -48,7 +39,18 @@ public struct CPCYear: CPCCompoundCalendarUnit {
 		self.backingValue = value;
 		self.indices = CPCYear.indices (for: value, using: calendar.calendar);
 	}
-	
+}
+
+extension CPCYear: CPCDateInterval {
+	public var start: Date { return self.startValue }
+	public var end: Date { return self.endValue };
+}
+
+extension CPCYear: CPCCalendarUnitBase {
+	public init (containing date: Date, calendar: Calendar) {
+		self.init (containing: date, calendar: calendar.wrapped ());
+	}
+
 	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
 	///
 	/// - Parameters:
@@ -84,6 +86,15 @@ public struct CPCYear: CPCCompoundCalendarUnit {
 	public init (containing date: Date, calendarOf otherUnit: CPCYear) {
 		self.init (containing: date, calendar: otherUnit.calendarWrapper);
 	}
+}
+
+extension CPCYear: CPCCompoundCalendarUnit {
+	public typealias Element = CPCMonth;
+	internal typealias UnitBackingType = BackingStorage;
+	
+	internal static let representedUnit = Calendar.Component.year;
+	internal static let descriptionDateFormatTemplate = "yyyy";
+
 }
 
 extension CPCYear.BackingStorage: ExpressibleByDateComponents {
@@ -124,6 +135,11 @@ public extension CPCYear {
 		return self.current.prev;
 	}
 	
+	/// Number of year represented by this value.
+	public var year: Int {
+		return self.backingValue.year;
+	}
+
 	/// Create a new value, corresponding to a year in the future or past.
 	///
 	/// - Parameter yearsSinceNow: Distance from current year in years.

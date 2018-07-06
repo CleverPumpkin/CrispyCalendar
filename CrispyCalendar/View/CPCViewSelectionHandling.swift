@@ -203,16 +203,11 @@ internal protocol CPCViewDelegatingSelectionHandling: CPCViewSelectionHandling {
 extension CPCViewDelegatingSelectionHandling {
 	internal typealias CPCViewDelegatingSelectionHandler = CPCViewSelectionHandler.Delegating <Self>;
 	
-	public var selection: CPCViewSelection {
-		get {
-			return self.selectionHandler.selection;
-		}
-		set {
-			if let selectionHandler = self.selectionHandler as? CPCViewDelegatingSelectionHandler {
-				selectionHandler.selection = newValue;
-			} else {
-				self.selectionHandler = CPCViewSelectionHandler.primitive (for: newValue);
-			}
+	internal func setSelection (_ newValue: Selection) {
+		if let selectionHandler = self.selectionHandler as? CPCViewDelegatingSelectionHandler {
+			selectionHandler.selection = newValue;
+		} else {
+			self.selectionHandler = CPCViewSelectionHandler.primitive (for: newValue);
 		}
 	}
 }

@@ -50,10 +50,8 @@ extension CPCDayBackingStorageProtocol {
 }
 
 /// Calendar unit that repsesents a single day.
-public struct CPCDay: CPCCalendarUnit {
-	internal typealias BackingType = BackingStorage;
-	
-	internal struct BackingStorage: Hashable, CPCDayBackingStorageProtocol {
+public struct CPCDay {
+		internal struct BackingStorage: Hashable, CPCDayBackingStorageProtocol {
 		fileprivate struct Packed: Hashable, CPCDayBackingStorageProtocol {
 			fileprivate static let acceptableYears = Int.minSignedHalf ... .maxSignedHalf;
 			fileprivate static let acceptableMonths = 0 ... .maxUnsignedQuarter;
@@ -130,39 +128,6 @@ public struct CPCDay: CPCCalendarUnit {
 			return CPCMonth (backedBy: CPCMonth.BackingStorage (year: self.year, month: self.month), calendar: calendar);
 		}
 	}
-	
-	internal static let representedUnit = Calendar.Component.day;
-	internal static let requiredComponents: Set <Calendar.Component> = [.day, .month, .year];
-	internal static let descriptionDateFormatTemplate = "ddMMyyyy";
-
-	/// Year of represented day.
-	public var year: Int {
-		return self.backingValue.year;
-	}
-	/// Month of represented day.
-	public var month: Int {
-		return self.backingValue.month;
-	}
-	/// Week number of represented day.
-	public var week: Int {
-		return self.calendar.component (.weekOfYear, from: self.start);
-	}
-	/// This day's number.
-	public var day: Int {
-		return self.backingValue.day;
-	}
-	/// Year that contains represented day.
-	public var containingYear: CPCYear {
-		return self.backingValue.containingYear (self.calendarWrapper);
-	}
-	/// Month that contains represented day.
-	public var containingMonth: CPCMonth {
-		return self.backingValue.containingMonth (self.calendarWrapper);
-	}
-	/// Week that contains represented day.
-	public var containingWeek: CPCWeek {
-		return CPCWeek (containing: self.start, calendarOf: self);
-	}
 
 	internal let calendarWrapper: CalendarWrapper;
 	internal let backingValue: BackingStorage;
@@ -171,7 +136,18 @@ public struct CPCDay: CPCCalendarUnit {
 		self.calendarWrapper = calendar;
 		self.backingValue = value;
 	}
-	
+}
+
+extension CPCDay: CPCDateInterval {
+	public var start: Date { return self.startValue }
+	public var end: Date { return self.endValue };
+}
+
+extension CPCDay: CPCCalendarUnitBase {
+	public init (containing date: Date, calendar: Calendar) {
+		self.init (containing: date, calendar: calendar.wrapped ());
+	}
+
 	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
 	///
 	/// - Parameters:
@@ -207,6 +183,14 @@ public struct CPCDay: CPCCalendarUnit {
 	public init (containing date: Date, calendarOf otherUnit: CPCYear) {
 		self.init (containing: date, calendar: otherUnit.calendarWrapper);
 	}
+}
+
+extension CPCDay: CPCCalendarUnit {
+	internal typealias BackingType = BackingStorage;
+	
+	internal static let representedUnit = Calendar.Component.day;
+	internal static let requiredComponents: Set <Calendar.Component> = [.day, .month, .year];
+	internal static let descriptionDateFormatTemplate = "ddMMyyyy";
 }
 
 extension CPCDay.BackingStorage: ExpressibleByDateComponents {
@@ -249,6 +233,41 @@ public extension CPCDay {
 	/// Value that represents tomorrow.
 	public static var tommorow: CPCDay {
 		return self.today.prev;
+	}
+	
+	/// Year of represented day.
+	public var year: Int {
+		return self.backingValue.year;
+	}
+	
+	/// Month of represented day.
+	public var month: Int {
+		return self.backingValue.month;
+	}
+	
+	/// Week number of represented day.
+	public var week: Int {
+		return self.calendar.component (.weekOfYear, from: self.start);
+	}
+	
+	/// This day's number.
+	public var day: Int {
+		return self.backingValue.day;
+	}
+	
+	/// Year that contains represented day.
+	public var containingYear: CPCYear {
+		return self.backingValue.containingYear (self.calendarWrapper);
+	}
+	
+	/// Month that contains represented day.
+	public var containingMonth: CPCMonth {
+		return self.backingValue.containingMonth (self.calendarWrapper);
+	}
+	
+	/// Week that contains represented day.
+	public var containingWeek: CPCWeek {
+		return CPCWeek (containing: self.start, calendarOf: self);
 	}
 	
 	/// Create a new value, corresponding to a day in the future or past.

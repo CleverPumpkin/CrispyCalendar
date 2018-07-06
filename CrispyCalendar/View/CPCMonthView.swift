@@ -408,6 +408,11 @@ extension CPCMonthView: CPCViewBackedByAppearanceStorage {}
 
 extension CPCMonthView: CPCViewDelegatingSelectionHandling {
 	public typealias SelectionDelegateType = CPCMonthViewSelectionDelegate;
+	
+	open var selection: CPCViewSelection {
+		get { return self.selectionHandler.selection }
+		set { self.setSelection (newValue) }
+	}
 
 	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
 		return delegate.selection;

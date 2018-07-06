@@ -165,6 +165,11 @@ extension CPCMultiMonthsView: CPCMultiMonthsViewProtocol {
 
 extension CPCMultiMonthsView: CPCViewDelegatingSelectionHandling {
 	public typealias SelectionDelegateType = CPCMultiMonthsViewSelectionDelegate;
+	
+	open var selection: CPCViewSelection {
+		get { return self.selectionHandler.selection }
+		set { self.setSelection (newValue) }
+	}
 
 	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
 		return delegate.selection;

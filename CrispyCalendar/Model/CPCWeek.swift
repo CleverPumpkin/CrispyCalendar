@@ -24,10 +24,7 @@
 import Foundation
 
 /// Calendar unit that repsesents a week.
-public struct CPCWeek: CPCCompoundCalendarUnit {
-	public typealias Element = CPCDay;
-	internal typealias UnitBackingType = BackingStorage;
-	
+public struct CPCWeek {
 	internal struct BackingStorage: Hashable {
 		fileprivate let date: Date;
 		
@@ -35,9 +32,6 @@ public struct CPCWeek: CPCCompoundCalendarUnit {
 			self.date = date;
 		}
 	}
-
-	internal static let representedUnit = Calendar.Component.weekOfYear;
-	internal static let descriptionDateFormatTemplate = "wddMM";
 
 	public let indices: CountableRange <Int>;
 
@@ -48,14 +42,21 @@ public struct CPCWeek: CPCCompoundCalendarUnit {
 	internal let backingValue: UnitBackingType;
 	internal let calendarWrapper: CalendarWrapper;
 	
-	internal static func indices (for value: BackingStorage, using calendar: Calendar) -> CountableRange <Int> {
-		return CountableRange (guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value.date)));
-	}
-
 	internal init (backedBy value: UnitBackingType, calendar: CalendarWrapper) {
 		self.calendarWrapper = calendar;
 		self.backingValue = value;
 		self.indices = CPCWeek.indices (for: value, using: calendar.calendar);
+	}
+}
+
+extension CPCWeek: CPCDateInterval {
+	public var start: Date { return self.startValue }
+	public var end: Date { return self.endValue };
+}
+
+extension CPCWeek: CPCCalendarUnitBase {
+	public init (containing date: Date, calendar: Calendar) {
+		self.init (containing: date, calendar: calendar.wrapped ());
 	}
 	
 	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
@@ -92,6 +93,18 @@ public struct CPCWeek: CPCCompoundCalendarUnit {
 	///   - otherUnit: Calendar source.
 	public init (containing date: Date, calendarOf otherUnit: CPCYear) {
 		self.init (containing: date, calendar: otherUnit.calendarWrapper);
+	}
+}
+
+extension CPCWeek: CPCCompoundCalendarUnit {
+	public typealias Element = CPCDay;
+	internal typealias UnitBackingType = BackingStorage;
+	
+	internal static let representedUnit = Calendar.Component.weekOfYear;
+	internal static let descriptionDateFormatTemplate = "wddMM";
+	
+	internal static func indices (for value: BackingStorage, using calendar: Calendar) -> CountableRange <Int> {
+		return CountableRange (guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value.date)));
 	}
 }
 
