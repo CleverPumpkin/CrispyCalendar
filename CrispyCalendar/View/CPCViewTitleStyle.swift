@@ -53,13 +53,22 @@ public struct CPCViewTitleStyle: Hashable, RawRepresentable, ExpressibleByString
 		return .full;
 	}
 	
+	/// Create a new month title format using date format template for current locale.
+	///
+	/// - Parameters:
+	///   - template: Date format template compatible with DateFormatter.
+	/// - Returns: Month title format that matches supplied parameters or `nil` if format template is invalid.
+	public static func customTemplate (_ template: String) -> CPCViewTitleStyle! {
+		return self.customTemplate (template, locale: .currentUsed);
+	}
+
 	/// Create a new month title format using date format template.
 	///
 	/// - Parameters:
 	///   - template: Date format template compatible with DateFormatter.
-	///   - locale: Locale to evaluate format template. Defaults to current locale.
+	///   - locale: Locale to evaluate format template.
 	/// - Returns: Month title format that matches supplied parameters or `nil` if format template is invalid.
-	public static func customTemplate (_ template: String, locale: Locale = .current) -> CPCViewTitleStyle! {
+	public static func customTemplate (_ template: String, locale: Locale) -> CPCViewTitleStyle! {
 		return CPCViewTitleStyle (templateValue: template, locale: locale);
 	}
 
@@ -91,12 +100,20 @@ public struct CPCViewTitleStyle: Hashable, RawRepresentable, ExpressibleByString
 		}
 	}
 	
+	/// Create a new month title format using date format template for current locale.
+	///
+	/// - Parameters:
+	///   - template: Date format template compatible with DateFormatter.
+	public init? (templateValue template: String) {
+		self.init (templateValue: template, locale: .currentUsed);
+	}
+
 	/// Create a new month title format using date format template.
 	///
 	/// - Parameters:
 	///   - template: Date format template compatible with DateFormatter.
-	///   - locale: Locale to evaluate format template. Defaults to current locale.
-	public init? (templateValue template: String, locale: Locale = .current) {
+	///   - locale: Locale to evaluate format template.
+	public init? (templateValue template: String, locale: Locale) {
 		guard let rawValue = DateFormatter.dateFormat (fromTemplate: template, options: 0, locale: locale) else {
 			return nil;
 		}

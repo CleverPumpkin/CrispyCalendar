@@ -52,7 +52,7 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 		}
 	};
 	
-	open var calendar = Calendar.current {
+	open var calendar = Calendar.currentUsed {
 		didSet {
 			self.setNeedsDisplay ();
 		}
@@ -73,7 +73,7 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	}
 	
 	open override var intrinsicContentSize: CGSize {
-		return CGSize (width: UIViewNoIntrinsicMetric, height: self.font.lineHeight);
+		return CGSize (width: UIView.noIntrinsicMetric, height: self.font.lineHeight);
 	}
 	
 	open var adjustsFontForContentSizeCategory: Bool {
@@ -121,12 +121,12 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 		let style = self.style, week = CPCWeek (containing: Date (), calendar: self.calendar), font = self.effectiveFont, lineHeight = font.lineHeight, scale = self.separatorWidth;
 		let cellOriginY = (self.bounds.midY - lineHeight / 2).rounded (.down, scale: scale);
 		let cellWidth = self.bounds.width / CGFloat (week.count), cellHeight = lineHeight.rounded (.up, scale: scale);
-		let weekdayAttributes: [NSAttributedStringKey: Any] = [
+		let weekdayAttributes: [NSAttributedString.Key: Any] = [
 			.font: font,
 			.foregroundColor: self.textColor,
 			.paragraphStyle: NSParagraphStyle.centeredWithMiddleTruncation,
 		];
-		let weekendAttributes: [NSAttributedStringKey: Any] = {
+		let weekendAttributes: [NSAttributedString.Key: Any] = {
 			var result = weekdayAttributes;
 			result [.foregroundColor] = self.weekendColor;
 			return result;

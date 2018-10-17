@@ -208,10 +208,10 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 	internal var monthViewsManager: CPCMonthViewsManager? {
 		get {
-			return self.monthViewsManagerRef?.value;
+			return self.monthViewsManagerPtr?.pointee;
 		}
 		set {
-			self.monthViewsManagerRef = newValue.map { UnownedStorage (value: $0) };
+			self.monthViewsManagerPtr = UnsafePointer (to: newValue);
 		}
 	};
 	internal var highlightedDayIndex: CellIndex? {
@@ -223,7 +223,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	private var layoutStorage: Layout?;
 	private unowned var aspectRatioConstraint: NSLayoutConstraint;
-	private var monthViewsManagerRef: UnownedStorage <CPCMonthViewsManager>?;
+	private var monthViewsManagerPtr: UnsafePointer <CPCMonthViewsManager>?;
 	
 	public override init (frame: CGRect) {
 		self.aspectRatioConstraint = .placeholder;
@@ -295,7 +295,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 
-	open override func setContentCompressionResistancePriority (_ priority: UILayoutPriority, for axis: UILayoutConstraintAxis) {
+	open override func setContentCompressionResistancePriority (_ priority: UILayoutPriority, for axis: NSLayoutConstraint.Axis) {
 		super.setContentCompressionResistancePriority (priority, for: .horizontal);
 		super.setContentCompressionResistancePriority (priority, for: .vertical);
 		self.setNeedsUpdateConstraints ();

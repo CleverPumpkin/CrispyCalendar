@@ -39,8 +39,8 @@ fileprivate extension CGSize {
 		CGFloat (UInt.max),
 		CGFloat (Int32.max),
 		CGFloat (UInt32.max),
-		UIViewNoIntrinsicMetric,
-		UITableViewAutomaticDimension,
+		UIView.noIntrinsicMetric,
+		UITableView.automaticDimension,
 		0.0,
 	];
 	private static let saneAspectRatiosRange = CGFloat (1e-3) ... CGFloat (1e3);
@@ -150,10 +150,20 @@ extension CPCFixedAspectRatioView where Self: UIView {
 			result = self.heightAnchor.constraint (equalToConstant: 0.0);
 		}
 		
-		let axis: [UILayoutConstraintAxis] = [.horizontal, .vertical];
+		let axis: [NSLayoutConstraint.Axis] = [.horizontal, .vertical];
 		result.priority = UILayoutPriority (rawValue: axis.map {
 			(self.contentCompressionResistancePriority (for: $0).rawValue +  self.contentHuggingPriority (for: $0).rawValue) / (2.0 * Float (axis.count))
 		}.reduce (0, +));
 		return result;
 	}
 }
+
+#if !swift(>=4.2)
+internal extension UIView {
+	internal static let noIntrinsicMetric = UIViewNoIntrinsicMetric;
+}
+
+fileprivate extension UITableView {
+	fileprivate static let automaticDimension = UITableViewAutomaticDimension;
+}
+#endif

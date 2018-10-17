@@ -122,7 +122,7 @@ extension CPCYear.BackingStorage: CustomStringConvertible, CPCCalendarUnitBackin
 public extension CPCYear {
 	/// Value that represents a current year.
 	public static var current: CPCYear {
-		return self.init (containing: Date (), calendar: .current);
+		return self.init (containing: Date (), calendar: .currentUsed);
 	}
 	
 	/// Value that represents next year.

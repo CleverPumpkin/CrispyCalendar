@@ -67,7 +67,7 @@ extension CPCCalendarView {
 		}
 		
 		internal required init? (coder aDecoder: NSCoder) {
-			self.calendar = Calendar.current.wrapped ();
+			self.calendar = Calendar.currentUsed.wrapped ();
 			super.init (coder: aDecoder);
 		}
 	}

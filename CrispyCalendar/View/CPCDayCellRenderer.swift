@@ -38,7 +38,7 @@ public protocol CPCDayCellRenderingContext {
 	/// Cell title.
 	var title: String { get };
 	/// Cell title attributes.
-	var titleAttributes: [NSAttributedStringKey: Any] { get };
+	var titleAttributes: [NSAttributedString.Key: Any] { get };
 	/// Cell title frame.
 	var titleFrame: CGRect { get };
 }
@@ -108,7 +108,7 @@ public extension CPCDayCellRenderer {
 	///   - attributes: Cell title attributes, e.g. foreground color or font.
 	///   - frame: Cell title target frame.
 	///   - context: Graphics context to draw in.
-	public func drawCellTitle (title: String, attributes: [NSAttributedStringKey: Any], frame: CGRect, in context: CGContext) {
+	public func drawCellTitle (title: String, attributes: [NSAttributedString.Key: Any], frame: CGRect, in context: CGContext) {
 		UIGraphicsPushContext (context);
 		context.saveGState ();
 		defer {

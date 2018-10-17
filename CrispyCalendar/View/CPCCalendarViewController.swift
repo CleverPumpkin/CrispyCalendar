@@ -105,14 +105,19 @@ open class CPCCalendarViewController: UIViewController {
 	}
 	
 	open override var view: UIView! {
-		willSet (newView) {
-			guard let newValue = newView as? CPCCalendarView else {
+		get {
+			return super.view;
+		}
+		set {
+			switch (newValue) {
+			case let newValue as CPCCalendarView:
+				newValue.calendarViewController = self;
+				fallthrough;
+			case nil:
+				super.view = newValue;
+			case .some (let newView):
 				fatalError ("[CrispyCalendar] Sanity check failure: \(CPCCalendarViewController.self) is designed to manage \(CPCCalendarView.self) instances; \(newView) is given");
 			}
-			if self.isViewLoaded {
-				self.calendarView.calendarViewController = nil;
-			}
-			newValue.calendarViewController = self;
 		}
 	}
 	
@@ -186,10 +191,17 @@ open class CPCCalendarViewController: UIViewController {
 		self.layoutWeekView ();
 	}
 	
+#if swift(>=4.2)
+	open override func didMove (toParent parent: UIViewController?) {
+		super.didMove (toParent: parent);
+		self.layoutWeekView ();
+	}
+#else
 	open override func didMove (toParentViewController parent: UIViewController?) {
 		super.didMove (toParentViewController: parent);
 		self.layoutWeekView ();
 	}
+#endif
 	
 	@available (iOS 11.0, *)
 	open override func viewSafeAreaInsetsDidChange () {

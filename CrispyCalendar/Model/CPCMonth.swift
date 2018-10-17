@@ -204,7 +204,7 @@ extension CPCMonth.BackingStorage: CPCCalendarUnitBackingType {
 public extension CPCMonth {
 	/// Value that represents a current month.
 	public static var current: CPCMonth {
-		return self.init (containing: Date (), calendar: .current);
+		return self.init (containing: Date (), calendar: .currentUsed);
 	}
 	
 	/// Value that represents a next month.

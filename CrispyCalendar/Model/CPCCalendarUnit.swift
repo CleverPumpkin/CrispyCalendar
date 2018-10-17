@@ -106,7 +106,7 @@ extension CPCCalendarUnitBase {
 	}
 	
 	public init (containing date: Date, timeZone: TimeZone) {
-		self.init (containing: date, timeZone: timeZone, calendar: .current);
+		self.init (containing: date, timeZone: timeZone, calendar: .currentUsed);
 	}
 	
 	public init (containing date: Date) {
@@ -115,7 +115,7 @@ extension CPCCalendarUnitBase {
 	
 	public init (containing date: Date, timeZone: TimeZone, calendarIdentifier: Calendar.Identifier) {
 		var calendar = Calendar (identifier: calendarIdentifier);
-		calendar.locale = .current;
+		calendar.locale = .currentUsed;
 		self.init (containing: date, timeZone: timeZone, calendar: calendar);
 	}
 	
@@ -207,7 +207,7 @@ extension CPCCalendarUnit {
 	}
 	
 	public var debugDescription: String {
-		let intervalFormatter = self.dateIntervalFormatter, calendar = self.calendar, calendarID = calendar.identifier, locale = calendar.locale ?? .current;
+		let intervalFormatter = self.dateIntervalFormatter, calendar = self.calendar, calendarID = calendar.identifier, locale = calendar.locale ?? .currentUsed;
 		return "<\(Self.self): \(intervalFormatter.string (from: self.start, to: self.end)); backing: \(self.backingValue); calendar: \(locale.localizedString (for: calendarID) ?? "\(calendarID)"); locale: \(locale.identifier)>";
 	}
 }
@@ -252,5 +252,19 @@ fileprivate extension DateIntervalFormatter {
 			$0 [key] = formatter;
 			return formatter;
 		};
+	}
+}
+
+internal extension Locale {
+	internal static var currentUsed: Locale {
+		return Bundle.main.preferredLocalizations.first.map (Locale.init) ?? .current;
+	}
+}
+
+internal extension Calendar {
+	internal static var currentUsed: Calendar {
+		var result = Calendar.current;
+		result.locale = .currentUsed;
+		return result;
 	}
 }

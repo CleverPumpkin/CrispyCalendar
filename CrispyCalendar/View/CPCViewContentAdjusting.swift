@@ -48,8 +48,8 @@ extension CPCViewContentAdjusting {
 				NotificationCenter.default.removeObserver (observer);
 			case (nil, true):
 				self.adjustValuesForCurrentContentSizeCategory ();
-				self.contentSizeCategoryObserver = NotificationCenter.default.addObserver (forName: .UIContentSizeCategoryDidChange, object: nil, queue: nil) { notification in
-					if let category = notification.userInfo? [UIContentSizeCategoryNewValueKey] as? UIContentSizeCategory {
+				self.contentSizeCategoryObserver = NotificationCenter.default.addObserver (forName: UIContentSizeCategory.didChangeNotification, object: nil, queue: nil) { notification in
+					if let category = notification.userInfo? [UIContentSizeCategory.newValueUserInfoKey] as? UIContentSizeCategory {
 						self.adjustValues (for: category);
 					} else {
 						self.adjustValuesForCurrentContentSizeCategory ();
@@ -90,3 +90,9 @@ extension CPCViewContentAdjusting {
 	}
 }
 
+#if !swift(>=4.2)
+fileprivate extension UIContentSizeCategory {
+	fileprivate static let didChangeNotification = NSNotification.Name.UIContentSizeCategoryDidChange;
+	fileprivate static let newValueUserInfoKey = UIContentSizeCategoryNewValueKey;
+}
+#endif

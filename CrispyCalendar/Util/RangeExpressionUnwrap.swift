@@ -87,15 +87,9 @@ extension RangeExpressionUnwrap where Index == CPCDay {
 	}
 }
 
-fileprivate struct FixedWidthIntegerRangeExpressionUnwrap <T>: RangeExpressionUnwrap where T: FixedWidthInteger, T.Stride: SignedInteger {
-	fileprivate typealias Index = T;
-
-	fileprivate let indices = T.min ..< T.max;	
-}
-
-extension RangeExpression where Bound: FixedWidthInteger, Bound.Stride: SignedInteger {
+extension RangeExpression where Bound: FixedWidthInteger {
 	internal var unwrapped: Range <Bound> {
-		return self.relative (to: FixedWidthIntegerRangeExpressionUnwrap <Bound> ());
+		return self.relative (to: Bound.min ..< Bound.max);
 	}
 }
 

@@ -210,7 +210,9 @@ extension RangeBaseProtocol {
 }
 
 extension Range: RangeBaseProtocol {}
+#if !compiler(>=4.2)
 extension CountableRange: RangeBaseProtocol {}
+#endif
 
 internal protocol ClosedRangeBaseProtocol: BoundedRangeProtocol {
 	init <R> (_ range: R) where R: ClosedRangeBaseProtocol, R.Bound == Bound;
@@ -223,8 +225,11 @@ extension ClosedRangeBaseProtocol {
 }
 
 extension ClosedRange: ClosedRangeBaseProtocol {}
+#if !compiler(>=4.2)
 extension CountableClosedRange: ClosedRangeBaseProtocol {}
+#endif
 
+#if !swift(>=4.2)
 internal extension RangeBaseProtocol where Bound: BinaryInteger {
 	internal init <R> (_ range: R) where R: RangeExpression, R.Bound: FixedWidthInteger {
 		self.init (Range <R.Bound> (range));
@@ -248,3 +253,5 @@ internal extension ClosedRangeBaseProtocol where Bound: FixedWidthInteger, Bound
 		self.init (range.unwrapped);
 	}
 }
+#endif
+

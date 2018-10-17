@@ -34,7 +34,7 @@ extension CPCCompoundCalendarUnit {
 	///   - calendar: Calendar to perform calculations with.
 	/// - Returns: All indices that are valid for compound unit that contains a date represented by given `value`.
 	internal static func indices (for value: BackingType, using calendar: Calendar) -> CountableRange <Int> {
-		return CountableRange (guarantee (calendar.range (of: Element.representedUnit, in: self.representedUnit, for: value.startDate (using: calendar))));
+		return guarantee (calendar.range (of: Element.representedUnit, in: self.representedUnit, for: value.startDate (using: calendar)));
 	}
 	
 	public var startIndex: Int {

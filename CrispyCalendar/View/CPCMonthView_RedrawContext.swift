@@ -139,7 +139,7 @@ internal extension CPCMonthView {
 		private let formatter: DateFormatter;
 		private let titleFrame: CGRect;
 		private let titleContentFrame: CGRect;
-		private let titleAttributes: [NSAttributedStringKey: Any];
+		private let titleAttributes: [NSAttributedString.Key: Any];
 	}
 	
 	fileprivate struct GridRedrawContext {
@@ -159,7 +159,7 @@ internal extension CPCMonthView {
 		private let dayFormatter: DateFormatter;
 		private let separatorColor: UIColor;
 		private let cellTitleHeight: CGFloat;
-		private let cellTitleAttributes: [NSAttributedStringKey: Any];
+		private let cellTitleAttributes: [NSAttributedString.Key: Any];
 		private let cellRenderer: CellRenderer;
 		private let cellBackgroundColorGetter: (DayCellState) -> UIColor?;
 	}
@@ -321,7 +321,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		fileprivate var title: String {
 			return self.parent.dayFormatter.string (from: self.day.start);
 		}
-		fileprivate var titleAttributes: [NSAttributedStringKey: Any] {
+		fileprivate var titleAttributes: [NSAttributedString.Key: Any] {
 			return self.parent.cellTitleAttributes;
 		}
 		fileprivate var titleFrame: CGRect {

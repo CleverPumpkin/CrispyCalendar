@@ -27,10 +27,10 @@ extension CPCCalendarView {
 	internal class Cell: UICollectionViewCell {
 		internal var monthViewsManager: CPCMonthViewsManager? {
 			get {
-				return self.monthViewsManagerRef?.value;
+				return self.monthViewsManagerPtr?.pointee;
 			}
 			set {
-				self.monthViewsManagerRef = newValue.map { UnownedStorage (value: $0) };
+				self.monthViewsManagerPtr = UnsafePointer (to: newValue);
 			}
 		}
 		
@@ -45,9 +45,9 @@ extension CPCCalendarView {
 		
 		private unowned let monthView: CPCMonthView;
 		
-		private var monthViewsManagerRef: UnownedStorage <CPCMonthViewsManager>? {
+		private var monthViewsManagerPtr: UnsafePointer <CPCMonthViewsManager>? {
 			didSet {
-				guard oldValue !== self.monthViewsManagerRef else {
+				guard oldValue != self.monthViewsManagerPtr else {
 					return;
 				}
 				self.updateMonthViewManagingStatus ();
@@ -73,6 +73,10 @@ extension CPCCalendarView {
 			super.init (coder: aDecoder);
 			monthView.frame = self.contentView.bounds;
 			self.contentView.addSubview (monthView);
+		}
+		
+		deinit {
+			self.monthView.removeFromMultiMonthViewsManager ();
 		}
 		
 		internal override func apply (_ layoutAttributes: UICollectionViewLayoutAttributes) {

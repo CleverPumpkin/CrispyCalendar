@@ -23,7 +23,7 @@
 
 import Foundation
 
-internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: SignedInteger {
+internal struct GridIndices <Idx> where Idx: FixedWidthInteger {
 	internal struct Element: CustomStringConvertible, CustomDebugStringConvertible, Hashable, Strideable, ExpressibleByNilLiteral {
 		internal typealias Stride = Idx.Stride;
 		
@@ -113,8 +113,8 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 		
 #if swift(>=4.2)
 		
-		fileprivate let rows: CountableRange <Idx>;
-		fileprivate let columns: CountableRange <Idx>;
+		fileprivate let rows: Range <Idx>;
+		fileprivate let columns: Range <Idx>;
 		
 #else
 		
@@ -124,15 +124,15 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 			private let minCol: Idx;
 			private let maxCol: Idx;
 			
-			fileprivate var rows: CountableRange <Idx> {
+			fileprivate var rows: Range <Idx> {
 				return self.minRow ..< self.maxRow;
 			}
 			
-			fileprivate var columns: CountableRange <Idx> {
+			fileprivate var columns: Range <Idx> {
 				return self.minCol ..< self.maxCol;
 			}
 			
-			fileprivate init (rows: CountableRange <Idx>, columns: CountableRange <Idx>) {
+			fileprivate init (rows: Range <Idx>, columns: Range <Idx>) {
 				self.minRow = rows.lowerBound;
 				self.maxRow = rows.upperBound;
 				self.minCol = columns.lowerBound;
@@ -140,18 +140,18 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 			}
 		}
 		
-		fileprivate var rows: CountableRange <Idx> {
+		fileprivate var rows: Range <Idx> {
 			return self.hashableValues.rows;
 		}
 		
-		fileprivate var columns: CountableRange <Idx> {
+		fileprivate var columns: Range <Idx> {
 			return self.hashableValues.columns;
 		}
 		private let hashableValues: HashableValues;
 
 #endif
 
-		fileprivate var indices: CountableRange <Idx> {
+		fileprivate var indices: Range <Idx> {
 			return 0 ..< numericCast (self.rows.count * self.columns.count);
 		}
 		
@@ -180,7 +180,7 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 			return (lhs === rhs) || ((lhs.rows == rhs.rows) && (lhs.columns == rhs.columns));
 		}
 	
-		private init (rows: CountableRange <Idx>, columns: CountableRange <Idx>) {
+		private init (rows: Range <Idx>, columns: Range <Idx>) {
 #if swift(>=4.2)
 			self.rows = rows;
 			self.columns = columns;
@@ -190,7 +190,11 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 		}
 		
 		fileprivate convenience init <R1, R2> (rows: R1, columns: R2) where R1: RangeExpression, R1.Bound == Idx, R2: RangeExpression, R2.Bound == Idx {
-			self.init (rows: CountableRange (rows), columns: CountableRange (columns));
+#if swift(>=4.2)
+			self.init (rows: rows.unwrapped, columns: columns.unwrapped);
+#else
+			self.init (rows: Range (rows), columns: Range (columns));
+#endif
 		}
 		
 		fileprivate func index (forRow row: Idx, column: Idx) -> Element {
@@ -210,11 +214,11 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger, Idx.Stride: Sign
 		return self.info.max;
 	}
 	
-	internal var rows: CountableRange <Idx> {
+	internal var rows: Range <Idx> {
 		return self.info.rows;
 	}
 	
-	internal var columns: CountableRange <Idx> {
+	internal var columns: Range <Idx> {
 		return self.info.columns;
 	}
 	

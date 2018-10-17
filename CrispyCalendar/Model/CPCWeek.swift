@@ -104,7 +104,7 @@ extension CPCWeek: CPCCompoundCalendarUnit {
 	internal static let descriptionDateFormatTemplate = "wddMM";
 	
 	internal static func indices (for value: BackingStorage, using calendar: Calendar) -> CountableRange <Int> {
-		return CountableRange (guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value.date)));
+		return guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value.date));
 	}
 }
 
@@ -135,7 +135,7 @@ extension CPCWeek.BackingStorage: CPCCalendarUnitBackingType {
 public extension CPCWeek {
 	/// Value that represents a current week.
 	public static var current: CPCWeek {
-		return self.init (containing: Date (), calendar: .current);
+		return self.init (containing: Date (), calendar: .currentUsed);
 	}
 	
 	/// Value that represents next week.

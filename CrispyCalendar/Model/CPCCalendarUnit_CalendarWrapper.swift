@@ -24,7 +24,7 @@
 import Swift
 
 /// Wraps a Calendar instance into a reference type to enable short-circuit equality evaluation using identity operator.
-internal final class CPCCalendarWrapper: Hashable {
+internal final class CPCCalendarWrapper: NSObject {
 	private static var instances = UnfairThreadsafeStorage (UnownedDictionary <Calendar, CPCCalendarWrapper> ());
 	
 	/// Wrapped Calendar instance
@@ -32,9 +32,9 @@ internal final class CPCCalendarWrapper: Hashable {
 	private let calendarHashValue: Int;
 	
 #if swift(>=4.2)
-	internal func hash (into hasher: inout Hasher) {
-		hasher.combine (self.calendarHashValue);
-	}
+//	internal func hash (into hasher: inout Hasher) {
+//		hasher.combine (self.calendarHashValue);
+//	}
 #else
 	internal var hashValue: Int {
 		return self.calendarHashValue;

@@ -123,7 +123,7 @@ extension CPCCalendarView {
 		}
 	}
 	
-	private static func makeCollectionView (_ frame: CGRect, calendar: Calendar = .current) -> UICollectionView {
+	private static func makeCollectionView (_ frame: CGRect, calendar: Calendar = .currentUsed) -> UICollectionView {
 		let collectionView = UICollectionView (frame: frame.bounds, collectionViewLayout: Layout (calendar: calendar.wrapped ()));
 		collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight];
 		collectionView.allowsSelection = false;
@@ -315,7 +315,7 @@ extension CPCCalendarView /* UIScrollViewProtocol */ {
 		return self.collectionView.adjustedContentInset;
 	}
 	@available (iOS 11.0, *)
-	open var contentInsetAdjustmentBehavior: UIScrollViewContentInsetAdjustmentBehavior {
+	open var contentInsetAdjustmentBehavior: UIScrollView.ContentInsetAdjustmentBehavior {
 		get { return self.collectionView.contentInsetAdjustmentBehavior }
 		set { self.collectionView.contentInsetAdjustmentBehavior = newValue }
 	}

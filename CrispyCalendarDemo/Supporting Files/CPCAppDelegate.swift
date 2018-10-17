@@ -27,7 +27,7 @@ import UIKit
 internal class CPCAppDelegate: UIResponder, UIApplicationDelegate {
 	internal var window: UIWindow?;
 
-	internal func application (_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+	internal func application (_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 		let window = UIWindow (frame: UIScreen.main.bounds);
 		window.rootViewController = UINavigationController (rootViewController: CPCDashboardVC ());
 		window.makeKeyAndVisible ();

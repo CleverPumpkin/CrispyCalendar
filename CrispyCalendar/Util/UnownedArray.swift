@@ -23,32 +23,12 @@
 
 import Swift
 
-internal struct UnownedStorage <Element> where Element: AnyObject {
-	internal unowned let value: Element;
-	
-	internal static func === (lhs: UnownedStorage, rhs: UnownedStorage) -> Bool {
-		return lhs.value === rhs.value;
-	}
-
-	internal static func !== (lhs: UnownedStorage, rhs: UnownedStorage) -> Bool {
-		return !(lhs === rhs);
-	}
-}
-
-internal func === <Element> (lhs: UnownedStorage <Element>?, rhs: UnownedStorage <Element>?) -> Bool where Element: AnyObject {
-	return lhs?.value === rhs?.value;
-}
-
-internal func !== <Element> (lhs: UnownedStorage <Element>?, rhs: UnownedStorage <Element>?) -> Bool where Element: AnyObject {
-	return !(lhs === rhs);
-}
-
 internal struct UnownedArray <Element> where Element: AnyObject {
-	private var storage: [UnownedStorage <Element>];
+	private var storage: [UnsafePointer <Element>];
 }
 
 internal struct UnownedDictionary <Key, Value> where Key: Hashable, Value: AnyObject {
-	private var storage: [Key: UnownedStorage <Value>];
+	private var storage: [Key: UnsafePointer <Value>];
 }
 
 extension UnownedArray: MutableCollection, RangeReplaceableCollection {
@@ -64,10 +44,10 @@ extension UnownedArray: MutableCollection, RangeReplaceableCollection {
 
 	internal subscript (position: Index) -> Element {
 		get {
-			return self.storage [position].value;
+			return self.storage [position].pointee;
 		}
 		set (newValue) {
-			self.storage [position] = UnownedStorage (value: newValue);
+			self.storage [position] = UnsafePointer (to: newValue);
 		}
 	}
 	
@@ -84,12 +64,12 @@ extension UnownedArray: MutableCollection, RangeReplaceableCollection {
 	}
 	
 	internal mutating func replaceSubrange <C, R> (_ subrange: R, with newElements: C) where C: Collection, C.Element == Element, R: RangeExpression, R.Bound == Index {
-		self.storage.replaceSubrange (subrange, with: newElements.map { UnownedStorage (value: $0) });
+		self.storage.replaceSubrange (subrange, with: newElements.map (UnsafePointer.init));
 	}
 }
 
 extension UnownedDictionary: Collection, ExpressibleByDictionaryLiteral {
-	internal typealias Index = Dictionary <Key, UnownedStorage <Value>>.Index;
+	internal typealias Index = Dictionary <Key, UnsafePointer <Value>>.Index;
 	internal typealias Element = (key: Key, value: Value);
 	
 	internal var startIndex: Index {
@@ -105,24 +85,42 @@ extension UnownedDictionary: Collection, ExpressibleByDictionaryLiteral {
 	}
 	
 	internal init (dictionaryLiteral elements: (Key, Value)...) {
-		self.storage = Dictionary (uniqueKeysWithValues: elements.map { (key: $0.0, value: UnownedStorage (value: $0.1) ) });
+		self.storage = Dictionary (uniqueKeysWithValues: elements.map { (key: $0.0, value: UnsafePointer (to: $0.1)) });
 	}
 	
 	internal subscript (key: Key) -> Value? {
 		get {
-			return self.storage [key]?.value;
+			return self.storage [key]?.pointee;
 		}
 		set {
-			self.storage [key] = newValue.map { UnownedStorage (value: $0) };
+			self.storage [key] = UnsafePointer (to: newValue);
 		}
 	}
 	
 	internal subscript (position: Index) -> (key: Key, value: Value) {
 		let (key, value) = self.storage [position];
-		return (key: key, value: value.value);
+		return (key: key, value: value.pointee);
 	}
 	
 	internal func index (after i: Index) -> Index {
 		return self.storage.index (after: i);
+	}
+}
+
+internal extension UnsafePointer where Pointee: AnyObject {
+	internal var pointee: Pointee {
+		return Unmanaged <Pointee>.fromOpaque (self).takeUnretainedValue ();
+	}
+	
+	internal init (to object: Pointee) {
+		// Fuck, should be this so-o-o complicated?
+		self.init (Unmanaged.passUnretained (object).toOpaque ().assumingMemoryBound (to: Pointee.self));
+	}
+
+	internal init? (to object: Pointee?) {
+		guard let object = object else {
+			return nil;
+		}
+		self.init (to: object);
 	}
 }

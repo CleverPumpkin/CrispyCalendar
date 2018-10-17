@@ -50,7 +50,7 @@ internal extension CPCMonthView {
 				return .null;
 			}
 			
-			let result = UIEdgeInsetsInsetRect (titleFrame, self.titleMargins), scale = self.separatorWidth;
+			let result = titleFrame.inset (by: self.titleMargins), scale = self.separatorWidth;
 			return CGRect (
 				origin: CGPoint (x: result.minX.rounded (.up, scale: scale), y: result.minY.rounded (.up, scale: scale)),
 				size: CGSize (width: result.width.rounded (.down, scale: scale), height: result.height.rounded (.down, scale: scale))
@@ -190,3 +190,11 @@ internal extension CPCMonthView {
 		}
 	}
 }
+
+#if !swift(>=4.2)
+fileprivate extension CGRect {
+	fileprivate func inset (by insets: UIEdgeInsets) -> CGRect {
+		return UIEdgeInsetsInsetRect (self, insets);
+	}
+}
+#endif

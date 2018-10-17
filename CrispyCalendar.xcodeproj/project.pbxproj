@@ -52,6 +52,7 @@
 		438454D220D2880D00CDC209 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 438454D120D2880D00CDC209 /* LaunchScreen.xib */; };
 		438454D920D2A41B00CDC209 /* CPCCalendarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438454D820D2A41A00CDC209 /* CPCCalendarViewController.swift */; };
 		438AAB5B20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438AAB5A20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift */; };
+		439D98B02177BC6C00FFB7DD /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 439D98B22177BC6C00FFB7DD /* Localizable.strings */; };
 		43B53ABF20D4166000AA27BB /* CPCCalendarView_Layout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B53ABE20D4166000AA27BB /* CPCCalendarView_Layout.swift */; };
 		43B53AC120D4194900AA27BB /* CPCCalendarView_Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B53AC020D4194900AA27BB /* CPCCalendarView_Cell.swift */; };
 		43B53AC320D421D900AA27BB /* unsafeCastConvenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B53AC220D421D900AA27BB /* unsafeCastConvenience.swift */; };
@@ -136,6 +137,9 @@
 		438454D120D2880D00CDC209 /* LaunchScreen.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		438454D820D2A41A00CDC209 /* CPCCalendarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarViewController.swift; sourceTree = "<group>"; };
 		438AAB5A20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMultiMonthsViewProtocol.swift; sourceTree = "<group>"; };
+		439D98B12177BC6C00FFB7DD /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		439D98B32177BC8000FFB7DD /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
+		439D98B42177BC8800FFB7DD /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		43B53ABE20D4166000AA27BB /* CPCCalendarView_Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarView_Layout.swift; sourceTree = "<group>"; };
 		43B53AC020D4194900AA27BB /* CPCCalendarView_Cell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarView_Cell.swift; sourceTree = "<group>"; };
 		43B53AC220D421D900AA27BB /* unsafeCastConvenience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = unsafeCastConvenience.swift; sourceTree = "<group>"; };
@@ -222,6 +226,7 @@
 			children = (
 				438454C620D27E0E00CDC209 /* Assets.xcassets */,
 				438454D120D2880D00CDC209 /* LaunchScreen.xib */,
+				439D98B22177BC6C00FFB7DD /* Localizable.strings */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -406,6 +411,8 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				ru,
+				es,
 			);
 			mainGroup = 43AF4AC32092311B001A0F40;
 			productRefGroup = 43AF4ACE2092311B001A0F40 /* Products */;
@@ -424,6 +431,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				438454D220D2880D00CDC209 /* LaunchScreen.xib in Resources */,
+				439D98B02177BC6C00FFB7DD /* Localizable.strings in Resources */,
 				438454CC20D27E0E00CDC209 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -509,6 +517,19 @@
 			targetProxy = 438454D520D2A27200CDC209 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		439D98B22177BC6C00FFB7DD /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				439D98B12177BC6C00FFB7DD /* en */,
+				439D98B32177BC8000FFB7DD /* ru */,
+				439D98B42177BC8800FFB7DD /* es */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		438454C320D27DA700CDC209 /* Debug */ = {

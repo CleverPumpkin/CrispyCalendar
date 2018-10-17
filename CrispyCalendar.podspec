@@ -9,6 +9,7 @@ Pod::Spec.new do |spec|
 	spec.requires_arc = true
 	
 	spec.ios.deployment_target = '10.3'
+	spec.swift_version         = '4.2'
 	spec.source_files          = "#{spec.name}/{Util,Model,View,Supporting Files}/*.{h,m,swift}"
 	spec.module_map            = "#{spec.name}/Supporting Files/#{spec.name}.modulemap"
 	spec.frameworks            = 'UIKit'

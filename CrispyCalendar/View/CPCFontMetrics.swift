@@ -99,7 +99,7 @@ internal struct CPCFontMetrics {
 			self.fontMetrics = fontMetrics;
 		}
 		
-		fileprivate init (style: UIFontTextStyle) {
+		fileprivate init (style: UIFont.TextStyle) {
 			self.init (UIFontMetrics (forTextStyle: style));
 		}
 		
@@ -122,9 +122,9 @@ internal struct CPCFontMetrics {
 	
 	/// `CPCFontMetricsProtocol` implementation that relies on system font metrics (iOS 10.3 and older).
 	private struct LegacyFontMetrics: CPCFontMetricsProtocol {
-		private let textStyle: UIFontTextStyle;
+		private let textStyle: UIFont.TextStyle;
 		
-		fileprivate init (textStyle: UIFontTextStyle) {
+		fileprivate init (textStyle: UIFont.TextStyle) {
 			self.textStyle = textStyle;
 		}
 
@@ -145,7 +145,7 @@ internal struct CPCFontMetrics {
 	///
 	/// - Parameter textStyle: Text style that is used to scale various values.
 	/// - Returns: An instance of `FontMetrics` (iOS 11.0+) or `LegacyFontMetrics` (iOS 10.3 and older).
-	internal static func metrics (for textStyle: UIFontTextStyle) -> CPCFontMetricsProtocol {
+	internal static func metrics (for textStyle: UIFont.TextStyle) -> CPCFontMetricsProtocol {
 		if #available (iOS 11.0, *) {
 			return FontMetrics (style: textStyle);
 		} else {

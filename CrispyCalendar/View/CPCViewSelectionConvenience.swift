@@ -112,7 +112,7 @@ public extension CPCViewSelection {
 
 		case (.single (.some (let day1)), .single (.some (let day2))):
 			if day1.distance (to: day2).magnitude == 1 {
-				lhs = .range (CountableRange (bounds: day1, day2));
+				lhs = .range (Range (bounds: day1, day2));
 			} else {
 				lhs = .unordered ([day1, day2]);
 			}
@@ -273,11 +273,11 @@ extension CPCViewProtocol {
 	}
 	
 	public func select <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay {
-		self.selection += .range (CountableRange (range.unwrapped));
+		self.selection += .range (range.unwrapped);
 	}
 	
 	public func select <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay, R: RandomAccessCollection, R.Element == CPCDay {
-		self.selection += .range (CountableRange (range.unwrapped));
+		self.selection += .range (range.unwrapped);
 	}
 	
 	public func select <C> (_ ordered: C) where C: RandomAccessCollection, C.Element == CPCDay {
@@ -297,11 +297,11 @@ extension CPCViewProtocol {
 	}
 	
 	public func deselect <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay {
-		self.selection -= .range (CountableRange (range.unwrapped));
+		self.selection -= .range (range.unwrapped);
 	}
 	
 	public func deselect <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay, R: RandomAccessCollection, R.Element == CPCDay {
-		self.selection -= .range (CountableRange (range.unwrapped));
+		self.selection -= .range (range.unwrapped);
 	}
 	
 	public func deselect <C> (_ ordered: C) where C: RandomAccessCollection, C.Element == CPCDay {
