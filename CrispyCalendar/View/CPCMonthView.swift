@@ -179,9 +179,9 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 	
 	/// The object that acts as the selection delegate of this view.
-	open var selectionDelegate: SelectionDelegateType? {
+	open var selectionDelegate: CPCMonthViewSelectionDelegate? {
 		get {
-			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? SelectionDelegateType;
+			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? CPCMonthViewSelectionDelegate;
 		}
 		set {
 			if let newValue = newValue {
@@ -446,30 +446,28 @@ extension CPCMonthView: CPCViewContentAdjusting {
 extension CPCMonthView: CPCViewBackedByAppearanceStorage {}
 
 extension CPCMonthView: CPCViewDelegatingSelectionHandling {
-	public typealias SelectionDelegateType = CPCMonthViewSelectionDelegate;
-	
 	open var selection: CPCViewSelection {
 		get { return self.selectionHandler.selection }
 		set { self.setSelection (newValue) }
 	}
 
-	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
+	internal func selectionValue (of delegate: CPCMonthViewSelectionDelegate) -> Selection {
 		return delegate.selection;
 	}
 	
-	internal func setSelectionValue (_ selection: Selection, in delegate: SelectionDelegateType) {
+	internal func setSelectionValue (_ selection: Selection, in delegate: CPCMonthViewSelectionDelegate) {
 		delegate.selection = selection;
 	}
 	
-	internal func resetSelection (in delegate: SelectionDelegateType) {
+	internal func resetSelection (in delegate: CPCMonthViewSelectionDelegate) {
 		delegate.monthViewDidClearSelection (self);
 	}
 	
-	internal func handlerShouldSelectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+	internal func handlerShouldSelectDayCell (_ day: CPCDay, delegate: CPCMonthViewSelectionDelegate) -> Bool {
 		return delegate.monthView (self, shouldSelect: day);
 	}
 	
-	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: CPCMonthViewSelectionDelegate) -> Bool {
 		return delegate.monthView (self, shouldDeselect: day);
 	}
 }
@@ -493,6 +491,13 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 			self.init (month: month, separatorWidth: view.separatorWidth, titleFont: view.effectiveTitleFont, titleMargins: view.effectiveTitleMargins);
 		}
 
+		/// Initializes layout attributes for a specific month view.
+		///
+		/// - Parameters:
+		///   - month: Month to be rendered by the measured view.
+		///   - separatorWidth: Widtth of separator lines of the measured view. Typically is equal to `roundingScale`.
+		///   - titleFont: Font that the measure view would use to render month title.
+		///   - titleMargins: Additional month view title insets/outsets.
 		public init (month: CPCMonth, separatorWidth: CGFloat, titleFont: UIFont, titleMargins: UIEdgeInsets) {
 			self.month = month;
 			self.separatorWidth = separatorWidth;

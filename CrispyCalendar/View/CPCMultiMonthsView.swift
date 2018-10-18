@@ -123,9 +123,9 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 	}
 	
 	/// The object that acts as the selection delegate of this view.
-	open var selectionDelegate: SelectionDelegateType? {
+	open var selectionDelegate: CPCMultiMonthsViewSelectionDelegate? {
 		get {
-			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? SelectionDelegateType;
+			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? CPCMultiMonthsViewSelectionDelegate;
 		}
 		set {
 			if let newValue = newValue {
@@ -210,28 +210,26 @@ extension CPCMultiMonthsView: CPCMultiMonthsViewProtocol {
 }
 
 extension CPCMultiMonthsView: CPCViewDelegatingSelectionHandling {
-	public typealias SelectionDelegateType = CPCMultiMonthsViewSelectionDelegate;
-	
 	open var selection: CPCViewSelection {
 		get { return self.selectionHandler.selection }
 		set { self.setSelection (newValue) }
 	}
 
-	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
+	internal func selectionValue (of delegate: CPCMultiMonthsViewSelectionDelegate) -> Selection {
 		return delegate.selection;
 	}
 	
-	internal func setSelectionValue (_ selection: Selection, in delegate: SelectionDelegateType) {
+	internal func setSelectionValue (_ selection: Selection, in delegate: CPCMultiMonthsViewSelectionDelegate) {
 		delegate.selection = selection;
 	}
 	
-	internal func resetSelection (in delegate: SelectionDelegateType) {}
+	internal func resetSelection (in delegate: CPCMultiMonthsViewSelectionDelegate) {}
 	
-	internal func handlerShouldSelectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+	internal func handlerShouldSelectDayCell (_ day: CPCDay, delegate: CPCMultiMonthsViewSelectionDelegate) -> Bool {
 		return delegate.multiMonthView (self, shouldSelect: day);
 	}
 	
-	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: CPCMultiMonthsViewSelectionDelegate) -> Bool {
 		return delegate.multiMonthView (self, shouldDeselect: day);
 	}
 }

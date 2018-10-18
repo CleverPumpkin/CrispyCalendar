@@ -262,17 +262,15 @@ extension CPCCalendarView: CPCViewProtocol {
 }
 
 extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
-	public typealias SelectionDelegateType = CPCCalendarViewSelectionDelegate;
-		
 	open var selection: CPCViewSelection {
 		get { return self.selectionHandler.selection }
 		set { self.setSelection (newValue) }
 	}
 
 	/// The object that acts as the selection delegate of this view.
-	open var selectionDelegate: SelectionDelegateType? {
+	open var selectionDelegate: CPCCalendarViewSelectionDelegate? {
 		get {
-			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? SelectionDelegateType;
+			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? CPCCalendarViewSelectionDelegate;
 		}
 		set {
 			if let newValue = newValue {
@@ -290,21 +288,21 @@ extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
 	/// Default implementation does nothing. Subclasses can override it to perform additional actions whenever selection changes.
 	@objc open func selectionDidChange () {}
 	
-	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
+	internal func selectionValue (of delegate: CPCCalendarViewSelectionDelegate) -> Selection {
 		return delegate.selection;
 	}
 	
-	internal func setSelectionValue (_ selection: Selection, in delegate: SelectionDelegateType) {
+	internal func setSelectionValue (_ selection: Selection, in delegate: CPCCalendarViewSelectionDelegate) {
 		delegate.selection = selection;
 	}
 	
-	internal func resetSelection (in delegate: SelectionDelegateType) {}
+	internal func resetSelection (in delegate: CPCCalendarViewSelectionDelegate) {}
 	
-	internal func handlerShouldSelectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+	internal func handlerShouldSelectDayCell (_ day: CPCDay, delegate: CPCCalendarViewSelectionDelegate) -> Bool {
 		return delegate.calendarView (self, shouldSelect: day);
 	}
 	
-	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: SelectionDelegateType) -> Bool {
+	internal func handlerShouldDeselectDayCell (_ day: CPCDay, delegate: CPCCalendarViewSelectionDelegate) -> Bool {
 		return delegate.calendarView (self, shouldDeselect: day);
 	}
 }
@@ -352,13 +350,14 @@ extension CPCCalendarView /* UIScrollViewProtocol */ {
 		get { return self.collectionView.scrollIndicatorInsets }
 		set { self.collectionView.scrollIndicatorInsets = newValue }
 	}
-	@available (iOS 11.0, *)
+
 	/// The insets derived from the content insets and the safe area of the scroll view.
+	@available (iOS 11.0, *)
 	open var adjustedContentInset: UIEdgeInsets {
 		return self.collectionView.adjustedContentInset;
 	}
-	@available (iOS 11.0, *)
 	/// The behavior for determining the adjusted content offsets.
+	@available (iOS 11.0, *)
 	open var contentInsetAdjustmentBehavior: UIScrollView.ContentInsetAdjustmentBehavior {
 		get { return self.collectionView.contentInsetAdjustmentBehavior }
 		set { self.collectionView.contentInsetAdjustmentBehavior = newValue }

@@ -35,10 +35,6 @@ public struct CPCWeek {
 
 	public let indices: CountableRange <Int>;
 
-	public var startDate: Date {
-		return self.backingValue.date;
-	}
-	
 	internal let backingValue: UnitBackingType;
 	internal let calendarWrapper: CalendarWrapper;
 	

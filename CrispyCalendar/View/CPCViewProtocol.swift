@@ -197,11 +197,6 @@ internal final class CPCViewAppearanceStorage {
 
 /// Views conforming to this protocol perform rendering of calendar cells
 public protocol CPCViewProtocol: AnyObject {
-	typealias TitleStyle = CPCViewTitleStyle;
-	typealias DayCellState = CPCDayCellState;
-	typealias Selection = CPCViewSelection;
-	typealias CellRenderer = CPCDayCellRenderer;
-	
 	/// The font used to display the title label.
 	var titleFont: UIFont { get set };
 	/// The color of the month title label.
@@ -234,6 +229,17 @@ public protocol CPCViewProtocol: AnyObject {
 	///   - backgroundColor: The color of the background to use for the specified state.
 	///   - state: The state that uses the specified color.
 	func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState);
+}
+
+public extension CPCViewProtocol {
+	/// See `CPCViewTitleStyle`.
+	public typealias TitleStyle = CPCViewTitleStyle;
+	/// See `CPCDayCellState`.
+	public typealias DayCellState = CPCDayCellState;
+	/// See `CPCViewSelection`.
+	public typealias Selection = CPCViewSelection;
+	/// See `CPCDayCellRenderer`.
+	public typealias CellRenderer = CPCDayCellRenderer;
 }
 
 internal extension CPCViewProtocol {

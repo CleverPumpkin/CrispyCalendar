@@ -59,11 +59,14 @@
 		}
 	],
 	"exclude": [
+		"CrispyCalendar/Util/UnownedArray.swift",
+		"CrispyCalendar/Util/GridIndices.swift",
 		"CrispyCalendar/Model/CPCCalendarUnit.swift",
 		"CrispyCalendar/Model/CPCCalendarUnit_CalendarWrapper.swift",
 		"CrispyCalendar/Model/CPCCompoundCalendarUnit.swift",
 		"CrispyCalendar/Model/CPCCalendarUnitSymbolImpl.swift",
 		"CrispyCalendar/View/CPCViewSelectionHandling.swift",
+		"CrispyCalendar/View/CPCCalendarView_Layout_Storage.swift",
 		"CrispyCalendar/View/CPCViewDelegatingSelectionHandler.swift"
 	],
 
