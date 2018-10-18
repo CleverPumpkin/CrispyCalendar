@@ -195,24 +195,44 @@ internal final class CPCViewAppearanceStorage {
 	internal var cellBackgroundColors = CPCViewDayCellStateBackgroundColors ();
 }
 
+/// Views conforming to this protocol perform rendering of calendar cells
 public protocol CPCViewProtocol: AnyObject {
 	typealias TitleStyle = CPCViewTitleStyle;
 	typealias DayCellState = CPCDayCellState;
 	typealias Selection = CPCViewSelection;
 	typealias CellRenderer = CPCDayCellRenderer;
 	
+	/// The font used to display the title label.
 	var titleFont: UIFont { get set };
+	/// The color of the month title label.
 	var titleColor: UIColor { get set };
+	/// The technique to use for aligning the month title.
 	var titleAlignment: NSTextAlignment { get set };
+	/// Style descirbing the exact format to use when displaying month name.
 	var titleStyle: TitleStyle { get set };
+	/// The inset or outset margins for the rectangle around the month title label.
 	var titleMargins: UIEdgeInsets { get set };
+	/// The font used to display each day's title.
 	var dayCellFont: UIFont { get set };
+	/// The color each day's title.
 	var dayCellTextColor: UIColor { get set };
+	/// The color of separator lines between days.
 	var separatorColor: UIColor { get set };
+	/// Value describing currently selected days in this view.
 	var selection: Selection { get set };
+	/// Renderer that is used to draw each day cell.
 	var cellRenderer: CellRenderer { get set };
 
+	/// Returns the day cell background color used for a state.
+	///
+	/// - Parameter state: The state that uses the background color.
 	func dayCellBackgroundColor (for state: DayCellState) -> UIColor?;
+	
+	/// Sets the background color of the day cell to use for the specified state.
+	///
+	/// - Parameters:
+	///   - backgroundColor: The color of the background to use for the specified state.
+	///   - state: The state that uses the specified color.
 	func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState);
 }
 

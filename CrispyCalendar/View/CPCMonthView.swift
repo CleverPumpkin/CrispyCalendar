@@ -27,14 +27,41 @@ fileprivate extension NSLayoutConstraint {
 	fileprivate static let placeholder = UIView ().widthAnchor.constraint (equalToConstant: 0.0);
 }
 
+/// Use a selection delegate (a custom object that implements this protocol) to modify behavior
+/// of a view when user interacts with it.
 public protocol CPCMonthViewSelectionDelegate: AnyObject {
+	/// Selected days associated with this view.
 	var selection: CPCViewSelection { get set };
 	
+	/// This method is called after view selection is being resert programmatically (e. g. by changing represented month).
+	///
+	/// - Parameter monthView: View for which selection was reset.
 	func monthViewDidClearSelection (_ monthView: CPCMonthView);
+	
+	/// Tells the delegate that a specific cell is about to be selected by user.
+	///
+	/// The delegate must updated stored `selection` value according to the desired selection scheme
+	/// and return whether the resulting selection was somehow shanged.
+	///
+	/// - Parameters:
+	///   - monthView: View to handle user interaction for.
+	///   - day: Day value rendered by the interacted cell.
+	/// - Returns: `true` if user actions have lead to an updated selection value; otherwise, `false`.
 	func monthView (_ monthView: CPCMonthView, shouldSelect day: CPCDay) -> Bool;
+	
+	/// Tells the delegate that a specific cell is about to be deselected by user.
+	///
+	/// The delegate must updated stored `selection` value according to the desired selection scheme
+	/// and return whether the resulting selection was somehow shanged.
+	///
+	/// - Parameters:
+	///   - monthView: View to handle user interaction for.
+	///   - day: Day value rendered by the interacted cell.
+	/// - Returns: `true` if user actions have lead to an updated selection value; otherwise, `false`.
 	func monthView (_ monthView: CPCMonthView, shouldDeselect day: CPCDay) -> Bool;
 }
 
+/// A view that is optimized for rendering a single month's days grid and a title.
 open class CPCMonthView: UIControl, CPCViewProtocol {
 	private typealias CPCViewSelectionHandlerObject = AnyObject & CPCViewSelectionHandlerProtocol;
 	
@@ -42,6 +69,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		return true;
 	}
 	
+	/// Month that is currently being rendered by this view.
 	open var month: CPCMonth? {
 		didSet {
 			guard self.month != oldValue else {
@@ -51,6 +79,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
+	/// Represents subset of the given month which should be rendered by the view.
 	open var enabledRegion: CountableRange <CPCDay>? {
 		didSet {
 			if (oldValue != self.enabledRegion) {
@@ -149,6 +178,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
+	/// The object that acts as the selection delegate of this view.
 	open var selectionDelegate: SelectionDelegateType? {
 		get {
 			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? SelectionDelegateType;
@@ -233,6 +263,11 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		self.commonInit ();
 	}
 	
+	/// Initializes and returns a newly allocated view object with the specified months to be renered and frame rectangle.
+	///
+	/// - Parameters:
+	///   - frame: Frame to be used by this view.
+	///   - month: Month value to be rendered by the view.
 	public convenience init (frame: CGRect, month: CPCMonth?) {
 		self.init (frame: frame);
 		
@@ -262,6 +297,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
+	/// Exposes `dayCellBackgroundColor (for:)` to be used from Objective C code.
 	@objc dynamic internal func dayCellBackgroundColor (for backgroundStateValue: Int, isTodayValue: Int) -> UIColor? {
 		return self.dayCellBackgroundColorImpl (backgroundStateValue, isTodayValue);
 	}
@@ -274,6 +310,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		return self.appearanceStorage.cellBackgroundColors [state];
 	}
 	
+	/// Exposes `setDayCellBackgroundColor (_:for:)` to be used from Objective C code.
 	@objc dynamic internal func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for backgroundStateValue: Int, isTodayValue: Int) {
 		return self.setDayCellBackgroundColorImpl (backgroundColor, backgroundStateValue, isTodayValue);
 	}
@@ -318,6 +355,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		return self.sizeThatFits (size, attributes: attributes);
 	}
 	
+	/// Discard a custom cell renderer that was set previously and use standard one supplied bny the library.
 	public func setDefaultCellRendeder () {
 		self.cellRenderer = CPCDefaultDayCellRenderer ();
 	}
@@ -446,6 +484,7 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 			return self.separatorWidth;
 		}
 		
+		/// Initializes layout attributes to match currently use values in the specified view.
 		public init? (_ view: CPCMonthView) {
 			guard let month = view.month, !month.isEmpty else {
 				return nil;

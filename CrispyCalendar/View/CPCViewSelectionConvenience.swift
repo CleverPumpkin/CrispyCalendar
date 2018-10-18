@@ -24,6 +24,10 @@
 import Foundation
 
 public extension CPCViewSelection {
+	/// Check whether a day is selected given all selected days.
+	///
+	/// - Parameter day: The day to check for containment.
+	/// - Returns: `true` if given is contained in the selection; otherwise, `false`.
 	public func isDaySelected (_ day: CPCDay) -> Bool {
 		switch (self) {
 		case .none:
@@ -39,6 +43,7 @@ public extension CPCViewSelection {
 		}
 	}
 	
+	/// A Boolean value indicating whether the selection does not contain any day.
 	public var isEmpty: Bool {
 		switch (self) {
 		case .none, .single (nil):
@@ -69,10 +74,17 @@ public extension CPCViewSelection {
 		}
 	}
 	
+	/// Returns set of days contained by exactly one of given selection values.
+	///
+	/// - Parameter other: Selection value to calculate difference from.
+	/// - Returns: Difference between selection values.
 	public func difference (_ other: CPCViewSelection) -> Set <CPCDay> {
 		return self.selectedDays.symmetricDifference (other.selectedDays);
 	}
 	
+	/// Returns a subset of this selection that contains days matching sepcified date constraints.
+	///
+	/// - Parameter datesRange: The limits to clamp this selection to.
 	public func clamped <R> (to datesRange: R) -> CPCViewSelection where R: CPCDateInterval {
 		switch (self) {
 		case .single (.some (let day)) where !datesRange.contains (day):
@@ -92,6 +104,11 @@ public extension CPCViewSelection {
 }
 
 public extension CPCViewSelection {
+	/// Forms union of two values and stores the result in the left-hand-side variable.
+	///
+	/// - Parameters:
+	///   - lhs: The first value to unite.
+	///   - rhs: The second value to unite.
 	public static func += (lhs: inout CPCViewSelection, rhs: CPCViewSelection) {
 		switch (lhs, rhs) {
 		case (let lhs, let rhs) where lhs == rhs:
@@ -172,13 +189,23 @@ public extension CPCViewSelection {
 		}
 	}
 	
+	/// Forms union of two values and returns it leaving otriginal values unchanged.
+	///
+	/// - Parameters:
+	///   - lhs: The first value to unite.
+	///   - rhs: The second value to unite.
 	public static func + (lhs: CPCViewSelection, rhs: CPCViewSelection) -> CPCViewSelection {
 		var result = lhs;
 		result += rhs;
 		return result;
 	}
 
-	public static func -= (lhs: inout CPCViewSelection, rhs: CPCViewSelection) {
+	/// Subtracts from the first value days that are selected byn the second one and stores the result in the left-hand-side variable.
+	///
+	/// - Parameters:
+	///   - lhs: Selection value to subtract days from.
+	///   - rhs:Value indicating days that should not be selected.
+	public static  func -= (lhs: inout CPCViewSelection, rhs: CPCViewSelection) {
 		switch (lhs, rhs) {
 		case (_, .none), (.none, _), (_, .single (nil)), (.single (nil), _), (.unordered ([]), _), (_, .unordered ([])), (.ordered ([]), _), (.ordered ([]), _):
 			return;
@@ -244,6 +271,12 @@ public extension CPCViewSelection {
 		}
 	}
 
+
+	/// Calculates selection that contains all of the left-hand-side days except those contained in right-hand-side one and returns it leaving original unchanged.
+	///
+	/// - Parameters:
+	///   - lhs: Selection value to subtract days from.
+	///   - rhs:Value indicating days that should not be selected.
 	public static func - (lhs: CPCViewSelection, rhs: CPCViewSelection) -> CPCViewSelection {
 		var result = lhs;
 		result -= rhs;
@@ -252,6 +285,7 @@ public extension CPCViewSelection {
 }
 
 extension CPCViewProtocol {
+	/// Boolean flag indicating whether selection may be extended by user.
 	public var allowsSelection: Bool {
 		get {
 			return self.selection != .none;
@@ -264,50 +298,86 @@ extension CPCViewProtocol {
 		}
 	}
 	
+	/// Appends a single day to the specified selection.
+	///
+	/// - Parameter day: Day to append.
 	public func select (_ day: CPCDay) {
 		self.selection += .single (day);
 	}
 	
+	/// Appends a range of cosecutive days to the specified selection.
+	///
+	/// - Parameter range: Days to append.
 	public func select <R> (_ range: R) where R: CPCDateInterval {
 		self.selection += .range (CPCDay (containing: range.start) ..< CPCDay (containing: range.end));
 	}
 	
+	/// Appends a range of cosecutive days to the specified selection.
+	///
+	/// - Parameter range: Days to append.
 	public func select <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay {
 		self.selection += .range (range.unwrapped);
 	}
 	
+	/// Appends days contained withing given collection to the specified selection.
+	///
+	/// - Parameter range: Days to append.
 	public func select <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay, R: RandomAccessCollection, R.Element == CPCDay {
 		self.selection += .range (range.unwrapped);
 	}
 	
+	/// Appends days from given collection to the specified selection.
+	///
+	/// - Parameter ordered: Days to append.
 	public func select <C> (_ ordered: C) where C: RandomAccessCollection, C.Element == CPCDay {
 		self.selection += .ordered (Array (ordered));
 	}
 	
+	/// Appends days from given collection to the specified selection.
+	///
+	/// - Parameter unordered: Days to append.
 	public func select <C> (_ unordered: C) where C: Collection, C: SetAlgebra, C.Element == CPCDay {
 		self.selection += .unordered (Set (unordered));
 	}
 	
+	/// Removes a single day from the specified selection.
+	///
+	/// - Parameter day: Day to remove from selection.
 	public func deselect (_ day: CPCDay) {
 		self.selection -= .single (day);
 	}
 	
+	/// Removes a consecutive range of days from the specified selection.
+	///
+	/// - Parameter range: Days to remove from selection.
 	public func deselect <R> (_ range: R) where R: CPCDateInterval {
 		self.selection -= .range (CPCDay (containing: range.start) ..< CPCDay (containing: range.end));
 	}
 	
+	/// Removes a consecutive range of days from the specified selection.
+	///
+	/// - Parameter range: Days to remove from selection.
 	public func deselect <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay {
 		self.selection -= .range (range.unwrapped);
 	}
 	
+	/// Removes a consecutive range of days from the specified selection.
+	///
+	/// - Parameter range: Days to remove from selection.
 	public func deselect <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay, R: RandomAccessCollection, R.Element == CPCDay {
 		self.selection -= .range (range.unwrapped);
 	}
 	
+	/// Removes days from given collection from the specified selection.
+	///
+	/// - Parameter ordered: Days to append.
 	public func deselect <C> (_ ordered: C) where C: RandomAccessCollection, C.Element == CPCDay {
 		self.selection -= .ordered (Array (ordered));
 	}
 	
+	/// Removes days from given collection from the specified selection.
+	///
+	/// - Parameter ordered: Days to append.
 	public func deselect <C> (_ unordered: C) where C: Collection, C: SetAlgebra, C.Element == CPCDay {
 		self.selection -= .unordered (Set (unordered));
 	}

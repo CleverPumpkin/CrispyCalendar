@@ -67,19 +67,53 @@ fileprivate extension CGSize {
 	}
 }
 
+/// A type that can be used to calculate size of a view conforming to `CPCViewMeasuring`
 public protocol CPCViewLayoutAttributes {
+	/// Scale factor to use for resulting frames/sizes rounding. Typically should be equal to `1.0 / UIScreen.main.nativeScale`.
 	var roundingScale: CGFloat { get }
 }
 
+/// A view type that is capable of calculating fitting size for instances staticslly.
 public protocol CPCViewMeasuring {
+	/// A type containing information required for view size calculations.
 	associatedtype LayoutAttributes where LayoutAttributes: CPCViewLayoutAttributes;
 	
+	/// Asks the view type to calculate and return the size for its instance that best fits the specified size.
+	///
+	/// - Parameters:
+	///   - size: The size for which the view type should calculate its best-fitting size.
+	///   - attributes: Additional attributes to be taken into consideration by view type when calculating best-fitting size.
+	/// - Returns: A new size that is adequate for given input parameters.
 	static func sizeThatFits (_ size: CGSize, with attributes: LayoutAttributes) -> CGSize;
+	
+	/// Asks the view type to calculate and return width for its instance given a specific height constraint.
+	///
+	/// - Note: Default implementation calls `sizeThatFits (_:with:)` with infinite width.
+	/// - Parameters:
+	///   - height: The height for which the view type should calculate its best-fitting width.
+	///   - attributes: Additional attributes to be taken into consideration by view type when calculating best-fitting width.
+	/// - Returns: A new width that is adequate for given input parameters.
 	static func widthThatFits (height: CGFloat, with attributes: LayoutAttributes) -> CGFloat;
+	
+	/// Asks the view type to calculate and return height for its instance given a specific width constraint.
+	///
+	/// - Note: Default implementation calls `sizeThatFits (_:with:)` with infinite height.
+	/// - Parameters:
+	///   - width: The width for which the view type should calculate its best-fitting height.
+	///   - attributes: Additional attributes to be taken into consideration by view type when calculating best-fitting height.
+	/// - Returns: A new height that is adequate for given input parameters.
 	static func heightThatFits (width: CGFloat, with attributes: LayoutAttributes) -> CGFloat;
 
+	/// Current layout attributes associated with this view instance.
 	var layoutAttributes: LayoutAttributes? { get };
 	
+	/// Asks the view to calculate and return the size that best fits the specified size.
+	///
+	/// - Note: Default implementation calls type method with same name.
+	/// - Parameters:
+	///   - size: The size for which the view should calculate its best-fitting size.
+	///   - attributes: Additional attributes to be taken into consideration when calculating best-fitting size.
+	/// - Returns: A new size that is adequate for given input parameters.
 	func sizeThatFits (_ size: CGSize, attributes: LayoutAttributes) -> CGSize;
 }
 
@@ -97,11 +131,12 @@ public extension CPCViewMeasuring {
 	}
 }
 
+/// A view type that sizes instances using linear equation.
 public protocol CPCFixedAspectRatioView: CPCViewMeasuring {
-	/// Returns coefficients of equation ViewHeight = K x ViewWidth + C to fit content.
+	/// Returns coefficients of equation `ViewHeight = K x ViewWidth + C` to fit content.
 	///
-	/// - Parameter attributes: view-specific layout attributes to perform layout calculations.
-	/// - Returns: multiplier K and constant C.
+	/// - Parameter attributes: View-specific layout attributes to perform layout calculations.
+	/// - Returns: Multiplier K and constant C.
 	static func aspectRatioComponents (for attributes: LayoutAttributes) -> (multiplier: CGFloat, constant: CGFloat)?;
 }
 
@@ -142,6 +177,10 @@ extension CPCFixedAspectRatioView {
 }
 
 extension CPCFixedAspectRatioView where Self: UIView {
+	/// Initialize `NSLayoutConstraint` expressing dependency between view dimensions.
+	///
+	/// - Parameter attributes: Attributes for which instance aspect ratio is calculated.
+	/// - Returns: A new `NSLaayoutConstraint` that ensures adequate sizing of this view.
 	public func aspectRatioLayoutConstraint (for attributes: LayoutAttributes) -> NSLayoutConstraint {
 		let result: NSLayoutConstraint;
 		if let (multiplier, constant) = Self.aspectRatioComponents (for: attributes) {

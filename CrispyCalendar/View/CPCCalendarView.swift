@@ -29,14 +29,44 @@ internal extension CGRect {
 	}
 }
 
+/// Use a selection delegate (a custom object that implements this protocol) to modify behavior
+/// of a calendar view when user interacts with it.
 public protocol CPCCalendarViewSelectionDelegate: AnyObject {
+	/// Selected days associated with this view.
 	var selection: CPCViewSelection { get set };
 	
+	/// Tells the delegate that a specific cell is about to be selected by user.
+	///
+	/// The delegate must updated stored `selection` value according to the desired selection scheme
+	/// and return whether the resulting selection was somehow shanged.
+	///
+	/// - Parameters:
+	///   - calendarView: View to handle user interaction for.
+	///   - day: Day value rendered by the interacted cell.
+	/// - Returns: `true` if user actions have lead to an updated selection value; otherwise, `false`.
 	func calendarView (_ calendarView: CPCCalendarView, shouldSelect day: CPCDay) -> Bool;
+
+	/// Tells the delegate that a specific cell is about to be deselected by user.
+	///
+	/// The delegate must updated stored `selection` value according to the desired selection scheme
+	/// and return whether the resulting selection was somehow shanged.
+	///
+	/// - Parameters:
+	///   - calendarView: View to handle user interaction for.
+	///   - day: Day value rendered by the interacted cell.
+	/// - Returns: `true` if user actions have lead to an updated selection value; otherwise, `false`.
 	func calendarView (_ calendarView: CPCCalendarView, shouldDeselect day: CPCDay) -> Bool;
 }
 
+/// A container view that internally manages and reuses `CPCMonthView` instances to provide
+/// an illusion of infinitely scrollable calendar interface.
+///
+/// Implementation details are  private and you are strongly discouraged from relying on
+/// any internal hierarchy of the container. Instead, use `CPCMultiMonthView` that provides
+/// the same unified selection handling and appearance attributes management, but assigning
+/// month values to specific views or arranging them visually remains under user control.
 open class CPCCalendarView: UIView {
+	/// Calendar to be used for various locale-dependent info.
 	open var calendar: Calendar {
 		get { return self.calendarWrapper.calendar }
 		set {
@@ -59,11 +89,13 @@ open class CPCCalendarView: UIView {
 		}
 	}
 	
+	/// The minimum date that a calendar view should present to user. Defaults to `nil` meaning no lower limit.
 	open var minimumDate: Date? {
 		get { return self.layout.minimumDate }
 		set { self.layout.minimumDate = newValue }
 	}
 	
+	/// The maximum date that a calendar view should present to user. Defaults to `nil` meaning no upper limit.
 	open var maximumDate: Date? {
 		get { return self.layout.maximumDate }
 		set { self.layout.maximumDate = newValue }
@@ -237,6 +269,7 @@ extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
 		set { self.setSelection (newValue) }
 	}
 
+	/// The object that acts as the selection delegate of this view.
 	open var selectionDelegate: SelectionDelegateType? {
 		get {
 			return (self.selectionHandler as? CPCViewDelegatingSelectionHandler)?.delegate as? SelectionDelegateType;
@@ -252,6 +285,9 @@ extension CPCCalendarView: CPCViewDelegatingSelectionHandling {
 		}
 	}
 	
+	/// Tells the view that selected days were changed in response to user actions.
+	///
+	/// Default implementation does nothing. Subclasses can override it to perform additional actions whenever selection changes.
 	@objc open func selectionDidChange () {}
 	
 	internal func selectionValue (of delegate: SelectionDelegateType) -> Selection {
@@ -284,59 +320,84 @@ extension CPCCalendarView: UIContentSizeCategoryAdjusting {}
 extension CPCCalendarView: CPCViewBackedByAppearanceStorage {}
 
 extension CPCCalendarView /* UIScrollViewProtocol */ {
+	/// A Boolean value that controls whether the scroll view bounces past the edge of content and back again.
 	open var bounces: Bool {
 		get { return self.collectionView.bounces }
 		set { self.collectionView.bounces = newValue }
 	}
+	/// A Boolean value that determines whether bouncing always occurs when vertical scrolling reaches the end of the content.
 	open var alwaysBounceVertical: Bool {
 		get { return self.collectionView.alwaysBounceVertical }
 		set { self.collectionView.alwaysBounceVertical = newValue }
 	}
+	/// A Boolean value that determines whether bouncing always occurs when horizontal scrolling reaches the end of the content view.
 	open var alwaysBounceHorizontal: Bool {
 		get { return self.collectionView.alwaysBounceHorizontal }
 		set { self.collectionView.alwaysBounceHorizontal = newValue }
 	}
 
+	/// A Boolean value that controls whether the scroll-to-today gesture is enabled.
 	open var scrollsToToday: Bool {
 		get { return self.collectionView.scrollsToTop }
 		set { self.collectionView.scrollsToTop = newValue }
 	}
 	
+	/// The custom distance that the content view is inset from the safe area or scroll view edges.
 	open var contentInset: UIEdgeInsets {
 		get { return self.collectionView.contentInset }
 		set { self.collectionView.contentInset = newValue }
 	}
+	/// The distance the scroll indicators are inset from the edge of the scroll view.
 	open var scrollIndicatorInsets: UIEdgeInsets {
 		get { return self.collectionView.scrollIndicatorInsets }
 		set { self.collectionView.scrollIndicatorInsets = newValue }
 	}
 	@available (iOS 11.0, *)
+	/// The insets derived from the content insets and the safe area of the scroll view.
 	open var adjustedContentInset: UIEdgeInsets {
 		return self.collectionView.adjustedContentInset;
 	}
 	@available (iOS 11.0, *)
+	/// The behavior for determining the adjusted content offsets.
 	open var contentInsetAdjustmentBehavior: UIScrollView.ContentInsetAdjustmentBehavior {
 		get { return self.collectionView.contentInsetAdjustmentBehavior }
 		set { self.collectionView.contentInsetAdjustmentBehavior = newValue }
 	}
 
+	/// A Boolean value that controls whether the horizontal scroll indicator is visible.
 	open var showsHorizontalScrollIndicator: Bool {
 		get { return self.collectionView.showsHorizontalScrollIndicator }
 		set { self.collectionView.showsHorizontalScrollIndicator = newValue }
 	}
+	/// A Boolean value that controls whether the vertical scroll indicator is visible.
 	open var showsVerticalScrollIndicator: Bool {
 		get { return self.collectionView.showsVerticalScrollIndicator }
 		set { self.collectionView.showsVerticalScrollIndicator = newValue }
 	}
 	
+	/// Scrolls a specific area of the content so that it is visible in the receiver.
+	///
+	/// - Parameters:
+	///   - date: A date that must be visible after scroll animation finishes.
+	///   - animated: `true` if the scrolling should be animated, `false` if it should be immediate.
 	open func scrollTo (date: Date, animated: Bool) {
 		return self.scrollTo (month: CPCMonth (containing: date, calendar: self.calendarWrapper), animated: animated);
 	}
 	
+	/// Scrolls a specific area of the content so that it is visible in the receiver.
+	///
+	/// - Parameters:
+	///   - day: A specific day that must be visible after scroll animation finishes.
+	///   - animated: `true` if the scrolling should be animated, `false` if it should be immediate.
 	open func scrollTo (day: CPCDay, animated: Bool) {
 		return self.scrollTo (month: CPCMonth (containing: day.start, calendar: self.calendarWrapper), animated: animated);
 	}
 	
+	/// Scrolls a specific area of the content so that it is visible in the receiver.
+	///
+	/// - Parameters:
+	///   - month: A specific month that must be visible after scroll animation finishes.
+	///   - animated: `true` if the scrolling should be animated, `false` if it should be immediate.
 	open func scrollTo (month: CPCMonth, animated: Bool) {
 		let scrollDestination: CPCMonth;
 		if let minimumDate = self.minimumDate, month.end <= minimumDate {

@@ -23,10 +23,32 @@
 
 import UIKit
 
+/// Use a selection delegate (a custom object that implements this protocol) to modify behavior
+/// of a calendar view controller when user interacts with it.
 public protocol CPCCalendarViewControllerSelectionDelegate: AnyObject {
+	/// Selected days associated with this view controller.
 	var selection: CPCViewSelection { get set };
 	
+	/// Tells the delegate that a specific cell is about to be selected by user.
+	///
+	/// The delegate must updated stored `selection` value according to the desired selection scheme
+	/// and return whether the resulting selection was somehow shanged.
+	///
+	/// - Parameters:
+	///   - calendarViewController: View controller to handle user interaction for.
+	///   - day: Day value rendered by the interacted cell.
+	/// - Returns: `true` if user actions have lead to an updated selection value; otherwise, `false`.
 	func calendarViewController (_ calendarViewController: CPCCalendarViewController, shouldSelect day: CPCDay) -> Bool;
+	
+	/// Tells the delegate that a specific cell is about to be deselected by user.
+	///
+	/// The delegate must updated stored `selection` value according to the desired selection scheme
+	/// and return whether the resulting selection was somehow shanged.
+	///
+	/// - Parameters:
+	///   - calendarView: View controller to handle user interaction for.
+	///   - day: Day value rendered by the interacted cell.
+	/// - Returns: `true` if user actions have lead to an updated selection value; otherwise, `false`.
 	func calendarViewController (_ calendarViewController: CPCCalendarViewController, shouldDeselect day: CPCDay) -> Bool;
 }
 
@@ -65,6 +87,8 @@ private enum SelectionStorage {
 	}
 }
 
+/// A view controller that manages a `CPCCalendarView` instance as its root view and optionally displays
+/// a supplementary view providing weekdays for the calendar view.
 open class CPCCalendarViewController: UIViewController {
 	private final class ViewDelegate: CPCCalendarViewSelectionDelegate {
 		fileprivate weak var viewControllerDelegate: CPCCalendarViewControllerSelectionDelegate?;
@@ -94,6 +118,7 @@ open class CPCCalendarViewController: UIViewController {
 		}
 	}
 	
+	/// The object that acts as the selection delegate of this view controller.
 	open weak var selectionDelegate: CPCCalendarViewControllerSelectionDelegate? {
 		get {
 			return self.viewDelegate?.viewControllerDelegate;
@@ -121,12 +146,15 @@ open class CPCCalendarViewController: UIViewController {
 		}
 	}
 	
+	/// The view that the controller manages.
 	open var calendarView: CPCCalendarView {
 		return unsafeDowncast (self.view);
 	}
 	
+	/// Week view that is rendered as part of calendar view.
 	open var weekView: CPCWeekView!;
 	
+	/// Selected days associated with this view controller.
 	open var selection: CPCViewSelection {
 		get {
 			return self.selectionStorage.selection;
@@ -136,6 +164,7 @@ open class CPCCalendarViewController: UIViewController {
 		}
 	}
 	
+	/// The minimum date that a calendar view controller should present to user. Defaults to `nil` meaning no lower limit.
 	open var minimumDate: Date? {
 		get {
 			return self.calendarView.minimumDate;
@@ -145,6 +174,7 @@ open class CPCCalendarViewController: UIViewController {
 		}
 	}
 	
+	/// The maximum date that a calendar view controller should present to user. Defaults to `nil` meaning no upper limit.
 	open var maximumDate: Date? {
 		get {
 			return self.calendarView.maximumDate;
@@ -209,7 +239,10 @@ open class CPCCalendarViewController: UIViewController {
 		self.layoutWeekView ();
 	}
 	
-	open func selectionDidChange () {}
+	/// Tells the view controller that selected days were changed in response to user actions.
+	///
+	/// Default implementation does nothing. Subclasses can override it to perform additional actions whenever selection changes.
+	@objc open func selectionDidChange () {}
 	
 	private func layoutWeekView () {
 		let weekView = self.weekView!, oldWeekViewHeight = weekView.bounds.height, weekViewTop: CGFloat;
