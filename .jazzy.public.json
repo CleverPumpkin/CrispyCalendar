@@ -35,6 +35,12 @@
 				"CPCCalendarView"
 			]
 		}, {
+			"name": "View Controller",
+			"children": [
+				"CPCCalendarViewController",
+				"CPCCalendarViewControllerSelectionDelegate"
+			]
+		}, {
 			"name": "Selection management",
 			"children": [
 				"CPCViewSelection",
