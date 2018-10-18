@@ -159,7 +159,7 @@ internal extension CPCMonthView {
 		private let dayFormatter: DateFormatter;
 		private let separatorColor: UIColor;
 		private let cellTitleHeight: CGFloat;
-		private let cellTitleAttributes: [NSAttributedString.Key: Any];
+		private let cellTitleAttributes: NSDictionary;
 		private let cellRenderer: CellRenderer;
 		private let cellBackgroundColorGetter: (DayCellState) -> UIColor?;
 	}
@@ -318,10 +318,10 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		fileprivate var frame: CGRect {
 			return self.parent.layout.cellFrames [self.cellIndex];
 		}
-		fileprivate var title: String {
-			return self.parent.dayFormatter.string (from: self.day.start);
+		fileprivate var title: NSString {
+			return self.parent.dayFormatter.string (from: self.day.start) as NSString;
 		}
-		fileprivate var titleAttributes: [NSAttributedString.Key: Any] {
+		fileprivate var titleAttributes: NSDictionary {
 			return self.parent.cellTitleAttributes;
 		}
 		fileprivate var titleFrame: CGRect {
@@ -392,11 +392,11 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		let dayCellFont = view.effectiveDayCellFont;
 		self.dayFormatter = DateFormatter.dequeueFormatter (for: month, dateFormatTemplate: "d");
 		self.cellTitleHeight = dayCellFont.lineHeight.rounded (.up, scale: layout.separatorWidth);
-		self.cellTitleAttributes = [
-			.font: dayCellFont,
-			.foregroundColor: view.dayCellTextColor,
-			.paragraphStyle: NSParagraphStyle.centeredWithTailTruncation,
-		];
+		self.cellTitleAttributes = NSDictionary (
+			objects: [dayCellFont, view.dayCellTextColor],
+			forKeys: [NSAttributedString.Key.font.rawValue as NSString, NSAttributedString.Key.foregroundColor.rawValue as NSString],
+			count: 2
+		) as NSDictionary;
 	}
 		
 	fileprivate func run (context ctx: CGContext) {

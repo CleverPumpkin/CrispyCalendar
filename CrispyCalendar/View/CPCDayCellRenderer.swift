@@ -36,9 +36,9 @@ public protocol CPCDayCellRenderingContext {
 	/// Cell frame.
 	var frame: CGRect { get }
 	/// Cell title.
-	var title: String { get };
+	var title: NSString { get };
 	/// Cell title attributes.
-	var titleAttributes: [NSAttributedString.Key: Any] { get };
+	var titleAttributes: NSDictionary { get };
 	/// Cell title frame.
 	var titleFrame: CGRect { get };
 }
@@ -108,15 +108,8 @@ public extension CPCDayCellRenderer {
 	///   - attributes: Cell title attributes, e.g. foreground color or font.
 	///   - frame: Cell title target frame.
 	///   - context: Graphics context to draw in.
-	public func drawCellTitle (title: String, attributes: [NSAttributedString.Key: Any], frame: CGRect, in context: CGContext) {
-		UIGraphicsPushContext (context);
-		context.saveGState ();
-		defer {
-			context.restoreGState ();
-			UIGraphicsPopContext ();
-		}
-		
-		NSAttributedString (string: title, attributes: attributes).draw (in: frame);
+	public func drawCellTitle (title: NSString, attributes: NSDictionary, frame: CGRect, in context: CGContext) {
+		__CrispyCalendar_CPCDayCellRenderer_drawCellTitle (title, attributes, frame, context);
 	}
 }
 

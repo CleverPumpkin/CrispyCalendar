@@ -222,8 +222,22 @@ extension CPCDay.BackingStorage: CPCCalendarUnitBackingType {
 public extension CPCDay {
 	/// Value that represents a current day.
 	public static var today: CPCDay {
-		return CPCDay (containing: Date (), calendar: .current);
+		if let cachedToday = self.cachedToday {
+			return cachedToday;
+		}
+		let today = CPCDay (containing: Date (), calendar: .current);
+		self.cachedToday = today;
+		return today;
 	}
+	
+	private static var cachedToday: CPCDay? {
+		didSet {
+			_ = self.dateChangeObserver;
+		}
+	}
+	private static let dateChangeObserver = NotificationCenter.default.addObserver (forName: .NSCalendarDayChanged, object: nil, queue: nil) { _ in
+		CPCDay.cachedToday = nil;
+	};
 	
 	/// Value that represents yesterday.
 	public static var yesterday: CPCDay {

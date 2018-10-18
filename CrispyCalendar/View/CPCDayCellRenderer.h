@@ -1,5 +1,5 @@
 //
-//  CrispyCalendar.h
+//  CPCDayCellRenderer.h
 //  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,6 +21,18 @@
 //  THE SOFTWARE.
 //
 
-#import <CrispyCalendar/CPCCalendarUnitSymbolStyle.h>
-#import <CrispyCalendar/CPCDayCellState.h>
-#import <CrispyCalendar/CPCViewTitleStyle.h>
+#import <UIKit/UIKit.h>
+
+NS_ASSUME_NONNULL_BEGIN
+
+__attribute__((always_inline)) NS_REFINED_FOR_SWIFT void CrispyCalendar_CPCDayCellRenderer_drawCellTitle (id title, id attributes, CGRect const frame, CGContextRef context) {
+	CGSize const titleSize = [(NSString *) title sizeWithAttributes:(NSDictionary <NSAttributedStringKey, id> *) attributes];
+	// TODO: RTL
+	CGPoint const titleOrigin = {
+		.x = round (CGRectGetMidX (frame) - titleSize.width / 2),
+		.y = round (CGRectGetMidY (frame) - titleSize.height / 2),
+	};
+	[(NSString *) title drawAtPoint:titleOrigin withAttributes:(NSDictionary <NSAttributedStringKey, id> *) attributes];
+}
+
+NS_ASSUME_NONNULL_END

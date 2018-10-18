@@ -47,14 +47,15 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 			guard self.month != oldValue else {
 				return;
 			}
-			self.needsFullAppearanceUpdate = true;
 			self.monthDidChange ();
 		}
 	}
 	
 	open var enabledRegion: CountableRange <CPCDay>? {
 		didSet {
-			self.setNeedsFullAppearanceUpdate ();
+			if (oldValue != self.enabledRegion) {
+				self.setNeedsFullAppearanceUpdate ();
+			}
 		}
 	}
 	
@@ -486,13 +487,17 @@ extension CPCMonthView {
 	}
 	
 	private func monthDidChange () {
+		self.setNeedsFullAppearanceUpdate ();
 		self.highlightedDayIndex = nil;
 		self.enabledRegion = nil;
 		self.selectionHandler = self.selectionHandler.clearingSelection ();
-		self.setNeedsFullAppearanceUpdate ();
 	}
 	
 	private func highlightedDayIndexDidChange (oldValue: CellIndex?) {
+		guard !self.needsFullAppearanceUpdate else {
+			return;
+		}
+		
 		guard oldValue != self.highlightedDayIndex else {
 			return;
 		}
@@ -506,6 +511,10 @@ extension CPCMonthView {
 	}
 	
 	private func selectionDidChange (oldValue: Selection) {
+		guard !self.needsFullAppearanceUpdate else {
+			return;
+		}
+		
 		guard let layout = self.layout, let month = self.month, let firstDayIndex = layout.cellFrames.indices.first else {
 			return;
 		}

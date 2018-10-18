@@ -91,9 +91,32 @@ extension CPCCalendarView.Layout: UICollectionViewDataSource {
 	internal func collectionView (_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		let cell = collectionView.dequeueReusableCell (withReuseIdentifier: .cellIdentifier, for: indexPath) as! CPCCalendarView.Cell;
 		cell.monthViewsManager = self.monthViewsManager;
-		let enabledRegionStart = CPCDay (containing: (self.minimumDate ?? .distantPast), calendar: self.calendar);
-		let enabledRegionEnd = CPCDay (containing: (self.maximumDate ?? .distantFuture), calendar: self.calendar);
-		cell.enabledRegion = enabledRegionStart ..< enabledRegionEnd;
+		
+		let minimumDay: CPCDay?, maximumDay: CPCDay?;
+		if let month = self.storage [indexPath]?.month {
+			if let minimumDate = self.minimumDate, month.start < minimumDate {
+				minimumDay = CPCDay (containing: minimumDate, calendar: self.calendar);
+			} else {
+				minimumDay = nil;
+			}
+			if let maximumDate = self.maximumDate, month.end > maximumDate {
+				maximumDay = CPCDay (containing: maximumDate, calendar: self.calendar);
+			} else {
+				maximumDay = nil;
+			}
+		} else {
+			(minimumDay, maximumDay) = (nil, nil);
+		}
+		switch (minimumDay, maximumDay) {
+		case (nil, nil):
+			cell.enabledRegion = nil;
+		case (.some (let minimumDay), nil):
+			cell.enabledRegion = minimumDay ..< CPCDay (containing: .distantFuture, calendar: self.calendar);
+		case (nil, .some (let maximumDay)):
+			cell.enabledRegion = CPCDay (containing: .distantPast, calendar: self.calendar) ..< maximumDay;
+		case (.some (let minimumDay), .some (let maximumDay)):
+			cell.enabledRegion = minimumDay ..< maximumDay;
+		}
 		return cell;
 	}
 }

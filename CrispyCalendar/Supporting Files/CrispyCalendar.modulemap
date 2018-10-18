@@ -1,6 +1,12 @@
 framework module CrispyCalendar {
 	umbrella header "CrispyCalendar.h"
 	
+	header "CPCCalendarUnitSymbolStyle.h"
+	header "CPCDayCellState.h"
+	header "CPCViewTitleStyle.h"
+	
+	private header "CPCDayCellRenderer.h"
+	
 	export *
 	module * { export * }
 }
