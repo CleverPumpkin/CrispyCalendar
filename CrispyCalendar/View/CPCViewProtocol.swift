@@ -203,7 +203,7 @@ public protocol CPCViewProtocol: AnyObject {
 	var titleColor: UIColor { get set };
 	/// The technique to use for aligning the month title.
 	var titleAlignment: NSTextAlignment { get set };
-	/// Style descirbing the exact format to use when displaying month name.
+	/// Style describing the exact format to use when displaying month name.
 	var titleStyle: TitleStyle { get set };
 	/// The inset or outset margins for the rectangle around the month title label.
 	var titleMargins: UIEdgeInsets { get set };

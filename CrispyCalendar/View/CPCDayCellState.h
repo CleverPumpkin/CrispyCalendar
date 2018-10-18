@@ -30,7 +30,7 @@ typedef NS_ENUM (uint8_t, CPCDayCellBackgroundState) {
 	/** Normal cell state, equivalent of `CPCDayCellState.BackgroundState.normal`.
 	 */
 	CPCDayCellBackgroundStateNormal,
-	/** Hightlighted cell state, equivalent of `CPCDayCellState.BackgroundState.highlighted`.
+	/** Highlighted cell state, equivalent of `CPCDayCellState.BackgroundState.highlighted`.
 	 */
 	CPCDayCellBackgroundStateHighlighted,
 	/** Selected cell state, equivalent of `CPCDayCellState.BackgroundState.selected`.

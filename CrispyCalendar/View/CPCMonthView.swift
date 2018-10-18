@@ -33,7 +33,7 @@ public protocol CPCMonthViewSelectionDelegate: AnyObject {
 	/// Selected days associated with this view.
 	var selection: CPCViewSelection { get set };
 	
-	/// This method is called after view selection is being resert programmatically (e. g. by changing represented month).
+	/// This method is called after view selection is being reset programmatically (e. g. by changing represented month).
 	///
 	/// - Parameter monthView: View for which selection was reset.
 	func monthViewDidClearSelection (_ monthView: CPCMonthView);
@@ -41,7 +41,7 @@ public protocol CPCMonthViewSelectionDelegate: AnyObject {
 	/// Tells the delegate that a specific cell is about to be selected by user.
 	///
 	/// The delegate must updated stored `selection` value according to the desired selection scheme
-	/// and return whether the resulting selection was somehow shanged.
+	/// and return whether the resulting selection was somehow changed.
 	///
 	/// - Parameters:
 	///   - monthView: View to handle user interaction for.
@@ -52,7 +52,7 @@ public protocol CPCMonthViewSelectionDelegate: AnyObject {
 	/// Tells the delegate that a specific cell is about to be deselected by user.
 	///
 	/// The delegate must updated stored `selection` value according to the desired selection scheme
-	/// and return whether the resulting selection was somehow shanged.
+	/// and return whether the resulting selection was somehow changed.
 	///
 	/// - Parameters:
 	///   - monthView: View to handle user interaction for.
@@ -263,7 +263,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		self.commonInit ();
 	}
 	
-	/// Initializes and returns a newly allocated view object with the specified months to be renered and frame rectangle.
+	/// Initializes and returns a newly allocated view object with the specified months to be rendered and frame rectangle.
 	///
 	/// - Parameters:
 	///   - frame: Frame to be used by this view.
@@ -355,7 +355,7 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		return self.sizeThatFits (size, attributes: attributes);
 	}
 	
-	/// Discard a custom cell renderer that was set previously and use standard one supplied bny the library.
+	/// Discard a custom cell renderer that was set previously and use standard one supplied by the library.
 	public func setDefaultCellRendeder () {
 		self.cellRenderer = CPCDefaultDayCellRenderer ();
 	}
@@ -495,7 +495,7 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 		///
 		/// - Parameters:
 		///   - month: Month to be rendered by the measured view.
-		///   - separatorWidth: Widtth of separator lines of the measured view. Typically is equal to `roundingScale`.
+		///   - separatorWidth: Width of separator lines of the measured view. Typically is equal to `roundingScale`.
 		///   - titleFont: Font that the measure view would use to render month title.
 		///   - titleMargins: Additional month view title insets/outsets.
 		public init (month: CPCMonth, separatorWidth: CGFloat, titleFont: UIFont, titleMargins: UIEdgeInsets) {

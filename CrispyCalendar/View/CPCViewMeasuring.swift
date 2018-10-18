@@ -73,7 +73,7 @@ public protocol CPCViewLayoutAttributes {
 	var roundingScale: CGFloat { get }
 }
 
-/// A view type that is capable of calculating fitting size for instances staticslly.
+/// A view type that is capable of calculating fitting size for instances statically.
 public protocol CPCViewMeasuring {
 	/// A type containing information required for view size calculations.
 	associatedtype LayoutAttributes where LayoutAttributes: CPCViewLayoutAttributes;
@@ -180,7 +180,7 @@ extension CPCFixedAspectRatioView where Self: UIView {
 	/// Initialize `NSLayoutConstraint` expressing dependency between view dimensions.
 	///
 	/// - Parameter attributes: Attributes for which instance aspect ratio is calculated.
-	/// - Returns: A new `NSLaayoutConstraint` that ensures adequate sizing of this view.
+	/// - Returns: A new `NSLayoutConstraint` that ensures adequate sizing of this view.
 	public func aspectRatioLayoutConstraint (for attributes: LayoutAttributes) -> NSLayoutConstraint {
 		let result: NSLayoutConstraint;
 		if let (multiplier, constant) = Self.aspectRatioComponents (for: attributes) {

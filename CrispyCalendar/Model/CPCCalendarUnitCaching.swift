@@ -78,7 +78,7 @@ internal extension CPCCompoundCalendarUnit {
 	
 	/// Query calendar units cache for position of subunit in this one.
 	///
-	/// - Parameter element: Subunbit, index of which is requested.
+	/// - Parameter element: Subunit, index of which is requested.
 	/// - Returns: Index of given subunit or nil if no such value was previously cached.
 	internal func cachedIndex (of element: Element) -> Index? {
 		return self.calendarWrapper.unitSpecificCacheInstance ().calendarUnit (self, indexOf: element);

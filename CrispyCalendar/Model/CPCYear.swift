@@ -23,7 +23,7 @@
 
 import Foundation
 
-/// Calendar unit that repsesents a year.
+/// Calendar unit that represents a year.
 public struct CPCYear {
 	internal struct BackingStorage: Hashable {
 		internal let year: Int;

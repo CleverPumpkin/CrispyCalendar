@@ -23,7 +23,7 @@
 
 import Foundation
 
-/// Calendar unit that repsesents a week.
+/// Calendar unit that represents a week.
 public struct CPCWeek {
 	internal struct BackingStorage: Hashable {
 		fileprivate let date: Date;

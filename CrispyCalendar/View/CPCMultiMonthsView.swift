@@ -32,7 +32,7 @@ public protocol CPCMultiMonthsViewSelectionDelegate: AnyObject {
 	/// Tells the delegate that a specific cell is about to be selected by user.
 	///
 	/// The delegate must updated stored `selection` value according to the desired selection scheme
-	/// and return whether the resulting selection was somehow shanged.
+	/// and return whether the resulting selection was somehow changed.
 	///
 	/// - Parameters:
 	///   - multiMonthView: View to handle user interaction for.
@@ -43,7 +43,7 @@ public protocol CPCMultiMonthsViewSelectionDelegate: AnyObject {
 	/// Tells the delegate that a specific cell is about to be deselected by user.
 	///
 	/// The delegate must updated stored `selection` value according to the desired selection scheme
-	/// and return whether the resulting selection was somehow shanged.
+	/// and return whether the resulting selection was somehow changed.
 	///
 	/// - Parameters:
 	///   - multiMonthView: View to handle user interaction for.
@@ -56,7 +56,7 @@ public protocol CPCMultiMonthsViewSelectionDelegate: AnyObject {
 ///
 /// After a month view has been added to the container, its appearance properties
 /// must no longer can be individually; their values are managed by the container
-/// view and are exactly same for all children. Selection and user interactiion is
+/// view and are exactly same for all children. Selection and user interaction is
 /// also managed by the container, which provides aggregate selection value, enabled
 /// region and supports selection that spans across multiple views. On the other hand,
 /// layout of the managed subviews is not performed and remains user responsibility.
@@ -202,7 +202,7 @@ extension CPCMultiMonthsView: CPCMultiMonthsViewProtocol {
 	
 	/// Removes the provided view from `monthViews` and stops it properties management.
 	///
-	/// - Note: This method does not remove mnonth view from the container's `subviews`.
+	/// - Note: This method does not remove month view from the container's `subviews`.
 	/// - Parameter monthView: Month view to remove.
 	@objc open func removeMonthView (_ monthView: CPCMonthView) {
 		self.monthViewsManager.removeMonthView (monthView);

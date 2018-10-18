@@ -32,7 +32,7 @@ public protocol CPCCalendarViewControllerSelectionDelegate: AnyObject {
 	/// Tells the delegate that a specific cell is about to be selected by user.
 	///
 	/// The delegate must updated stored `selection` value according to the desired selection scheme
-	/// and return whether the resulting selection was somehow shanged.
+	/// and return whether the resulting selection was somehow changed.
 	///
 	/// - Parameters:
 	///   - calendarViewController: View controller to handle user interaction for.
@@ -43,7 +43,7 @@ public protocol CPCCalendarViewControllerSelectionDelegate: AnyObject {
 	/// Tells the delegate that a specific cell is about to be deselected by user.
 	///
 	/// The delegate must updated stored `selection` value according to the desired selection scheme
-	/// and return whether the resulting selection was somehow shanged.
+	/// and return whether the resulting selection was somehow changed.
 	///
 	/// - Parameters:
 	///   - calendarView: View controller to handle user interaction for.

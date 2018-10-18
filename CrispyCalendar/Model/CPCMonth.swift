@@ -48,7 +48,7 @@ extension CPCMonthBackingStorageProtocol {
 	}
 }
 
-/// Calendar unit that repsesents a month.
+/// Calendar unit that represents a month.
 public struct CPCMonth {
 	internal struct BackingStorage: Hashable, CustomStringConvertible, CPCMonthBackingStorageProtocol {
 		fileprivate struct Packed: Hashable, CustomStringConvertible, CPCMonthBackingStorageProtocol {

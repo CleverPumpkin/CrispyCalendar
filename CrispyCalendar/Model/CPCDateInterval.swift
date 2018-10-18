@@ -31,7 +31,7 @@ public protocol CPCDateInterval: RangeExpression where Bound == Date {
 	var start: Date { get }
 	/// Earliest date that is not included in date interval and is later than `start` (analogous to `Range <Date>.upperBound`).
 	var end: Date { get }
-	/// Duration of date interval. Default implementation returns `self.end.timeIntervalSice (self.start)`.
+	/// Duration of date interval. Default implementation returns `self.end.timeIntervalSince (self.start)`.
 	var duration: TimeInterval { get }
 	
 	/// Returns a Boolean value indicating whether this date interval is fully contained or is equal to the given range.

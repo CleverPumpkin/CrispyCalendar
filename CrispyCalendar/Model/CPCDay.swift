@@ -49,7 +49,7 @@ extension CPCDayBackingStorageProtocol {
 	}
 }
 
-/// Calendar unit that repsesents a single day.
+/// Calendar unit that represents a single day.
 public struct CPCDay {
 		internal struct BackingStorage: Hashable, CPCDayBackingStorageProtocol {
 		fileprivate struct Packed: Hashable, CPCDayBackingStorageProtocol {
@@ -245,7 +245,7 @@ public extension CPCDay {
 	}
 	
 	/// Value that represents tomorrow.
-	public static var tommorow: CPCDay {
+	public static var tomorrow: CPCDay {
 		return self.today.prev;
 	}
 	

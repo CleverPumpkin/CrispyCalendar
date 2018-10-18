@@ -82,7 +82,7 @@ public extension CPCViewSelection {
 		return self.selectedDays.symmetricDifference (other.selectedDays);
 	}
 	
-	/// Returns a subset of this selection that contains days matching sepcified date constraints.
+	/// Returns a subset of this selection that contains days matching specified date constraints.
 	///
 	/// - Parameter datesRange: The limits to clamp this selection to.
 	public func clamped <R> (to datesRange: R) -> CPCViewSelection where R: CPCDateInterval {
@@ -142,7 +142,7 @@ public extension CPCViewSelection {
 			}
 		
 		case (.single (.some /*(let day)*/), .range /*(let range)*/):
-			lhs = rhs + lhs; // FIXME: merge with previous parrent when `SR-5377` is fixed.
+			lhs = rhs + lhs; // FIXME: merge with previous parent when `SR-5377` is fixed.
 			
 		case (.range (let range1), .range (let range2)):
 			if let contiguousRange = range1.contiguousUnion (range2) {
@@ -155,7 +155,7 @@ public extension CPCViewSelection {
 			lhs = .unordered (days.union (range));
 			
 		case (.unordered /*(let days)*/, .range /*(let range)*/):
-			lhs = rhs + lhs; // FIXME: merge with previous parrent when `SR-5377` is fixed.
+			lhs = rhs + lhs; // FIXME: merge with previous parent when `SR-5377` is fixed.
 		
 		case (.range (let range), .ordered (let days)):
 			lhs = .ordered (range.filter { !days.contains ($0) } + days);
@@ -167,7 +167,7 @@ public extension CPCViewSelection {
 			lhs = .unordered (days.union (day));
 			
 		case  (.single (.some /*(let day)*/), .unordered /*(let days)*/):
-			lhs = rhs + rhs; // FIXME: merge with previous parrent when `SR-5377` is fixed.
+			lhs = rhs + rhs; // FIXME: merge with previous parent when `SR-5377` is fixed.
 			
 		case (.unordered (let days1), .unordered (let days2)):
 			lhs = .unordered (days1.union (days2));
@@ -189,7 +189,7 @@ public extension CPCViewSelection {
 		}
 	}
 	
-	/// Forms union of two values and returns it leaving otriginal values unchanged.
+	/// Forms union of two values and returns it leaving original values unchanged.
 	///
 	/// - Parameters:
 	///   - lhs: The first value to unite.
@@ -305,21 +305,21 @@ extension CPCViewProtocol {
 		self.selection += .single (day);
 	}
 	
-	/// Appends a range of cosecutive days to the specified selection.
+	/// Appends a range of consecutive days to the specified selection.
 	///
 	/// - Parameter range: Days to append.
 	public func select <R> (_ range: R) where R: CPCDateInterval {
 		self.selection += .range (CPCDay (containing: range.start) ..< CPCDay (containing: range.end));
 	}
 	
-	/// Appends a range of cosecutive days to the specified selection.
+	/// Appends a range of consecutive days to the specified selection.
 	///
 	/// - Parameter range: Days to append.
 	public func select <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay {
 		self.selection += .range (range.unwrapped);
 	}
 	
-	/// Appends days contained withing given collection to the specified selection.
+	/// Appends days contained within given collection to the specified selection.
 	///
 	/// - Parameter range: Days to append.
 	public func select <R> (_ range: R) where R: RangeExpression, R.Bound == CPCDay, R: RandomAccessCollection, R.Element == CPCDay {

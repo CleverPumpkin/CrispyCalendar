@@ -23,7 +23,7 @@
 
 import Foundation
 
-/// Common implememntation of `CPCCalendarUnitSymbol` requirements.
+/// Common implementation of `CPCCalendarUnitSymbol` requirements.
 internal protocol CPCCalendarUnitSymbolImpl: CPCCalendarUnit, CPCCalendarUnitSymbol {
 	/// KeyPaths of a `Calendar` instance that should be used to retrieve non-standalone symbols.
 	static var symbolKeyPaths: [Style: KeyPath <Calendar, [String]>] { get };
