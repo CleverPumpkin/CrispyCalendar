@@ -62,13 +62,14 @@
 	],
 
 	"clean": true,
-	"sdk": "iphoneos",
-	"swift_version": "4.1",
+	"sdk": "iphonesimulator",
+	"swift_version": "4.2",
 	"module_version": "1.0.0",
+	"umbrella_header": "CrispyCalendar/Supporting Files/CrispyCalendar.h",
 
 	"module": "CrispyCalendar",
-	"podspec": "CrispyCalendar.podspec",
-	"source_directory": "CrispyCalendar/",
+	"source_directory": ".",
+	"xcodebuild_arguments": ["-project", "CrispyCalendar.xcodeproj", "-target", "CrispyCalendar"],
 
 	"author": "Cleverpumpkin, Ltd.",
 	"author_url": "http://cleverpumpkin.ru",

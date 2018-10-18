@@ -55,7 +55,7 @@
 
 	"clean": true,
 	"sdk": "iphoneos",
-	"swift_version": "4.1",
+	"swift_version": "4.2",
 	"module_version": "1.0.0",
 
 	"module": "CrispyCalendar",
