@@ -25,10 +25,7 @@ import UIKit
 
 internal extension UIView {
 	internal var separatorWidth: CGFloat {
-		guard let window = self.window else {
-			return 1.0;
-		}
-		return 1.0 / window.screen.nativeScale;
+		return 1.0 / (self.window?.screen ?? .main).nativeScale;
 	}
 }
 
