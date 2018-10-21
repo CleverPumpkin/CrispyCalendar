@@ -24,44 +24,73 @@
 #import <Foundation/Foundation.h>
 
 /**
- C/Objective C counterpart for `CPCDayCellState.BackgroundState`.
+ C/Objective C counterpart for `CPCDayCellState.State`.
  */
-typedef NS_ENUM (uint8_t, CPCDayCellBackgroundState) {
-	/** Normal cell state, equivalent of `CPCDayCellState.BackgroundState.normal`.
+typedef NS_OPTIONS (NSUInteger, CPCDayCellState) {
+	/** Normal state of a day cell (not selected, highlighted or disabled).
 	 */
-	CPCDayCellBackgroundStateNormal,
-	/** Highlighted cell state, equivalent of `CPCDayCellState.BackgroundState.highlighted`.
+	CPCDayCellStateNormal = 0 << 0,
+	/** Highlighted state of a cell (current user touch is inside cell's bounds).
 	 */
-	CPCDayCellBackgroundStateHighlighted,
-	/** Selected cell state, equivalent of `CPCDayCellState.BackgroundState.selected`.
+	CPCDayCellStateHighlighted = 1 << 0,
+	/** Selected state of a cell (cell is part of current selection).
 	 */
-	CPCDayCellBackgroundStateSelected,
-	/** Selected cell state, equivalent of `CPCDayCellState.BackgroundState.disabled`.
+	CPCDayCellStateSelected = 2 << 0,
+	/** Disabled state of a cell (cell is displayed but cannot be a part of selection).
 	 */
-	CPCDayCellBackgroundStateDisabled,
-} NS_REFINED_FOR_SWIFT;
+	CPCDayCellStateDisabled = 3 << 0,
+	/** State flag corresponding to a situaton where day cell is set with current day.
+	 *
+	 * Rationale is quite obvious: firstly, "today" value in Date & Time-related frameworks
+	 * is very frequently special-cased or at least exhibits slighlty different
+	 * UI/UX; secondly, any CPU-bound calculations are better off somewhere else than
+	 * inside drawing/layout code.
+	 * Anyway, Time Profiler is also suporting my theoretizations giving by yealding
+	 * incredible and suspicious 2049x improvements …in some other code from some
+	 * other people. But seriously speaking, I did not bother to measure minor (but
+	 * definnitely measurable) ~2-5% improvements gained just here and was more focused
+	 * on overall library code performance.
+	 */
+	CPCDayCellStateIsToday = 1 << 8,
+	
+	// TODO: introduce application-private states (see UIControlStateApplication)
+};
 
-/**
- C/Objective C counterpart for `CPCDayCellState`.
- */
-typedef struct {
-	/**
-	 State part, corresponding to user actions.
-	 */
-	CPCDayCellBackgroundState const backgroundState;
-	/**
-	 State part, indicating that cell is rendering current day.
-	 */
-	BOOL const isToday;
-} CPCDayCellState NS_REFINED_FOR_SWIFT;
+NS_REFINED_FOR_SWIFT
+#if __cplusplus
+contextpr
+#endif
+static NSInteger const CPCBackgroundDayCellStateBits = 2,
+                       CPCBackgroundDayCellStateMask = (1 << CPCBackgroundDayCellStateBits) - 1;
 
-/**
- Creates a new cell state from state items.
+NS_REFINED_FOR_SWIFT
+#if __cplusplus
+contextpr
+#endif
+static NSInteger const CPCDayCellStateIsTodayBits = 1,
+                       CPCDayCellStateStateIsTodayMask = (1 << NBBY);
 
- @param backgroundState User-dependent state part.
- @param isToday Value that indicates that cell renders current day.
- @return Full cell state with items initialized accordingly.
- */
-NS_INLINE NS_REFINED_FOR_SWIFT CPCDayCellState CPCDayCellStateMake (CPCDayCellBackgroundState const backgroundState, BOOL const isToday) {
-	return (CPCDayCellState) { .backgroundState = backgroundState, .isToday = isToday };
+NS_REFINED_FOR_SWIFT
+#if __cplusplus
+contextpr
+#endif
+static NSInteger const CPCDayCellStateBitsInvalid = ~(CPCBackgroundDayCellStateMask | CPCDayCellStateStateIsTodayMask),
+                       CPCDayCellStateCompressedMask = (CPCDayCellStateStateIsTodayMask >> (NBBY - CPCBackgroundDayCellStateBits)) | CPCBackgroundDayCellStateBits;
+
+NS_INLINE NS_REFINED_FOR_SWIFT BOOL CPCDayCellStateIsCompressible (CPCDayCellState const state) {
+	return !(state & CPCDayCellStateBitsInvalid);
+}
+
+NS_INLINE NS_REFINED_FOR_SWIFT NSInteger CPCDayCellStateGetPerfectHash (CPCDayCellState const state) {
+	NSCAssert (CPCDayCellStateIsCompressible (state), @"Perfect hash is unavailable for non-compressable states");
+	return (state & CPCBackgroundDayCellStateMask) | ((state & CPCDayCellStateStateIsTodayMask) >> (NBBY - CPCBackgroundDayCellStateBits));
+}
+
+NS_INLINE NS_REFINED_FOR_SWIFT CPCDayCellState CPCDayCellStateFromPerfectHash (NSInteger const hash) {
+	NSCAssert (!(hash & CPCDayCellStateCompressedMask), @"Invalid perfect hash of a state");
+	return (hash & CPCBackgroundDayCellStateMask) | ((hash << (NBBY - CPCBackgroundDayCellStateBits)) & CPCDayCellStateStateIsTodayMask);
+}
+
+NS_INLINE NS_REFINED_FOR_SWIFT NSInteger CPCDayCellStateGetHash (CPCDayCellState const state) {
+	return (CPCDayCellStateIsCompressible (state) ? CPCDayCellStateGetPerfectHash (state) : (state & CPCDayCellStateBitsInvalid));
 }

@@ -37,16 +37,6 @@ internal extension RangeReplaceableCollection {
 	}
 }
 
-internal extension SetAlgebra {
-	internal func union (_ element: Element) -> Self {
-		return self.union (Self (CollectionOfOne (element)));
-	}
-	
-	internal func subtracting (_ element: Element) -> Self {
-		return self.subtracting (Self (CollectionOfOne (element)));
-	}
-}
-
 internal extension Set {
 	internal func union (_ element: Element) -> Set {
 		return self.union (CollectionOfOne (element));

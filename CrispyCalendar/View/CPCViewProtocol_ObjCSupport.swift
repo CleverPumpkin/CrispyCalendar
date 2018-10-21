@@ -35,18 +35,6 @@ extension CPCMonthView {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .custom (newValue) }
 	}
-
-	/// Exposes `dayCellBackgroundColor (for:)` to be used from Objective C code.
-	@objc (dayCellBackgroundColorForState:)
-	open dynamic func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
-		return self.dayCellBackgroundColor (for: CPCDayCellState (state));
-	}
-	
-	/// Exposes `setDayCellBackgroundColor (_:for:)` to be used from Objective C code.
-	@objc (setDayCellBackgroundColor:forState:)
-	open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
-		self.setDayCellBackgroundColor (backgroundColor, for: CPCDayCellState (state));
-	}
 }
 
 extension CPCMultiMonthsView {
@@ -61,18 +49,6 @@ extension CPCMultiMonthsView {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .custom (newValue) }
 	}
-
-	/// Exposes `dayCellBackgroundColor (for:)` to be used from Objective C code.
-	@objc (dayCellBackgroundColorForState:)
-	open dynamic func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
-		return self.dayCellBackgroundColor (for: CPCDayCellState (state));
-	}
-	
-	/// Exposes `setDayCellBackgroundColor (_:for:)` to be used from Objective C code.
-	@objc (setDayCellBackgroundColor:forState:)
-	open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
-		self.setDayCellBackgroundColor (backgroundColor, for: CPCDayCellState (state));
-	}
 }
 
 extension CPCCalendarView {
@@ -86,18 +62,6 @@ extension CPCCalendarView {
 	@IBInspectable open dynamic var titleFormat: String! {
 		get { return self.titleStyle.rawValue }
 		set { self.titleStyle = .custom (newValue) }
-	}
-
-	/// Exposes `dayCellBackgroundColor (for:)` to be used from Objective C code.
-	@objc (dayCellBackgroundColorForState:)
-	open dynamic func dayCellBackgroundColor (for state: __CPCDayCellState) -> UIColor? {
-		return self.dayCellBackgroundColor (for: CPCDayCellState (state));
-	}
-	
-	/// Exposes `setDayCellBackgroundColor (_:for:)` to be used from Objective C code.
-	@objc (setDayCellBackgroundColor:forState:)
-	open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: __CPCDayCellState) {
-		self.setDayCellBackgroundColor (backgroundColor, for: CPCDayCellState (state));
 	}
 }
 

@@ -142,27 +142,11 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 		self.monthViewsManager.prepareForContainerDeallocation ();
 	}
 
-	@objc dynamic internal func dayCellBackgroundColor (for backgroundStateValue: Int, isTodayValue: Int) -> UIColor? {
-		return self.dayCellBackgroundColorImpl (backgroundStateValue, isTodayValue);
-	}
-	
-	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
-		guard !self.isAppearanceProxy else {
-			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
-			return self.dayCellBackgroundColor (for: backgroundStateValue, isTodayValue: isTodayValue);
-		}
+	@objc open dynamic func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
 		return self.monthViewsManager.dayCellBackgroundColor (for: state);
 	}
 	
-	@objc dynamic internal func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for backgroundStateValue: Int, isTodayValue: Int) {
-		return self.setDayCellBackgroundColorImpl (backgroundColor, backgroundStateValue, isTodayValue);
-	}
-	
-	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
-		guard !self.isAppearanceProxy else {
-			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
-			return self.setDayCellBackgroundColor (backgroundColor, for: backgroundStateValue, isTodayValue: isTodayValue);
-		}
+	@objc open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
 		self.monthViewsManager.setDayCellBackgroundColor (backgroundColor, for: state);
 	}
 	

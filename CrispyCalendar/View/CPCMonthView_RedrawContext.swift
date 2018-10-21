@@ -283,16 +283,11 @@ extension CPCMonthView.TitleRedrawContext: CPCMonthViewRedrawContextImpl {
 
 fileprivate extension CPCDayCellState {
 	fileprivate var parent: CPCDayCellState? {
-		if self.isToday {
-			return CPCDayCellState (backgroundState: self.backgroundState, isToday: false);
-		}
-		
-		switch (self.backgroundState) {
-		case .selected, .highlighted:
-			return CPCDayCellState (backgroundState: .normal, isToday: false);
-		case .disabled:
-			return .normal;
-		case .normal:
+		if self.contains (.isToday) {
+			return self.subtracting (.isToday);
+		} else if (self.contains (.selected) || self.contains (.highlighted) || self.contains (.disabled)) {
+			return [];
+		} else {
 			return nil;
 		}
 	}
@@ -421,7 +416,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		}
 		ctx.clip (using: .evenOdd);
 		
-		if let normalBackgroundColor = self.effectiveBackgroundColor (state: .normal), !normalBackgroundColor.isInvisible {
+		if let normalBackgroundColor = self.effectiveBackgroundColor (state: []), !normalBackgroundColor.isInvisible {
 			ctx.setFillColor (normalBackgroundColor.cgColor);
 			ctx.fill (frame);
 		} else if let backgroundColor = self.backgroundColor, !backgroundColor.isInvisible {
@@ -461,12 +456,18 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 	}
 
 	private func dayCellState (for day: CPCDay, at index: CellIndex) -> DayCellState {
+		var result: DayCellState = [];
+		if (day == .today) {
+			result.formUnion (.isToday);
+		}
+
 		if let enabledIndices = self.cellIndices.enabled, !enabledIndices.contains (index) {
-			return .disabled;
+			result.formUnion (.disabled);
+		} else if let selectedIndices = self.cellIndices.selected, selectedIndices.contains (index) {
+			result.formUnion (.selected);
+		} else if (self.cellIndices.highlighted == index) {
+			result.formUnion (.highlighted);
 		}
-		if let selectedIndices = self.cellIndices.selected, selectedIndices.contains (index) {
-			return .selected;
-		}
-		return CPCDayCellState (backgroundState: (self.cellIndices.highlighted == index) ? .highlighted : .normal, isToday: day == .today);
+		return result;
 	}
 }

@@ -297,32 +297,14 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
-	/// Exposes `dayCellBackgroundColor (for:)` to be used from Objective C code.
-	@objc dynamic internal func dayCellBackgroundColor (for backgroundStateValue: Int, isTodayValue: Int) -> UIColor? {
-		return self.dayCellBackgroundColorImpl (backgroundStateValue, isTodayValue);
-	}
-	
-	open func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
-		guard !self.isAppearanceProxy else {
-			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
-			return self.dayCellBackgroundColor (for: backgroundStateValue, isTodayValue: isTodayValue);
-		}
+	@objc open dynamic func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
 		return self.appearanceStorage.cellBackgroundColors [state];
 	}
 	
-	/// Exposes `setDayCellBackgroundColor (_:for:)` to be used from Objective C code.
-	@objc dynamic internal func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for backgroundStateValue: Int, isTodayValue: Int) {
-		return self.setDayCellBackgroundColorImpl (backgroundColor, backgroundStateValue, isTodayValue);
-	}
-	
-	open func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
-		guard !self.isAppearanceProxy else {
-			let (backgroundStateValue, isTodayValue) = state.appearanceValues;
-			return self.setDayCellBackgroundColor (backgroundColor, for: backgroundStateValue, isTodayValue: isTodayValue);
-		}
+	@objc open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
 		self.appearanceStorage.cellBackgroundColors [state] = backgroundColor;
 		
-		switch (state.backgroundState) {
+		switch (state) {
 		case .highlighted:
 			guard let highlightedIdx = self.highlightedDayIndex, let layout = self.layout else {
 				return;

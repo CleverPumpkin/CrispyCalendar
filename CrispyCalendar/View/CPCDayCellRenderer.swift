@@ -87,7 +87,7 @@ public extension CPCDayCellRenderer {
 	///   - frame: Cell frame.
 	///   - context: Graphics context to draw in.
 	public func drawCellBackground (state: CPCDayCellState, color: UIColor?, frame: CGRect, in context: CGContext) {
-		guard state != .normal, let color = color else {
+		guard state != [], let color = color else {
 			return;
 		}
 		

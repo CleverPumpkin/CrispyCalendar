@@ -49,99 +49,48 @@ fileprivate extension FixedWidthInteger {
 	}
 }
 
-internal extension CPCDayCellState {
-	internal var appearanceValues: (Int, Int) {
-		return (self.backgroundState.rawValue, self.isToday ? 1 : 0);
-	}
-}
-
-fileprivate extension CPCDayCellState {
-	fileprivate static let isTodayIndexMask = 1 << BackgroundState.requiredBitCount;
-	fileprivate static let requiredBitCount = BackgroundState.requiredBitCount + 1;
-	
-	fileprivate init (_ backgroundStateValue: Int, _ isTodayValue: Int) {
-		self.init (backgroundState: BackgroundState (rawValue: backgroundStateValue)!, isToday: isTodayValue != 0);
-	}
-}
-
-fileprivate extension CPCDayCellState.BackgroundState {
-	fileprivate static let requiredBitCount = (allCases.count - 1).usedBitCount;
-}
-
 /// Dictionary-like container
-internal struct CPCViewDayCellStateBackgroundColors {
-	private typealias BackgroundColors = CPCViewDayCellStateBackgroundColors;
-	private typealias State = CPCDayCellState;
-	
-	private static let capacity = 1 << CPCDayCellState.requiredBitCount;
-	private static let stateIndexBounds = 0 ..< BackgroundColors.capacity;
-	
-	private static let `default`: BackgroundColors = [
-		.normal: .white,
-		.highlighted: UIColor.yellow.withAlphaComponent (0.125),
-		.selected: UIColor.yellow.withAlphaComponent (0.25),
-		.disabled: .darkGray,
-		.today: .lightGray,
-	];
-	
-	private static func stateIndex (for state: State, message: @autoclosure () -> String, file: StaticString = #file, line: Int = #line, function: String = #function) -> Int {
-		let stateIndex = state.backgroundState.rawValue | (state.isToday ? CPCDayCellState.isTodayIndexMask : 0), stateIndexBounds = self.stateIndexBounds;
-		precondition (stateIndexBounds ~= stateIndex, "\(file):\(line) (\(function)): \(message ()): state index \(stateIndex) is out of bounds \(stateIndexBounds)");
-		return stateIndex;
-	}
-	
-	private var colors: ContiguousArray <UIColor?>;
+internal struct CPCDayCellStateBasedStorage <Value>: ExpressibleByDictionaryLiteral {
+	internal typealias State = CPCDayCellState;
+	internal typealias Key = State;
+
+	private var commonValues: ContiguousArray <Value?>;
+	private var extraValues: [State: Value]?;
 	
 	internal init () {
-		self = BackgroundColors.default;
+		self.commonValues = ContiguousArray (repeating: nil, count: __CPCDayCellStateCompressedMask + 1);
 	}
 	
-	internal init <D> (_ colors: D) where D: Sequence, D.Element == (CPCDayCellState, UIColor) {
-		var colorsStorage = ContiguousArray <UIColor?> (repeating: nil, count: CPCViewDayCellStateBackgroundColors.capacity);
-		for (state, color) in colors {
-			colorsStorage [BackgroundColors.stateIndex (for: state, message: "Cannot set initial color for state \(state)")] = color;
+	internal init (dictionaryLiteral elements: (State, Value)...) {
+		self.init ();
+		
+		let extraValues = elements.filter {
+			let (state, value) = $0;
+			if (state.isCompressible) {
+				self.commonValues [state.compressedIndex] = value;
+				return false;
+			} else {
+				return true;
+			}
+		};
+		if (!extraValues.isEmpty) {
+			self.extraValues = Dictionary (uniqueKeysWithValues: extraValues);
 		}
-		self.colors = colorsStorage;
 	}
 	
-	internal subscript (state: CPCDayCellState) -> UIColor? {
+	internal subscript (state: State) -> Value? {
 		get {
-			return self.colors [BackgroundColors.stateIndex (for: state, message: "Cannot retrieve color for state \(state)")];
+			return (state.isCompressible ? self.commonValues [state.compressedIndex] : self.extraValues? [state]);
 		}
 		set {
-			self.colors [BackgroundColors.stateIndex (for: state, message: "Cannot store color for state \(state)")] = newValue;
+			if state.isCompressible {
+				self.commonValues [state.compressedIndex] = newValue;
+			} else {
+				var extraValues = self.extraValues ?? [:];
+				extraValues [state] = newValue;
+				self.extraValues = extraValues;
+			}
 		}
-	}
-}
-
-extension CPCViewDayCellStateBackgroundColors: ExpressibleByDictionaryLiteral {
-	internal typealias Key = CPCDayCellState;
-	internal typealias Value = UIColor;
-	
-	internal init (dictionaryLiteral elements: (CPCDayCellState, UIColor)...) {
-		self.init (elements);
-	}
-}
-
-extension CPCViewDayCellStateBackgroundColors: Collection {
-	internal typealias Index = CPCDayCellState.AllCases.Index;
-	internal typealias Element = (key: CPCDayCellState, value: UIColor?);
-	
-	internal var startIndex: Index {
-		return CPCDayCellState.allCases.startIndex;
-	}
-	
-	internal var endIndex: Index {
-		return CPCDayCellState.allCases.endIndex;
-	}
-	
-	internal subscript (position: Index) -> Element {
-		let state = CPCDayCellState.allCases [position];
-		return (key: state, value: self [state]);
-	}
-	
-	internal func index (after i: Index) -> Index {
-		return CPCDayCellState.allCases.index (after: i);
 	}
 }
 
@@ -192,7 +141,13 @@ internal final class CPCViewAppearanceStorage {
 	internal var dayCellTextColor = UIColor.defaultDayCellText;
 	internal var separatorColor = UIColor.defaultSeparator;
 	internal var cellRenderer: CPCDayCellRenderer = CPCDefaultDayCellRenderer ();
-	internal var cellBackgroundColors = CPCViewDayCellStateBackgroundColors ();
+	internal var cellBackgroundColors: CPCDayCellStateBasedStorage <UIColor> = [
+		[]: .white,
+		.highlighted: UIColor.yellow.withAlphaComponent (0.125),
+		.selected: UIColor.yellow.withAlphaComponent (0.25),
+		.disabled: .darkGray,
+		.isToday: .lightGray,
+	];
 }
 
 /// Views conforming to this protocol perform rendering of calendar cells
@@ -255,14 +210,6 @@ internal extension CPCViewProtocol {
 		for state in CPCDayCellState.allCases {
 			self.setDayCellBackgroundColor (otherView.dayCellBackgroundColor (for: state), for: state);
 		}
-	}
-	
-	internal func dayCellBackgroundColorImpl (_ backgroundStateValue: Int, _ isTodayValue: Int) -> UIColor? {
-		return self.dayCellBackgroundColor (for: CPCDayCellState (backgroundStateValue, isTodayValue));
-	}
-	
-	internal func setDayCellBackgroundColorImpl (_ backgroundColor: UIColor?, _ backgroundStateValue: Int, _ isTodayValue: Int) {
-		return self.setDayCellBackgroundColor (backgroundColor, for: CPCDayCellState (backgroundStateValue, isTodayValue));
 	}
 }
 

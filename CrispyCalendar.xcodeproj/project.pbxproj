@@ -38,7 +38,7 @@
 		43689DBB2093681100052C7A /* CPCCalendarUnitSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43689DBA2093681100052C7A /* CPCCalendarUnitSymbol.swift */; };
 		43689DBF20936F2600052C7A /* CPCMonthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43689DBD20936F2500052C7A /* CPCMonthView.swift */; };
 		43689DC020936F2600052C7A /* CPCCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43689DBE20936F2500052C7A /* CPCCalendarView.swift */; };
-		43689DCA20937AF200052C7A /* CPCDayCellState.h in Headers */ = {isa = PBXBuildFile; fileRef = 43689DC920937AF200052C7A /* CPCDayCellState.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43689DCA20937AF200052C7A /* CPCDayCellState.h in Headers */ = {isa = PBXBuildFile; fileRef = 43689DC920937AF200052C7A /* CPCDayCellState.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		43689DCC20937C9F00052C7A /* CrispyCalendar.h in Headers */ = {isa = PBXBuildFile; fileRef = 43689DCB20937BED00052C7A /* CrispyCalendar.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		436F53B820A4C14900ACE40A /* UnownedArray.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436F53B720A4C14900ACE40A /* UnownedArray.swift */; };
 		436F53BB20A4C86B00ACE40A /* CPCViewProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436F53BA20A4C86B00ACE40A /* CPCViewProtocol.swift */; };
@@ -94,6 +94,7 @@
 /* Begin PBXFileReference section */
 		430492A92094724F00A4F1F1 /* ComputedCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputedCollection.swift; sourceTree = "<group>"; };
 		430492AC2094B54000A4F1F1 /* RangeExpressionInitialization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeExpressionInitialization.swift; sourceTree = "<group>"; };
+		4307A2A9217A038B00A717F8 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		43101B92209CDFBD00904529 /* GridIndices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GridIndices.swift; sourceTree = "<group>"; };
 		43101B94209CFBB400904529 /* CPCMonthView_Layout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMonthView_Layout.swift; sourceTree = "<group>"; };
 		43101B96209CFBC100904529 /* CPCMonthView_RedrawContext.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMonthView_RedrawContext.swift; sourceTree = "<group>"; };
@@ -196,6 +197,15 @@
 			path = Util;
 			sourceTree = "<group>";
 		};
+		4307A2A8217A036600A717F8 /* Pod */ = {
+			isa = PBXGroup;
+			children = (
+				4307A2A9217A038B00A717F8 /* README.md */,
+				43B6E72320A0902700A7403B /* CrispyCalendar.podspec */,
+			);
+			name = Pod;
+			sourceTree = "<group>";
+		};
 		43689DC32093735000052C7A /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
@@ -254,7 +264,7 @@
 		43AF4AC32092311B001A0F40 = {
 			isa = PBXGroup;
 			children = (
-				43B6E72320A0902700A7403B /* CrispyCalendar.podspec */,
+				4307A2A8217A036600A717F8 /* Pod */,
 				43C06FE220924E5A00202ED8 /* CrispyCalendar */,
 				438454B420D27DA500CDC209 /* CrispyCalendarDemo */,
 				43AF4ACE2092311B001A0F40 /* Products */,
