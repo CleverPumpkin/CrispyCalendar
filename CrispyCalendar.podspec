@@ -10,7 +10,7 @@ Pod::Spec.new do |spec|
 	
 	spec.ios.deployment_target = '10.3'
 	spec.swift_version         = '4.2'
-	spec.pod_target_xcconfig   = { 'DEFINES_MODULE' => 'YES' ]
+	spec.pod_target_xcconfig   = { 'DEFINES_MODULE' => 'YES' }
 	spec.source_files          = "#{spec.name}/{Util,Model,View,Supporting Files}/*.{h,c,m,swift}"
 	spec.public_header_files   = "#{spec.name}/{Util,Model,View,Supporting Files}/*.h"
 	spec.private_header_files  = "#{spec.name}/View/CPCDayCellRenderer.h"
