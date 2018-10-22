@@ -379,7 +379,15 @@ extension CPCCalendarView /* UIScrollViewProtocol */ {
 	///   - day: A specific day that must be visible after scroll animation finishes.
 	///   - animated: `true` if the scrolling should be animated, `false` if it should be immediate.
 	open func scrollTo (day: CPCDay, animated: Bool) {
-		return self.scrollTo (month: CPCMonth (containing: day.start, calendar: self.calendarWrapper), animated: animated);
+		let scrollDestination: CPCDay;
+		if let minimumDate = self.minimumDate, day.end <= minimumDate {
+			scrollDestination = CPCDay (containing: minimumDate, calendarOf: day);
+		} else if let maximumDate = self.maximumDate, day.start >= maximumDate {
+			scrollDestination = CPCDay (containing: maximumDate, calendarOf: day);
+		} else {
+			scrollDestination = day;
+		}
+		self.layout.scrollToDay (day, animated: animated);
 	}
 	
 	/// Scrolls a specific area of the content so that it is visible in the receiver.
@@ -388,14 +396,6 @@ extension CPCCalendarView /* UIScrollViewProtocol */ {
 	///   - month: A specific month that must be visible after scroll animation finishes.
 	///   - animated: `true` if the scrolling should be animated, `false` if it should be immediate.
 	open func scrollTo (month: CPCMonth, animated: Bool) {
-		let scrollDestination: CPCMonth;
-		if let minimumDate = self.minimumDate, month.end <= minimumDate {
-			scrollDestination = CPCMonth (containing: minimumDate, calendarOf: month);
-		} else if let maximumDate = self.maximumDate, month.start >= maximumDate {
-			scrollDestination = CPCMonth (containing: maximumDate, calendarOf: month);
-		} else {
-			scrollDestination = month;
-		}
-		self.layout.scrollToMonth (month: scrollDestination);
+		self.scrollTo (day: CPCDay (containing: month.start + month.duration / 2, calendarOf: month), animated: animated);
 	}
 }

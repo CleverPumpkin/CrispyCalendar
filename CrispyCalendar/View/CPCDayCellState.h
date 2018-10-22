@@ -75,7 +75,7 @@ NS_REFINED_FOR_SWIFT
 contextpr
 #endif
 static NSInteger const CPCDayCellStateBitsInvalid = ~(CPCBackgroundDayCellStateMask | CPCDayCellStateStateIsTodayMask),
-                       CPCDayCellStateCompressedMask = (CPCDayCellStateStateIsTodayMask >> (NBBY - CPCBackgroundDayCellStateBits)) | CPCBackgroundDayCellStateBits;
+                       CPCDayCellStateCompressedMask = (CPCDayCellStateStateIsTodayMask >> (NBBY - CPCBackgroundDayCellStateBits)) | CPCBackgroundDayCellStateMask;
 
 NS_INLINE NS_REFINED_FOR_SWIFT BOOL CPCDayCellStateIsCompressible (CPCDayCellState const state) {
 	return !(state & CPCDayCellStateBitsInvalid);

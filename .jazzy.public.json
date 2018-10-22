@@ -1,5 +1,5 @@
 {
-	"output": "docs/generated/public/",
+	"output": "docs/public/",
 	"min_acl": "public",
 
 	"theme": "fullwidth",

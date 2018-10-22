@@ -43,7 +43,7 @@ internal extension CPCCalendarView.Layout {
 			self.collectionView?.reloadData ();
 		} else {
 			DispatchQueue.main.async {
-				self.scrollToToday (animated: false);
+				self.scrollToDay (CPCDay (containing: self.layoutInitialDate, calendar: self.calendar));
 			};
 		}
 	}
@@ -78,6 +78,7 @@ internal extension CPCCalendarView.Layout {
 		guard let firstRow = rows.first, let lastRow = rows.last else {
 			return EmptyStorage ();
 		}
+		self.ignoreFirstBoundsChange = true;
 		return DefaultStorage (rows, boundsReach: (self.isMinimumDateReached (for: firstRow), self.isMaximumDateReached (for: lastRow)), contentSize: layoutSize);
 	}
 	
@@ -152,7 +153,7 @@ internal extension CPCCalendarView.Layout {
 	}
 	
 	private func makeMiddleRow (columns: [Column], midY: CGFloat) -> RowInfo {
-		let currentMonth = CPCMonth (containing: Date (), calendar: self.calendar), currentMonthIndex = currentMonth.unitOrdinalValue;
+		let currentMonth = CPCMonth (containing: self.layoutInitialDate, calendar: self.calendar), currentMonthIndex = currentMonth.unitOrdinalValue;
 		let firstMonthOfMiddleRow = currentMonth.advanced (by: -(currentMonthIndex % columnCount)), scale = guarantee (self.collectionView).separatorWidth;
 		return self.makeRow (startingWith: firstMonthOfMiddleRow, columns: columns) { (midY - $0 / 2).rounded (scale: scale) };
 	}
@@ -198,6 +199,7 @@ internal extension CPCCalendarView.Layout {
 internal protocol CPCCalendarViewLayoutStorage {
 	typealias Attributes = CPCCalendarView.Layout.Attributes;
 	
+	var isEmpty: Bool { get }
 	var isTopBoundReached: Bool { get };
 	var isBottomBoundReached: Bool { get };
 	var contentSize: CGSize { get };
@@ -268,6 +270,10 @@ extension CPCCalendarView.Layout {
 }
 
 extension CPCCalendarView.Layout.EmptyStorage: CPCCalendarViewLayoutStorage {
+	fileprivate var isEmpty: Bool {
+		return true;
+	}
+	
 	fileprivate var isTopBoundReached: Bool {
 		return false;
 	}
@@ -418,6 +424,10 @@ fileprivate extension CPCCalendarView.Layout.DefaultStorage {
 }
 
 extension CPCCalendarView.Layout.DefaultStorage: CPCCalendarViewLayoutStorage {
+	fileprivate var isEmpty: Bool {
+		return false;
+	}
+	
 	fileprivate var isTopBoundReached: Bool {
 		return self.boundsReach.top;
 	}

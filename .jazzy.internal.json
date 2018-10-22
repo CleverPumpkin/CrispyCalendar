@@ -1,5 +1,5 @@
 {
-	"output": "docs/generated/internal/",
+	"output": "docs/internal/",
 	"min_acl": "internal",
 
 	"theme": "fullwidth",

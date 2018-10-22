@@ -58,6 +58,13 @@ extension CPCCalendarView {
 			}
 		}
 		
+		internal var ignoreFirstBoundsChange = false;
+		internal var layoutInitialDate = Date () {
+			didSet {
+				self.invalidateLayout ();
+			}
+		}
+		
 		private var storage = makeEmptyStorage ();
 		private var currentInvalidationContext: InvalidationContext?;
 		
@@ -138,27 +145,47 @@ extension CPCCalendarView.Layout: UICollectionViewDelegate {
 	
 	@discardableResult
 	internal func scrollToToday (animated: Bool = true) -> Bool {
-		guard
-			let collectionView = self.collectionView,
-			let indexPath = self.storage.indexPath (for: CPCMonth (containing: self.scrollToTodayDate, calendar: self.calendar)) else {
-			return false;
-		}
-		
-		collectionView.scrollToItem (at: indexPath, at: .centeredVertically, animated: animated);
-		return true;
+		return self.scrollToDay (CPCDay (containing: self.scrollToTodayDate, calendar: self.calendar), animated: animated);
 	}
 
 	@discardableResult
-	internal func scrollToMonth (month: CPCMonth, animated: Bool = true) -> Bool {
-		var indexPath = self.storage.indexPath (for: month);
-		if (indexPath == nil) {
-			self.storage = self.tryCalculatingLayoutUntil (month: month, for: self.storage);
-			indexPath = self.storage.indexPath (for: month)
+	internal func scrollToDay (_ day: CPCDay, animated: Bool = true) -> Bool {
+		guard !self.storage.isEmpty else {
+			if let minimumDate = self.minimumDate, minimumDate > day.end {
+				self.layoutInitialDate = minimumDate;
+				return false;
+			} else if let maximumDate = self.maximumDate, maximumDate < day.start {
+				self.layoutInitialDate = maximumDate;
+				return false;
+			} else {
+				self.layoutInitialDate = day.start;
+				return true;
+			}
 		}
-		guard let targetIndexPath = indexPath, let collectionView = self.collectionView else {
+		
+		let targetMonth = day.containingMonth;
+		var indexPath = self.storage.indexPath (for: targetMonth);
+		if (indexPath == nil) {
+			self.storage = self.tryCalculatingLayoutUntil (month: targetMonth, for: self.storage);
+			indexPath = self.storage.indexPath (for: targetMonth);
+		}
+		guard let targetIndexPath = indexPath, let cellFrame = self.layoutAttributesForItem (at: targetIndexPath)?.frame else {
 			return false;
 		}
-		collectionView.scrollToItem (at: targetIndexPath, at: .centeredVertically, animated: animated);
+		let viewsMgr = self.monthViewsManager;
+		let titleHeight = viewsMgr.titleFont.lineHeight.rounded (.up) + viewsMgr.titleMargins.top + viewsMgr.titleMargins.bottom;
+		let containingWeek = day.containingWeek;
+		let dayCellSize = CGSize (width: cellFrame.width / CGFloat (containingWeek.count), height: (cellFrame.height - titleHeight) / CGFloat (targetMonth.count));
+		let dayFrame = CGRect (
+			x: cellFrame.minX + dayCellSize.width * CGFloat (containingWeek.index (of: day)!) / CGFloat (containingWeek.count),
+			y: cellFrame.minY + titleHeight + CGFloat (targetMonth.index (of: containingWeek)!) / CGFloat (targetMonth.count) * dayCellSize.height,
+			width: dayCellSize.width,
+			height: dayCellSize.height
+		);
+		guard let collectionView = self.collectionView else {
+			return false;
+		}
+		collectionView.scrollRectToVisible (dayFrame, animated: animated);
 		return true;
 	}
 }
@@ -185,6 +212,11 @@ extension CPCCalendarView.Layout {
 	}
 	
 	internal override func shouldInvalidateLayout (forBoundsChange newBounds: CGRect) -> Bool {
+		if (self.ignoreFirstBoundsChange) {
+			self.ignoreFirstBoundsChange = false;
+			return false;
+		}
+		
 		if
 			let invalidationContext = self.currentInvalidationContext,
 			let collectionView = self.collectionView,
@@ -205,6 +237,7 @@ extension CPCCalendarView.Layout {
 	}
 	
 	internal override func prepare () {
+		super.prepare ();
 		self.storage = self.prepareUpdatedLayout (current: self.storage, invalidationContext: self.currentInvalidationContext);
 		self.currentInvalidationContext = nil;
 		self.performPostUpdateActions (for: self.storage);
@@ -235,14 +268,6 @@ extension CPCCalendarView.Layout {
 	
 	internal class InvalidationContext: UICollectionViewLayoutInvalidationContext {
 		internal let verticalOffset: CGFloat?;
-		
-		internal override var invalidateEverything: Bool {
-			return self.verticalOffset == nil;
-		}
-		
-		internal override var invalidateDataSourceCounts: Bool {
-			return true;
-		}
 		
 		fileprivate static func forBoundsChange (_ newBounds: CGRect, currentStorage: Storage) -> InvalidationContext? {
 			let contentSize = currentStorage.contentSize;

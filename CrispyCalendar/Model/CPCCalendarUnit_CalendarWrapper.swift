@@ -44,10 +44,7 @@ internal final class CPCCalendarWrapper: NSObject {
 	internal var unitSpecificCaches = UnfairThreadsafeStorage ([ObjectIdentifier: UnitSpecificCacheProtocol] ());
 
 	private var lastCachesPurgeTimestamp = Date.timeIntervalSinceReferenceDate;
-	private lazy var mainRunLoopObserver: CFRunLoopObserver = {
-		var context = CFRunLoopObserverContext (version: 0, info: Unmanaged.passUnretained (self).toOpaque (), retain: nil, release: nil, copyDescription: nil);
-		return CFRunLoopObserverCreate (nil, CFRunLoopActivity.beforeWaiting.rawValue, true, 0, CPCCalendarViewMainRunLoopObserver, &context);
-	} ();
+	private var mainRunLoopObserver: CFRunLoopObserver?;
 	
 	internal static func == (lhs: CPCCalendarWrapper, rhs: CPCCalendarWrapper) -> Bool {
 		return (lhs === rhs);
@@ -73,14 +70,15 @@ internal final class CPCCalendarWrapper: NSObject {
 		self.calendarHashValue = calendar.hashValue;
 		super.init ();
 
-		DispatchQueue.main.async {
-			CFRunLoopAddObserver (CFRunLoopGetMain (), self.mainRunLoopObserver, CFRunLoopMode.commonModes);
-		};
+		var context = CFRunLoopObserverContext (version: 0, info: Unmanaged.passUnretained (self).toOpaque (), retain: nil, release: nil, copyDescription: nil);
+		let observer = CFRunLoopObserverCreate (kCFAllocatorDefault, CFRunLoopActivity.beforeWaiting.rawValue, true, 0, CPCCalendarViewMainRunLoopObserver, &context);
+		self.mainRunLoopObserver = observer;
+		CFRunLoopAddObserver (CFRunLoopGetMain (), observer, CFRunLoopMode.commonModes);
 	}
 	
 	deinit {
-		DispatchQueue.main.async {
-			CFRunLoopRemoveObserver (CFRunLoopGetMain (), self.mainRunLoopObserver, CFRunLoopMode.commonModes);
+		self.mainRunLoopObserver.map {
+			CFRunLoopRemoveObserver (CFRunLoopGetMain (), $0, CFRunLoopMode.commonModes);
 		}
 		
 		CPCCalendarWrapper.instances.withMutableStoredValue {
