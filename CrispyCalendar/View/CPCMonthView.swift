@@ -233,6 +233,9 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	private unowned var aspectRatioConstraint: NSLayoutConstraint;
 	private var monthViewsManagerPtr: UnsafePointer <CPCMonthViewsManager>? {
 		didSet {
+			self.titleFontDidUpdate ();
+			self.titleMarginsDidUpdate ();
+			self.dayCellFontDidUpdate ();
 			self.setNeedsFullAppearanceUpdate ();
 		}
 	}

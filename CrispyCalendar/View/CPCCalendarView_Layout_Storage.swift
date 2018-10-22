@@ -43,7 +43,7 @@ internal extension CPCCalendarView.Layout {
 			self.collectionView?.reloadData ();
 		} else {
 			DispatchQueue.main.async {
-				self.scrollToDay (CPCDay (containing: self.layoutInitialDate, calendar: self.calendar));
+				self.scrollToDay (CPCDay (containing: self.layoutInitialDate, calendar: self.calendar), animated: false);
 			};
 		}
 	}
@@ -61,7 +61,7 @@ internal extension CPCCalendarView.Layout {
 		
 		let lastSection = storage.sectionCount - 1, lastItem = storage.numberOfItems (in: lastSection) - 1;
 		if let lastMonth = storage [IndexPath (item: lastItem, section: lastSection)]?.month, lastMonth < month {
-			let insertedRows = self.makeRows (after: storage.lastRowInfo, columns: columns) { $0.months.upperBound >= month };
+			let insertedRows = self.makeRows (after: storage.lastRowInfo, columns: columns) { $0.months.upperBound > month };
 			return storage.appending (insertedRows, verticalOffset: (insertedRows.last?.frame.maxY).map { $0 - storage.contentSize.height } ?? 0.0);
 		}
 		return layoutStorage;

@@ -164,28 +164,35 @@ extension CPCCalendarView.Layout: UICollectionViewDelegate {
 		}
 		
 		let targetMonth = day.containingMonth;
-		var indexPath = self.storage.indexPath (for: targetMonth);
-		if (indexPath == nil) {
+		guard let indexPath = self.storage.indexPath (for: targetMonth) else {
 			self.storage = self.tryCalculatingLayoutUntil (month: targetMonth, for: self.storage);
-			indexPath = self.storage.indexPath (for: targetMonth);
+			guard self.storage.indexPath (for: targetMonth) != nil else {
+				return false;
+			}
+			self.layoutInitialDate = day.start;
+			self.collectionView?.reloadData ();
+			return true;
 		}
-		guard let targetIndexPath = indexPath, let cellFrame = self.layoutAttributesForItem (at: targetIndexPath)?.frame else {
+		
+		guard let cellFrame = self.layoutAttributesForItem (at: indexPath)?.frame else {
 			return false;
 		}
 		let viewsMgr = self.monthViewsManager;
 		let titleHeight = viewsMgr.titleFont.lineHeight.rounded (.up) + viewsMgr.titleMargins.top + viewsMgr.titleMargins.bottom;
 		let containingWeek = day.containingWeek;
-		let dayCellSize = CGSize (width: cellFrame.width / CGFloat (containingWeek.count), height: (cellFrame.height - titleHeight) / CGFloat (targetMonth.count));
-		let dayFrame = CGRect (
-			x: cellFrame.minX + dayCellSize.width * CGFloat (containingWeek.index (of: day)!) / CGFloat (containingWeek.count),
-			y: cellFrame.minY + titleHeight + CGFloat (targetMonth.index (of: containingWeek)!) / CGFloat (targetMonth.count) * dayCellSize.height,
-			width: dayCellSize.width,
-			height: dayCellSize.height
-		);
+		let dayCellHeight = (cellFrame.height - titleHeight) / CGFloat (targetMonth.count);
+		let dayCellY = cellFrame.minY + titleHeight + CGFloat (targetMonth [ordinal: 0].distance (to: containingWeek)) * dayCellHeight;
 		guard let collectionView = self.collectionView else {
 			return false;
 		}
-		collectionView.scrollRectToVisible (dayFrame, animated: animated);
+		let effectiveContentInset: UIEdgeInsets;
+		if #available (iOS 11.0, *) {
+			effectiveContentInset = collectionView.adjustedContentInset
+		} else {
+			effectiveContentInset = collectionView.contentInset;
+		};
+		let bounds = collectionView.bounds.inset (by: effectiveContentInset), targetRect = bounds.offsetBy (dx: 0.0, dy: dayCellY + dayCellHeight / 2 - bounds.midY);
+		collectionView.scrollRectToVisible (targetRect, animated: animated);
 		return true;
 	}
 }

@@ -74,7 +74,7 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	}
 	
 	open override var intrinsicContentSize: CGSize {
-		return CGSize (width: UIView.noIntrinsicMetric, height: self.font.lineHeight);
+		return CGSize (width: UIView.noIntrinsicMetric, height: self.font.lineHeight.rounded (.up, scale: self.separatorWidth));
 	}
 	
 	open var adjustsFontForContentSizeCategory: Bool {

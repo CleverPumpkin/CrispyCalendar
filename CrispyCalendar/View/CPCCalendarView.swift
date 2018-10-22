@@ -387,7 +387,7 @@ extension CPCCalendarView /* UIScrollViewProtocol */ {
 		} else {
 			scrollDestination = day;
 		}
-		self.layout.scrollToDay (day, animated: animated);
+		self.layout.scrollToDay (scrollDestination, animated: animated);
 	}
 	
 	/// Scrolls a specific area of the content so that it is visible in the receiver.
