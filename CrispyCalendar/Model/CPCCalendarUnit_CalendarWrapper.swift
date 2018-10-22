@@ -43,6 +43,12 @@ internal final class CPCCalendarWrapper: NSObject {
 
 	internal var unitSpecificCaches = UnfairThreadsafeStorage ([ObjectIdentifier: UnitSpecificCacheProtocol] ());
 
+	private var lastCachesPurgeTimestamp = Date.timeIntervalSinceReferenceDate;
+	private lazy var mainRunLoopObserver: CFRunLoopObserver = {
+		var context = CFRunLoopObserverContext (version: 0, info: Unmanaged.passUnretained (self).toOpaque (), retain: nil, release: nil, copyDescription: nil);
+		return CFRunLoopObserverCreate (nil, CFRunLoopActivity.beforeWaiting.rawValue, true, 0, CPCCalendarViewMainRunLoopObserver, &context);
+	} ();
+	
 	internal static func == (lhs: CPCCalendarWrapper, rhs: CPCCalendarWrapper) -> Bool {
 		return (lhs === rhs);
 	}
@@ -65,13 +71,38 @@ internal final class CPCCalendarWrapper: NSObject {
 	private init (_ calendar: Calendar) {
 		self.calendar = calendar;
 		self.calendarHashValue = calendar.hashValue;
+		super.init ();
+
+		DispatchQueue.main.async {
+			CFRunLoopAddObserver (CFRunLoopGetMain (), self.mainRunLoopObserver, CFRunLoopMode.commonModes);
+		};
 	}
 	
 	deinit {
+		DispatchQueue.main.async {
+			CFRunLoopRemoveObserver (CFRunLoopGetMain (), self.mainRunLoopObserver, CFRunLoopMode.commonModes);
+		}
+		
 		CPCCalendarWrapper.instances.withMutableStoredValue {
 			$0 [self.calendar] = nil;
 		};
 	}
+	
+	internal func mainRunLoopWillStartWaiting () {
+		let currentTimestamp = Date.timeIntervalSinceReferenceDate;
+		guard (currentTimestamp - self.lastCachesPurgeTimestamp) > 10.0 else {
+			return;
+		}
+		self.lastCachesPurgeTimestamp = currentTimestamp;
+		self.purgeCacheIfNeeded ();
+	}
+}
+
+private func CPCCalendarViewMainRunLoopObserver (observer: CFRunLoopObserver!, activity: CFRunLoopActivity, calendarPtr: UnsafeMutableRawPointer?) {
+	guard let calendarWrapper = calendarPtr.map ({ Unmanaged <CPCCalendarWrapper>.fromOpaque ($0).takeUnretainedValue () }) else {
+		return;
+	}
+	calendarWrapper.mainRunLoopWillStartWaiting ();
 }
 
 public extension Calendar {

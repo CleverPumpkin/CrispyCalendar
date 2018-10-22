@@ -37,25 +37,10 @@ internal extension CPCMultiMonthsViewProtocol {
 	}
 }
 
-internal extension CPCMultiMonthsViewProtocol where Self: CPCViewBackedByAppearanceStorage {
-	internal var appearanceStorage: CPCViewAppearanceStorage {
-		get {
-			return self.monthViewsManager.appearanceStorage;
-		}
-		set {
-			self.monthViewsManager.appearanceStorage = newValue;
-		}
-	}
-}
-
 internal extension CPCMultiMonthsViewProtocol where Self: CPCViewDelegatingSelectionHandling {
 	internal var selectionHandler: SelectionHandler {
-		get {
-			return self.monthViewsManager.multiSelectionHandler;
-		}
-		set {
-			self.monthViewsManager.setMultiSelectionHandler (newValue);
-		}
+		get { return self.monthViewsManager.multiSelectionHandler }
+		set { self.monthViewsManager.setMultiSelectionHandler (newValue) }
 	}
 }
 
@@ -72,10 +57,10 @@ internal final class CPCMonthViewsManager {
 			}
 		}
 	}
-	
+
+	internal let appearanceStorage = CPCViewAppearanceStorage ();
+
 	fileprivate private (set) var unownedMonthViews = UnownedArray <CPCMonthView> ();
-	fileprivate var appearanceStorage = CPCViewAppearanceStorage ();
-	
 	fileprivate var multiSelectionHandler = CPCViewDefaultSelectionHandler;
 	
 	internal func prepareForContainerDeallocation () {
@@ -95,7 +80,6 @@ internal extension CPCMonthViewsManager {
 			monthView.addTarget (self, action: #selector (monthViewValueChanged), for: .valueChanged);
 		}
 		monthView.monthViewsManager = self;
-		monthView.appearanceStorage = self.appearanceStorage;
 		monthView.cellRenderer = self.appearanceStorage.cellRenderer;
 		monthView.selectionHandler = self.selectionHandler (for: monthView);
 		monthView.setNeedsDisplay ();
@@ -128,7 +112,7 @@ extension CPCMonthViewsManager: CPCViewProtocol {
 		get { return self.appearanceStorage.titleFont }
 		set {
 			self.appearanceStorage.titleFont = newValue;
-			self.updateManagedMonthViews { $0.titleFont = newValue };
+			self.updateManagedMonthViews { $0.titleFontDidUpdate () };
 		}
 	}
 	
@@ -136,7 +120,7 @@ extension CPCMonthViewsManager: CPCViewProtocol {
 		get { return self.appearanceStorage.titleColor }
 		set {
 			self.appearanceStorage.titleColor = newValue;
-			self.updateManagedMonthViews { $0.titleColor = newValue };
+			self.updateManagedMonthViews { $0.titleAppearanceDidUpdate () };
 		}
 	}
 	
@@ -144,7 +128,7 @@ extension CPCMonthViewsManager: CPCViewProtocol {
 		get { return self.appearanceStorage.titleAlignment }
 		set {
 			self.appearanceStorage.titleAlignment = newValue;
-			self.updateManagedMonthViews { $0.titleAlignment = newValue };
+			self.updateManagedMonthViews { $0.titleAppearanceDidUpdate () };
 		}
 	}
 	
@@ -152,7 +136,7 @@ extension CPCMonthViewsManager: CPCViewProtocol {
 		get { return self.appearanceStorage.titleStyle }
 		set {
 			self.appearanceStorage.titleStyle = newValue;
-			self.updateManagedMonthViews { $0.titleStyle = newValue };
+			self.updateManagedMonthViews { $0.titleAppearanceDidUpdate () };
 		}
 	}
 	
@@ -160,7 +144,7 @@ extension CPCMonthViewsManager: CPCViewProtocol {
 		get { return self.appearanceStorage.titleMargins }
 		set {
 			self.appearanceStorage.titleMargins = newValue;
-			self.updateManagedMonthViews { $0.titleMargins = newValue };
+			self.updateManagedMonthViews { $0.titleMarginsDidUpdate () };
 		}
 	}
 	
@@ -168,15 +152,7 @@ extension CPCMonthViewsManager: CPCViewProtocol {
 		get { return self.appearanceStorage.dayCellFont }
 		set {
 			self.appearanceStorage.dayCellFont = newValue;
-			self.updateManagedMonthViews { $0.dayCellFont = newValue };
-		}
-	}
-	
-	internal var dayCellTextColor: UIColor {
-		get { return self.appearanceStorage.dayCellTextColor }
-		set {
-			self.appearanceStorage.dayCellTextColor = newValue;
-			self.updateManagedMonthViews { $0.dayCellTextColor = newValue };
+			self.updateManagedMonthViews { $0.dayCellFontDidUpdate () };
 		}
 	}
 	
@@ -184,7 +160,7 @@ extension CPCMonthViewsManager: CPCViewProtocol {
 		get { return self.appearanceStorage.separatorColor }
 		set {
 			self.appearanceStorage.separatorColor = newValue;
-			self.updateManagedMonthViews { $0.separatorColor = newValue };
+			self.updateManagedMonthViews { $0.gridAppearanceDidUpdate () };
 		}
 	}
 	
@@ -192,17 +168,26 @@ extension CPCMonthViewsManager: CPCViewProtocol {
 		get { return self.appearanceStorage.cellRenderer }
 		set {
 			self.appearanceStorage.cellRenderer = newValue;
-			self.updateManagedMonthViews { $0.cellRenderer = newValue };
+			self.updateManagedMonthViews { $0.gridAppearanceDidUpdate () };
 		}
 	}
 	
+	internal func dayCellTextColor (for state: DayCellState) -> UIColor? {
+		return self.appearanceStorage.cellTextColors [state];
+	}
+	
+	internal func setDayCellTextColor (_ textColor: UIColor?, for state: DayCellState) {
+		self.appearanceStorage.cellTextColors [state] = textColor;
+		self.updateManagedMonthViews { $0.gridAppearanceDidUpdate (for: state) };
+	}
+
 	internal func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
 		return self.appearanceStorage.cellBackgroundColors [state];
 	}
 	
 	internal func setDayCellBackgroundColor(_ backgroundColor: UIColor?, for state: DayCellState) {
 		self.appearanceStorage.cellBackgroundColors [state] = backgroundColor;
-		self.updateManagedMonthViews { $0.setDayCellBackgroundColor (backgroundColor, for: state) };
+		self.updateManagedMonthViews { $0.gridAppearanceDidUpdate (for: state) };
 	}
 }
 

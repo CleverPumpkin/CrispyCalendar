@@ -177,6 +177,17 @@ internal extension CPCMonthView {
 		internal func cellIndex (forRow row: Int, column: Int) -> CellIndex {
 			return self.cellFrames.indices.index (forRow: row, column: column);
 		}
+
+		internal func cellIndex (for day: CPCDay) -> CellIndex? {
+			let month = self.month;
+			guard month.contains (day) else {
+				return nil;
+			}
+			guard let firstDayIndex = self.cellFrames.indices.first else {
+				return nil;
+			}
+			return firstDayIndex.advanced (by: month [ordinal: firstDayIndex.row] [ordinal: firstDayIndex.column].distance (to: day));
+		}
 		
 		internal func horizontalSeparatorIndexes (for rows: CountableRange <Int>) -> CountableClosedRange <Int> {
 			return (rows.lowerBound ... rows.upperBound).clamped (to: 0 ... self.cellFrames.indices.rows.upperBound);

@@ -65,10 +65,6 @@ public protocol CPCMonthViewSelectionDelegate: AnyObject {
 open class CPCMonthView: UIControl, CPCViewProtocol {
 	private typealias CPCViewSelectionHandlerObject = AnyObject & CPCViewSelectionHandlerProtocol;
 	
-	open class override var requiresConstraintBasedLayout: Bool {
-		return true;
-	}
-	
 	/// Month that is currently being rendered by this view.
 	open var month: CPCMonth? {
 		didSet {
@@ -89,92 +85,67 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	}
 	
 	@IBInspectable open dynamic var titleFont: UIFont {
-		get {
-			return self.appearanceStorage.titleFont;
-		}
+		get { return self.effectiveAppearanceStorage.titleFont }
 		set {
 			self.appearanceStorage.titleFont = newValue;
-			self.effectiveTitleFont = self.scaledFont (self.titleFont, using: CPCMonthView.titleMetrics);
+			self.titleFontDidUpdate ();
 		}
 	}
 	@IBInspectable open dynamic var titleColor: UIColor {
-		get {
-			return self.appearanceStorage.titleColor;
-		}
+		get { return self.effectiveAppearanceStorage.titleColor }
 		set {
 			self.appearanceStorage.titleColor = newValue;
-			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
+			self.titleAppearanceDidUpdate ();
 		}
 	}
 	@IBInspectable open dynamic var titleAlignment: NSTextAlignment {
-		get {
-			return self.appearanceStorage.titleAlignment;
-		}
+		get { return self.effectiveAppearanceStorage.titleAlignment }
 		set {
 			guard (self.titleAlignment != newValue) else {
 				return;
 			}
 			self.appearanceStorage.titleAlignment = newValue;
-			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
+			self.titleAppearanceDidUpdate ();
 		}
 	}
 	open var titleStyle: TitleStyle {
-		get {
-			return self.appearanceStorage.titleStyle;
-		}
+		get { return self.effectiveAppearanceStorage.titleStyle }
 		set {
 			guard !self.isAppearanceProxy else {
 				return self.titleFormat = newValue.rawValue;
 			}
 			self.appearanceStorage.titleStyle = newValue;
-			self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
+			self.titleAppearanceDidUpdate ();
 		}
 	}
 	@IBInspectable open dynamic var titleMargins: UIEdgeInsets {
-		get {
-			return self.appearanceStorage.titleMargins;
-		}
+		get { return self.effectiveAppearanceStorage.titleMargins }
 		set {
 			self.appearanceStorage.titleMargins = newValue;
-			self.effectiveTitleMargins = self.scaledInsets (self.titleMargins, using: CPCMonthView.titleMetrics);
+			self.titleMarginsDidUpdate ();
 		}
 	}
 	
 	@IBInspectable open dynamic var dayCellFont: UIFont {
-		get {
-			return self.appearanceStorage.dayCellFont;
-		}
+		get { return self.effectiveAppearanceStorage.dayCellFont }
 		set {
 			self.appearanceStorage.dayCellFont = newValue;
-			self.effectiveDayCellFont = self.scaledFont (self.dayCellFont, using: CPCMonthView.dayCellTextMetrics);
-		}
-	}
-	@IBInspectable open dynamic var dayCellTextColor: UIColor {
-		get {
-			return self.appearanceStorage.dayCellTextColor;
-		}
-		set {
-			self.appearanceStorage.dayCellTextColor = newValue;
-			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
+			self.dayCellFontDidUpdate ();
 		}
 	}
 	@IBInspectable open dynamic var separatorColor: UIColor {
-		get {
-			return self.appearanceStorage.separatorColor;
-		}
+		get { return self.effectiveAppearanceStorage.separatorColor }
 		set {
 			self.appearanceStorage.separatorColor = newValue;
-			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
+			self.gridAppearanceDidUpdate ();
 		}
 	}
 	
 	open var cellRenderer: CPCDayCellRenderer {
-		get {
-			return self.appearanceStorage.cellRenderer;
-		}
+		get { return self.effectiveAppearanceStorage.cellRenderer }
 		set {
 			self.appearanceStorage.cellRenderer = newValue;
-			self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
+			self.gridAppearanceDidUpdate ();
 		}
 	}
 	
@@ -231,17 +202,17 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
-	internal var contentSizeCategoryObserver: NSObjectProtocol?;
-	internal var appearanceStorage = AppearanceStorage () {
-		didSet {
-			self.setNeedsFullAppearanceUpdate ();
-		}
+	internal let appearanceStorage = AppearanceStorage ();
+	
+	internal var effectiveAppearanceStorage: AppearanceStorage {
+		return self.monthViewsManager?.appearanceStorage ?? self.appearanceStorage;
 	}
 	internal var monthViewsManager: CPCMonthViewsManager? {
-		get {
-			return self.monthViewsManagerPtr?.pointee;
-		}
+		get { return self.monthViewsManagerPtr?.pointee }
 		set {
+			guard self.monthViewsManager !== newValue else {
+				return;
+			}
 			self.monthViewsManagerPtr = UnsafePointer (to: newValue);
 		}
 	};
@@ -251,10 +222,20 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	internal var needsFullAppearanceUpdate = true;
-	
+	internal var contentSizeCategoryObserver: NSObjectProtocol?;
+	internal var usesAspectRatioConstraint = true {
+		didSet {
+			self.setNeedsUpdateConstraints ();
+		}
+	}
+
 	private var layoutStorage: Layout?;
 	private unowned var aspectRatioConstraint: NSLayoutConstraint;
-	private var monthViewsManagerPtr: UnsafePointer <CPCMonthViewsManager>?;
+	private var monthViewsManagerPtr: UnsafePointer <CPCMonthViewsManager>? {
+		didSet {
+			self.setNeedsFullAppearanceUpdate ();
+		}
+	}
 	
 	public override init (frame: CGRect) {
 		self.aspectRatioConstraint = .placeholder;
@@ -297,22 +278,26 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
-	@objc open dynamic func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
-		return self.appearanceStorage.cellBackgroundColors [state];
+	@objc (dayCellTextColorForState:)
+	open dynamic func dayCellTextColor (for state: DayCellState) -> UIColor? {
+		return self.effectiveAppearanceStorage.cellTextColors [state];
 	}
 	
-	@objc open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
+	@objc (setDayCellTextColor:forState:)
+	open dynamic func setDayCellTextColor (_ backgroundColor: UIColor?, for state: DayCellState) {
+		self.appearanceStorage.cellTextColors [state] = backgroundColor;
+		self.gridAppearanceDidUpdate (for: state);
+	}
+
+	@objc (dayCellBackgroundColorForState:)
+	open dynamic func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
+		return self.effectiveAppearanceStorage.cellBackgroundColors [state];
+	}
+	
+	@objc (setDayCellBackgroundColor:forState:)
+	open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
 		self.appearanceStorage.cellBackgroundColors [state] = backgroundColor;
-		
-		switch (state) {
-		case .highlighted:
-			guard let highlightedIdx = self.highlightedDayIndex, let layout = self.layout else {
-				return;
-			}
-			self.setNeedsDisplay (layout.cellFrames [highlightedIdx]);
-		default:
-			self.setNeedsDisplay ();
-		}
+		self.gridAppearanceDidUpdate (for: state);
 	}
 
 	open override func setContentCompressionResistancePriority (_ priority: UILayoutPriority, for axis: NSLayoutConstraint.Axis) {
@@ -324,8 +309,12 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	open override func updateConstraints () {
 		self.aspectRatioConstraint.isActive = false;
-		self.aspectRatioConstraint = self.layoutAttributes.map { self.aspectRatioLayoutConstraint (for: $0) } ?? self.heightAnchor.constraint (equalToConstant: 0.0);
-		self.aspectRatioConstraint.isActive = true;
+		if (self.usesAspectRatioConstraint) {
+			self.aspectRatioConstraint = self.layoutAttributes.map { self.aspectRatioLayoutConstraint (for: $0) } ?? self.heightAnchor.constraint (equalToConstant: 0.0);
+			self.aspectRatioConstraint.isActive = true;
+		} else {
+			self.aspectRatioConstraint = .placeholder;
+		}
 		
 		super.updateConstraints ();
 	}
@@ -425,8 +414,6 @@ extension CPCMonthView: CPCViewContentAdjusting {
 	}
 }
 
-extension CPCMonthView: CPCViewBackedByAppearanceStorage {}
-
 extension CPCMonthView: CPCViewDelegatingSelectionHandling {
 	open var selection: CPCViewSelection {
 		get { return self.selectionHandler.selection }
@@ -504,6 +491,63 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 	}
 }
 
+internal extension CPCMonthView {
+	internal func titleFontDidUpdate () {
+		self.effectiveTitleFont = self.scaledFont (self.titleFont, using: CPCMonthView.titleMetrics);
+	}
+	
+	internal func titleMarginsDidUpdate () {
+		self.effectiveTitleMargins = self.scaledInsets (self.titleMargins, using: CPCMonthView.titleMetrics);
+	}
+	
+	internal func titleAppearanceDidUpdate () {
+		if (self.needsFullAppearanceUpdate) {
+			return;
+		}
+		self.setNeedsDisplay (self.layout?.titleFrame ?? self.bounds);
+	}
+	
+	internal func dayCellFontDidUpdate () {
+		self.effectiveDayCellFont = self.scaledFont (self.dayCellFont, using: CPCMonthView.dayCellTextMetrics);
+	}
+	
+	internal func gridAppearanceDidUpdate () {
+		if (self.needsFullAppearanceUpdate) {
+			return;
+		}
+		self.setNeedsDisplay (self.layout?.gridFrame ?? self.bounds);
+	}
+	
+	internal func gridAppearanceDidUpdate (for state: DayCellState) {
+		if (self.needsFullAppearanceUpdate) {
+			return;
+		}
+		guard let month = self.month, let layout = self.layout else {
+			return;
+		}
+		
+		if (state.contains ([])) {
+			return self.gridAppearanceDidUpdate ();
+		}
+		
+		let today = CPCDay.today;
+		if state.contains (.isToday), month.contains (today), let todayCellIndex = layout.cellIndex (for: today) {
+			self.setNeedsDisplay (layout.cellFrames [todayCellIndex]);
+		}
+		if state.contains (.selected) {
+			for day in self.selection.difference (.none) {
+				guard let cellIdx = layout.cellIndex (for: day) else {
+					continue;
+				}
+				self.setNeedsDisplay (layout.cellFrames [cellIdx]);
+			}
+		}
+		if state.contains (.highlighted), let highlightedIdx = self.highlightedDayIndex {
+			self.setNeedsDisplay (layout.cellFrames [highlightedIdx]);
+		}
+	}
+}
+
 extension CPCMonthView {
 	private func setNeedsFullAppearanceUpdate () {
 		self.needsFullAppearanceUpdate = true;
@@ -540,18 +584,19 @@ extension CPCMonthView {
 		guard !self.needsFullAppearanceUpdate else {
 			return;
 		}
-		
-		guard let layout = self.layout, let month = self.month, let firstDayIndex = layout.cellFrames.indices.first else {
+		guard let layout = self.layout else {
 			return;
 		}
-		
-		let firstDay = month [ordinal: firstDayIndex.row] [ordinal: firstDayIndex.column], selectionDiff = self.selection.difference (oldValue);
+		let selectionDiff = self.selection.difference (oldValue);
 		guard !selectionDiff.isEmpty else {
 			return;
 		}
 		
 		for day in selectionDiff {
-			self.setNeedsDisplay (layout.cellFrames [firstDayIndex.advanced (by: firstDay.distance (to: day))]);
+			guard let cellIndex = layout.cellIndex (for: day) else {
+				continue;
+			}
+			self.setNeedsDisplay (layout.cellFrames [cellIndex]);
 		}
 	}
 }

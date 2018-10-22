@@ -102,10 +102,6 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 		get { return self.monthViewsManager.dayCellFont }
 		set { self.monthViewsManager.dayCellFont = newValue }
 	}
-	@IBInspectable open dynamic var dayCellTextColor: UIColor {
-		get { return self.monthViewsManager.dayCellTextColor }
-		set { self.monthViewsManager.dayCellTextColor = newValue }
-	}
 	@IBInspectable open dynamic var separatorColor: UIColor {
 		get { return self.monthViewsManager.separatorColor }
 		set { self.monthViewsManager.separatorColor = newValue }
@@ -142,11 +138,23 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 		self.monthViewsManager.prepareForContainerDeallocation ();
 	}
 
-	@objc open dynamic func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
+	@objc (dayCellTextColorForState:)
+	open dynamic func dayCellTextColor (for state: DayCellState) -> UIColor? {
+		return self.monthViewsManager.dayCellTextColor (for: state);
+	}
+	
+	@objc (setDayCellTextColor:forState:)
+	open dynamic func setDayCellTextColor (_ textColor: UIColor?, for state: DayCellState) {
+		self.monthViewsManager.setDayCellTextColor (textColor, for: state);
+	}
+
+	@objc (dayCellBackgroundColorForState:)
+	open dynamic func dayCellBackgroundColor (for state: DayCellState) -> UIColor? {
 		return self.monthViewsManager.dayCellBackgroundColor (for: state);
 	}
 	
-	@objc open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
+	@objc (setDayCellBackgroundColor:forState:)
+	open dynamic func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState) {
 		self.monthViewsManager.setDayCellBackgroundColor (backgroundColor, for: state);
 	}
 	
@@ -218,5 +226,4 @@ extension CPCMultiMonthsView: CPCViewDelegatingSelectionHandling {
 	}
 }
 
-extension CPCMultiMonthsView: CPCViewBackedByAppearanceStorage {}
 extension CPCMultiMonthsView: UIContentSizeCategoryAdjusting {}

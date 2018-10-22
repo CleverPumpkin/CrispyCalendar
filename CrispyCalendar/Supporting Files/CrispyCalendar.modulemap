@@ -1,4 +1,5 @@
 framework module CrispyCalendar {
+	header "CrispyCalendar.h"
 	header "CPCCalendarUnitSymbolStyle.h"
 	header "CPCViewTitleStyle.h"
 	

@@ -23,32 +23,6 @@
 
 import UIKit
 
-fileprivate extension BinaryInteger {
-	fileprivate var usedBitCount: Int {
-		guard self > 0 else {
-			return (self == 0) ? 0 : self.bitWidth;
-		}
-		
-		let words = self.words;
-		var iterator = words.makeIterator ();
-		guard var lastWord = iterator.next () else {
-			return 0;
-		}
-		var result = 0;
-		while let word = iterator.next () {
-			result += UInt.bitWidth;
-			lastWord = word;
-		}
-		return result + lastWord.usedBitCount;
-	}
-}
-
-fileprivate extension FixedWidthInteger {
-	fileprivate var usedBitCount: Int {
-		return Self.bitWidth - self.leadingZeroBitCount;
-	}
-}
-
 /// Dictionary-like container
 internal struct CPCDayCellStateBasedStorage <Value>: ExpressibleByDictionaryLiteral {
 	internal typealias State = CPCDayCellState;
@@ -80,7 +54,24 @@ internal struct CPCDayCellStateBasedStorage <Value>: ExpressibleByDictionaryLite
 	
 	internal subscript (state: State) -> Value? {
 		get {
-			return (state.isCompressible ? self.commonValues [state.compressedIndex] : self.extraValues? [state]);
+			guard state.isCompressible else {
+				return self.extraValues? [state];
+			}
+			
+			if let result = self.commonValues [state.compressedIndex] {
+				return result;
+			}
+			if (state.contains (.isToday)) {
+				return self [state.subtracting (.isToday)];
+			} else if (state.contains (.disabled)) {
+				return self [state.subtracting (.disabled)];
+			} else if (state.contains (.selected)) {
+				return self [state.subtracting (.selected)];
+			} else if (state.contains (.highlighted)) {
+				return self [state.subtracting (.highlighted)];
+			} else {
+				return nil;
+			}
 		}
 		set {
 			if state.isCompressible {
@@ -138,9 +129,11 @@ internal final class CPCViewAppearanceStorage {
 	internal var titleStyle = CPCViewTitleStyle.default;
 	internal var titleMargins = UIEdgeInsets.defaultMonthTitle;
 	internal var dayCellFont = UIFont.defaultDayCellText;
-	internal var dayCellTextColor = UIColor.defaultDayCellText;
 	internal var separatorColor = UIColor.defaultSeparator;
 	internal var cellRenderer: CPCDayCellRenderer = CPCDefaultDayCellRenderer ();
+	internal var cellTextColors: CPCDayCellStateBasedStorage <UIColor> = [
+		[]: UIColor.defaultDayCellText,
+	];
 	internal var cellBackgroundColors: CPCDayCellStateBasedStorage <UIColor> = [
 		[]: .white,
 		.highlighted: UIColor.yellow.withAlphaComponent (0.125),
@@ -164,14 +157,24 @@ public protocol CPCViewProtocol: AnyObject {
 	var titleMargins: UIEdgeInsets { get set };
 	/// The font used to display each day's title.
 	var dayCellFont: UIFont { get set };
-	/// The color each day's title.
-	var dayCellTextColor: UIColor { get set };
 	/// The color of separator lines between days.
 	var separatorColor: UIColor { get set };
 	/// Value describing currently selected days in this view.
 	var selection: Selection { get set };
 	/// Renderer that is used to draw each day cell.
 	var cellRenderer: CellRenderer { get set };
+
+	/// Returns the day cell text color used for a state.
+	///
+	/// - Parameter state: The state that uses the text color.
+	func dayCellTextColor (for state: DayCellState) -> UIColor?;
+	
+	/// Sets the text color of the day cell to use for the specified state.
+	///
+	/// - Parameters:
+	///   - textColor: The color of the text to use for the specified state.
+	///   - state: The state that uses the specified color.
+	func setDayCellTextColor (_ textColor: UIColor?, for state: DayCellState);
 
 	/// Returns the day cell background color used for a state.
 	///
@@ -195,32 +198,6 @@ public extension CPCViewProtocol {
 	public typealias Selection = CPCViewSelection;
 	/// See `CPCDayCellRenderer`.
 	public typealias CellRenderer = CPCDayCellRenderer;
-}
-
-internal extension CPCViewProtocol {
-	internal func copyStyle <View> (from otherView: View) where View: CPCViewProtocol {
-		self.titleFont = otherView.titleFont;
-		self.titleColor = otherView.titleColor;
-		self.titleAlignment = otherView.titleAlignment;
-		self.titleStyle = otherView.titleStyle;
-		self.dayCellFont = otherView.dayCellFont;
-		self.dayCellTextColor = otherView.dayCellTextColor;
-		self.separatorColor = otherView.separatorColor;
-
-		for state in CPCDayCellState.allCases {
-			self.setDayCellBackgroundColor (otherView.dayCellBackgroundColor (for: state), for: state);
-		}
-	}
-}
-
-internal protocol CPCViewBackedByAppearanceStorage: AnyObject {
-	var appearanceStorage: CPCViewAppearanceStorage { get set };
-}
-
-internal extension CPCViewBackedByAppearanceStorage where Self: CPCViewProtocol {
+	/// See `CPCViewAppearanceStorage`
 	internal typealias AppearanceStorage = CPCViewAppearanceStorage;
-	
-	internal func copyStyle <View> (from otherView: View) where View: CPCViewProtocol, View: CPCViewBackedByAppearanceStorage {
-		self.appearanceStorage = otherView.appearanceStorage;
-	}
 }

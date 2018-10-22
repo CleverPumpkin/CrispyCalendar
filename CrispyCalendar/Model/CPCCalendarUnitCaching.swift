@@ -211,10 +211,6 @@ internal extension CPCCalendarWrapper {
 			self.calendarWrapper = calendarWrapper;
 		}
 		
-		fileprivate func purgeAllCachesIfNeeded () {
-			self.calendarWrapper.purgeCacheIfNeeded ();
-		}
-		
 		fileprivate func purge (factor: Double) {
 			self.enumerateSubcaches { (subcache: inout CPCCalendarUnitSpecificCacheProtocol) in
 				subcache.purge (factor: factor);
@@ -246,7 +242,6 @@ internal extension CPCCalendarWrapper {
 			self.distancesCache [UnitDistancesStorage.Key (otherUnit, pairedWith: unit)] = -distance;
 			self.advancedUnitsCache [UnitAdvancesStorage.Key (unit, pairedWith: distance)] = otherUnit;
 			self.advancedUnitsCache [UnitAdvancesStorage.Key (otherUnit, pairedWith: -distance)] = unit;
-			self.purgeAllCachesIfNeeded ();
 		}
 		
 		fileprivate func calendarUnit (_ unit: Unit, advancedBy value: Unit.Stride) -> Unit? {
@@ -258,7 +253,6 @@ internal extension CPCCalendarWrapper {
 			self.advancedUnitsCache [UnitAdvancesStorage.Key (otherUnit, pairedWith: -value)] = unit;
 			self.distancesCache [UnitDistancesStorage.Key (unit, pairedWith: otherUnit)] = value;
 			self.distancesCache [UnitDistancesStorage.Key (otherUnit, pairedWith: unit)] = -value;
-			self.purgeAllCachesIfNeeded ();
 		}
 		
 		fileprivate override func enumerateSubcaches (using block: (CPCCalendarUnitSpecificCacheProtocol) -> ()) -> () {
@@ -289,7 +283,6 @@ internal extension CPCCalendarWrapper {
 		fileprivate func calendarUnit (_ unit: Unit, cacheElement element: Unit.Element, for index: Unit.Index) {
 			self.smallerUnitValuesCache [UnitValuesStorage.Key (unit, pairedWith: index)] = element;
 			self.smallerUnitIndexesCache [UnitIndexesStorage.Key (unit, pairedWith: element)] = index;
-			self.purgeAllCachesIfNeeded ();
 		}
 		
 		fileprivate func calendarUnit (_ unit: Unit, indexOf element: Unit.Element) -> Unit.Index? {
@@ -299,7 +292,6 @@ internal extension CPCCalendarWrapper {
 		fileprivate func calendarUnit (_ unit: Unit, cacheIndex index: Unit.Index, for element: Unit.Element) {
 			self.smallerUnitIndexesCache [UnitIndexesStorage.Key (unit, pairedWith: element)] = index;
 			self.smallerUnitValuesCache [UnitValuesStorage.Key (unit, pairedWith: index)] = element;
-			self.purgeAllCachesIfNeeded ();
 		}
 		
 		fileprivate override func enumerateSubcaches (using block: (CPCCalendarUnitSpecificCacheProtocol) -> ()) -> () {
@@ -325,6 +317,16 @@ internal extension CPCCalendarWrapper {
 		return self.unitSpecificCaches.withStoredValue { $0.values.reduce (0) { $0 + $1.count } };
 	}
 
+	internal func purgeCacheIfNeeded () {
+		if (self.currentCacheSize > CPCCalendarWrapper.cacheSizeThreshold) {
+			self.unitSpecificCaches.withMutableStoredValue {
+				for key in $0.keys {
+					$0 [key]?.purge (factor: CPCCalendarWrapper.cachePurgeFactor);
+				}
+			};
+		}
+	}
+
 	fileprivate func unitSpecificCacheInstance <Unit, Cache> () -> Cache where Cache: CompoundUnitSpecificCache <Unit> {
 		return self.unitSpecificCacheInstanceImpl ();
 	}
@@ -343,16 +345,5 @@ internal extension CPCCalendarWrapper {
 			caches [typeID] = instance;
 			return instance;
 		};
-
-	}
-
-	fileprivate func purgeCacheIfNeeded () {
-		if (self.currentCacheSize > CPCCalendarWrapper.cacheSizeThreshold) {
-			self.unitSpecificCaches.withMutableStoredValue {
-				for key in $0.keys {
-					$0 [key]?.purge (factor: CPCCalendarWrapper.cachePurgeFactor);
-				}
-			};
-		}
 	}
 }

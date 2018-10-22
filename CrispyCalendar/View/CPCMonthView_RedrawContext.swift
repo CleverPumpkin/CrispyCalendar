@@ -159,8 +159,9 @@ internal extension CPCMonthView {
 		private let dayFormatter: DateFormatter;
 		private let separatorColor: UIColor;
 		private let cellTitleHeight: CGFloat;
-		private let cellTitleAttributes: NSDictionary;
 		private let cellRenderer: CellRenderer;
+		private let cellTitleFont: UIFont;
+		private let cellTextColorGetter: (DayCellState) -> UIColor?;
 		private let cellBackgroundColorGetter: (DayCellState) -> UIColor?;
 	}
 	
@@ -301,6 +302,12 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 	private typealias GridRedrawContext = CPCMonthView.GridRedrawContext;
 	
 	private struct DayCellRenderingContext: CPCDayCellRenderingContext {
+		fileprivate static let titleAttributesKeys: [NSCopying] = [
+			NSAttributedString.Key.foregroundColor.rawValue as NSString,
+			NSAttributedString.Key.font.rawValue as NSString,
+			NSAttributedString.Key.paragraphStyle.rawValue as NSString,
+		];
+		
 		fileprivate let graphicsContext: CGContext;
 		fileprivate let day: CPCDay;
 
@@ -308,7 +315,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 			return self.parent.dayCellState (for: self.day, at: self.cellIndex);
 		}
 		fileprivate var backgroundColor: UIColor? {
-			return self.parent.effectiveBackgroundColor (state: self.state);
+			return self.parent.cellBackgroundColorGetter (self.state);
 		}
 		fileprivate var frame: CGRect {
 			return self.parent.layout.cellFrames [self.cellIndex];
@@ -317,7 +324,11 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 			return self.parent.dayFormatter.string (from: self.day.start) as NSString;
 		}
 		fileprivate var titleAttributes: NSDictionary {
-			return self.parent.cellTitleAttributes;
+			return NSDictionary (
+				objects: [self.parent.cellTextColorGetter (self.state) ?? UIColor.clear, self.parent.cellTitleFont, NSParagraphStyle.dayCellTitleStyle],
+				forKeys: DayCellRenderingContext.titleAttributesKeys,
+				count: DayCellRenderingContext.titleAttributesKeys.count
+			);
 		}
 		fileprivate var titleFrame: CGRect {
 			let frame = self.frame, halfSeparatorWidth = self.parent.layout.separatorWidth / 2.0;
@@ -375,6 +386,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 			return nil;
 		}
 		
+		let dayCellFont = view.effectiveDayCellFont;
 		self.month = month;
 		self.layout = layout;
 		self.cellIndices = indices;
@@ -382,16 +394,12 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.separatorColor = view.separatorColor;
 		self.backgroundColor = view.backgroundColor;
 		self.clearingContext = CPCMonthView.GridRedrawContext.makeClearingContext (for: rect, ifNeededIn: view);
-		self.cellBackgroundColorGetter = view.dayCellBackgroundColor;
+		self.cellTitleFont = dayCellFont;
+		self.cellTextColorGetter = { view.effectiveAppearanceStorage.cellTextColors [$0] };
+		self.cellBackgroundColorGetter = { view.effectiveAppearanceStorage.cellBackgroundColors [$0] };
 
-		let dayCellFont = view.effectiveDayCellFont;
 		self.dayFormatter = DateFormatter.dequeueFormatter (for: month, dateFormatTemplate: "d");
 		self.cellTitleHeight = dayCellFont.lineHeight.rounded (.up, scale: layout.separatorWidth);
-		self.cellTitleAttributes = NSDictionary (
-			objects: [dayCellFont, view.dayCellTextColor],
-			forKeys: [NSAttributedString.Key.font.rawValue as NSString, NSAttributedString.Key.foregroundColor.rawValue as NSString],
-			count: 2
-		) as NSDictionary;
 	}
 		
 	fileprivate func run (context ctx: CGContext) {
@@ -416,7 +424,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		}
 		ctx.clip (using: .evenOdd);
 		
-		if let normalBackgroundColor = self.effectiveBackgroundColor (state: []), !normalBackgroundColor.isInvisible {
+		if let normalBackgroundColor = self.cellBackgroundColorGetter ([]), !normalBackgroundColor.isInvisible {
 			ctx.setFillColor (normalBackgroundColor.cgColor);
 			ctx.fill (frame);
 		} else if let backgroundColor = self.backgroundColor, !backgroundColor.isInvisible {
@@ -426,7 +434,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 			ctx.clear (frame);
 		}
 		for index in self.cellIndices.affected {
-			let renderingContext = DayCellRenderingContext.init (self, cellIndex: index, graphicsContext: ctx);
+			let renderingContext = DayCellRenderingContext (self, cellIndex: index, graphicsContext: ctx);
 			self.cellRenderer.drawCell (in: renderingContext);
 		}
 		
@@ -446,21 +454,11 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		ctx.strokeLineSegments (between: separatorPoints);
 	}
 	
-	private func effectiveBackgroundColor (state: DayCellState) -> UIColor? {
-		for state in sequence (first: state, next: { $0.parent }) {
-			if let result = self.cellBackgroundColorGetter (state) {
-				return result;
-			}
-		}
-		return nil;
-	}
-
 	private func dayCellState (for day: CPCDay, at index: CellIndex) -> DayCellState {
 		var result: DayCellState = [];
 		if (day == .today) {
 			result.formUnion (.isToday);
 		}
-
 		if let enabledIndices = self.cellIndices.enabled, !enabledIndices.contains (index) {
 			result.formUnion (.disabled);
 		} else if let selectedIndices = self.cellIndices.selected, selectedIndices.contains (index) {
@@ -470,4 +468,8 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		}
 		return result;
 	}
+}
+
+fileprivate extension NSParagraphStyle {
+	fileprivate static let dayCellTitleStyle = NSParagraphStyle.style (alignment: .center, lineBreakMode: .byClipping);
 }
