@@ -25,6 +25,8 @@ import UIKit
 
 extension CPCCalendarView {
 	internal class Layout: UICollectionViewLayout {
+		internal typealias ColumnContentInsetsReference = CPCCalendarView.ColumnContentInsetsReference;
+		
 		internal var columnCount = 1 {
 			didSet {
 				self.invalidateLayout ();
@@ -33,6 +35,13 @@ extension CPCCalendarView {
 		}
 		
 		internal var columnContentInsets = UIEdgeInsets.zero {
+			didSet {
+				self.invalidateLayout ();
+				self.collectionView?.reloadData ();
+			}
+		}
+		
+		internal var columnContentInsetsReference: ColumnContentInsetsReference = .default {
 			didSet {
 				self.invalidateLayout ();
 				self.collectionView?.reloadData ();
@@ -141,6 +150,18 @@ extension CPCCalendarView.Layout: UICollectionViewDelegate {
 		}
 	}
 	
+	internal func layoutMarginsDidChange () {
+		if (self.columnContentInsetsReference == .fromLayoutMargins) {
+			self.invalidateLayout ();
+		}
+	}
+	
+	internal func safeAreaInsetsDidChange () {
+		if (self.columnContentInsetsReference == .fromSafeAreaInsets) {
+			self.invalidateLayout ();
+		}
+	}
+
 	internal func scrollViewShouldScrollToTop (_ scrollView: UIScrollView) -> Bool {
 		return (scrollView !== self.collectionView) || !self.scrollToToday ();
 	}

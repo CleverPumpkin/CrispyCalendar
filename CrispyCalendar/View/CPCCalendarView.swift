@@ -66,6 +66,22 @@ public protocol CPCCalendarViewSelectionDelegate: AnyObject {
 /// the same unified selection handling and appearance attributes management, but assigning
 /// month values to specific views or arranging them visually remains under user control.
 open class CPCCalendarView: UIView {
+	@objc (CPCCalendarViewColumnContentInsetsReference)
+	public enum ColumnContentInsetsReference: Int {
+		case none;
+		case fromContentInset;
+		case fromLayoutMargins;
+		case fromSafeAreaInsets;
+		
+		internal static var `default`: ColumnContentInsetsReference {
+			if #available (iOS 11.0, *) {
+				return .fromSafeAreaInsets;
+			} else {
+				return .fromLayoutMargins;
+			}
+		}
+	};
+	
 	/// Calendar to be used for various locale-dependent info.
 	open var calendar: Calendar {
 		get { return self.calendarWrapper.calendar }
@@ -113,6 +129,11 @@ open class CPCCalendarView: UIView {
 		set { self.layout.columnContentInsets = newValue }
 	}
 	
+	@IBInspectable open dynamic var columnContentInsetsReference: ColumnContentInsetsReference {
+		get { return self.layout.columnContentInsetsReference }
+		set { self.layout.columnContentInsetsReference = newValue }
+	}
+	
 	internal unowned let collectionView: UICollectionView;
 
 	internal var calendarViewController: CPCCalendarViewController?;
@@ -150,6 +171,31 @@ open class CPCCalendarView: UIView {
 	open override func layoutSubviews () {
 		super.layoutSubviews ();
 		self.collectionView.frame = self.bounds;
+	}
+	
+	open override func layoutMarginsDidChange () {
+		super.layoutMarginsDidChange ();
+		self.layout.layoutMarginsDidChange ();
+	}
+	
+	@available (iOS 11.0, *)
+	open override func safeAreaInsetsDidChange () {
+		super.safeAreaInsetsDidChange ();
+		self.layout.safeAreaInsetsDidChange ();
+	}
+	
+	open override func didAddSubview (_ subview: UIView) {
+		super.didAddSubview (subview);
+		if let weekView = subview as? CPCWeekView {
+			weekView.calendarView = self;
+		}
+	}
+	
+	open override func willRemoveSubview (_ subview: UIView) {
+		if let weekView = subview as? CPCWeekView {
+			weekView.calendarView = nil;
+		}
+		super.willRemoveSubview (subview);
 	}
 }
 

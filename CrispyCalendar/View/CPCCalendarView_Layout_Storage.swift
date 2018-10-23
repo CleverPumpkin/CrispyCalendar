@@ -27,6 +27,23 @@ internal extension CPCCalendarView.Layout {
 	internal typealias Storage = CPCCalendarViewLayoutStorage;
 	private typealias Column = (x: CGFloat, width: CGFloat);
 	
+	internal var currentReferenceContentInsets: UIEdgeInsets {
+		switch (self.columnContentInsetsReference) {
+		case .none:
+			return .zero;
+		case .fromContentInset:
+			return guarantee (self.collectionView).contentInset;
+		case .fromLayoutMargins:
+			return guarantee (self.collectionView).layoutMargins;
+		case .fromSafeAreaInsets:
+			if #available (iOS 11.0, *) {
+				return guarantee (self.collectionView).safeAreaInsets
+			} else { // can not happen
+				fatalError ("Something weird just happened");
+			}
+		}
+	}
+	
 	internal static func makeEmptyStorage () -> Storage {
 		return EmptyStorage ();
 	}
@@ -123,9 +140,10 @@ internal extension CPCCalendarView.Layout {
 	}
 	
 	private func makeColumns (_ columnCount: Int) -> [Column] {
-		let insets = self.columnContentInsets, collectionView = guarantee (self.collectionView), width = collectionView.bounds.width, scale = collectionView.separatorWidth;
-		let columnsX = (0 ... columnCount).map { (CGFloat ($0) * width / CGFloat (columnCount)).rounded (scale: scale) };
-		return (0 ..< columnCount).map { (col: Int) in (x: columnsX [col] + insets.left, width: columnsX [col + 1] - columnsX [col] - insets.left - insets.right) };
+		let referenceInsets = self.currentReferenceContentInsets, collectionView = guarantee (self.collectionView), scale = collectionView.separatorWidth;
+		let leading = referenceInsets.left, width = collectionView.bounds.width - referenceInsets.left - referenceInsets.right, columnInsets = self.columnContentInsets;
+		let columnsX = (0 ... columnCount).map { fma (CGFloat ($0), width / CGFloat (columnCount), leading).rounded (scale: scale) };
+		return (0 ..< columnCount).map { (col: Int) in (x: columnsX [col] + columnInsets.left, width: columnsX [col + 1] - columnsX [col] - columnInsets.left - columnInsets.right) };
 	}
 	
 	private func makeRows (before rowInfo: RowInfo, columns: [Column], stop predicate: (RowInfo) -> Bool) -> [RowInfo] {

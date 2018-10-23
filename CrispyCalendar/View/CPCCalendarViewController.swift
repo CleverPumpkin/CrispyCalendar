@@ -152,7 +152,10 @@ open class CPCCalendarViewController: UIViewController {
 	}
 	
 	/// Week view that is rendered as part of calendar view.
-	open var weekView: CPCWeekView!;
+	open var weekView: CPCWeekView! {
+		willSet { self.weekView?.removeFromSuperview () }
+		didSet { self.calendarView.addSubview (weekView) }
+	}
 	
 	/// Selected days associated with this view controller.
 	open var selection: CPCViewSelection {
@@ -187,13 +190,13 @@ open class CPCCalendarViewController: UIViewController {
 	/// The number of columns to display in a calendar view.
 	@IBInspectable open dynamic var columnCount: Int {
 		get { return self.calendarView.columnCount }
-		set { (self.calendarView.columnCount, self.weekView.columnCount) = (newValue, newValue) }
+		set { self.calendarView.columnCount = newValue }
 	}
 	
 	/// Insets or outsets that are applied to each calendar column.
 	@IBInspectable open dynamic var columnContentInsets: UIEdgeInsets {
 		get { return self.calendarView.columnContentInsets }
-		set { (self.calendarView.columnContentInsets, self.weekView.columnContentInsets) = (newValue, newValue) }
+		set { self.calendarView.columnContentInsets = newValue }
 	}
 
 	private var selectionStorage: SelectionStorageProtocol!;

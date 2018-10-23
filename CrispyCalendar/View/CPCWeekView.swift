@@ -54,16 +54,12 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	
 	/// Calendar to be used for weekday order & names.
 	open var calendar = Calendar.currentUsed {
-		didSet {
-			self.setNeedsDisplay ();
-		}
+		didSet { self.setNeedsDisplay () }
 	}
 	
 	/// Style of rendered symbols.
 	open var style: CPCDay.Weekday.Style {
-		get {
-			return self.styleValue;
-		}
+		get { return self.styleValue }
 		set {
 			guard !self.isAppearanceProxy else {
 				return self.cStyle = newValue.cStyle;
@@ -73,19 +69,6 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 		}
 	}
 	
-	@IBInspectable open dynamic var columnCount = 1 {
-		didSet {
-			self.setNeedsDisplay ();
-		}
-	}
-	
-	@IBInspectable open dynamic var columnContentInsets = UIEdgeInsets.zero {
-		didSet {
-			self.setNeedsDisplay ();
-		}
-	}
-	
-
 	open override var intrinsicContentSize: CGSize {
 		return CGSize (width: UIView.noIntrinsicMetric, height: self.effectiveFont.lineHeight.rounded (.up, scale: self.separatorWidth));
 	}
@@ -97,8 +80,16 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	
 	internal var contentSizeCategoryObserver: NSObjectProtocol?;
 	
+	internal var calendarView: CPCCalendarView? {
+		get { return self.calendarViewPtr?.pointee }
+		set { self.calendarViewPtr = UnsafePointer (to: newValue) }
+	}
+	
 	private var weekendColorWasCustomized = false;
 	private var styleValue = CPCDay.Weekday.Style.short;
+	private var calendarViewPtr: UnsafePointer <CPCCalendarView>? {
+		didSet { self.setNeedsDisplay () }
+	}
 	
 	/// Font that is actually used for text rendering. It is equivalent to `font` when `adjustsFontForContentSizeCategory` is `false`
 	/// and is scaled version of `font` otherwise.
@@ -131,14 +122,68 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 		return CGSize (width: size.width, height: self.intrinsicContentSize.height);
 	}
 	
+	open override func layoutMarginsDidChange () {
+		super.layoutMarginsDidChange ();
+		
+		switch (self.calendarView?.columnContentInsetsReference) {
+		case nil, .some (.fromLayoutMargins):
+			self.setNeedsDisplay ();
+		default:
+			break;
+		}
+	}
+	
+	@available (iOS 11.0, *)
+	open override func safeAreaInsetsDidChange () {
+		super.safeAreaInsetsDidChange ();
+
+		switch (self.calendarView?.columnContentInsetsReference) {
+		case nil, .some (.fromSafeAreaInsets):
+			self.setNeedsDisplay ();
+		default:
+			break;
+		}
+	}
+	
 	open override func draw (_ rect: CGRect) {
-		let columnCount = CGFloat (self.columnCount), boundsSize = self.bounds.standardized.size;
-		let columnLeftInset = self.columnContentInsets.left, columnWidthInset = columnLeftInset + self.columnContentInsets.right;
-		for column in 0 ..< self.columnCount {
+		let columnCount: Int, referenceInsets: UIEdgeInsets, columnContentInsets: UIEdgeInsets;
+		if let calendarView = self.calendarView {
+			columnCount = calendarView.columnCount;
+			columnContentInsets = calendarView.columnContentInsets;
+			referenceInsets = calendarView.layout.currentReferenceContentInsets;
+		} else {
+			columnCount = 1;
+			columnContentInsets = .zero;
+			if #available (iOS 11.0, *) {
+				let safeAreaInsets = self.safeAreaInsets, layoutMargins = self.layoutMargins;
+				if self.insetsLayoutMarginsFromSafeArea {
+					referenceInsets = UIEdgeInsets (
+						top: safeAreaInsets.top + layoutMargins.top,
+						left: safeAreaInsets.left + layoutMargins.left,
+						bottom: safeAreaInsets.bottom + layoutMargins.bottom,
+						right: safeAreaInsets.right + layoutMargins.right
+					);
+				} else {
+					referenceInsets = UIEdgeInsets (
+						top: max (safeAreaInsets.top, layoutMargins.top),
+						left: max (safeAreaInsets.left, layoutMargins.left),
+						bottom: max (safeAreaInsets.bottom, layoutMargins.bottom),
+						right: max (safeAreaInsets.right, layoutMargins.right)
+					);
+				}
+			} else {
+				referenceInsets = self.layoutMargins;
+			}
+		}
+		
+		let boundsSize = self.bounds.standardized.size, leading = referenceInsets.left, width = boundsSize.width - referenceInsets.left - referenceInsets.right;
+		let columnLeftInset = columnContentInsets.left, columnWidthInset = columnLeftInset + columnContentInsets.right;
+		for column in 0 ..< columnCount {
+			let columnCount = CGFloat (columnCount);
 			self.drawSingleWeek (in: CGRect (
-				x: columnLeftInset + CGFloat (column) / columnCount * boundsSize.width,
+				x: leading + columnLeftInset + CGFloat (column) / columnCount * width,
 				y: 0.0,
-				width: boundsSize.width / columnCount - columnWidthInset,
+				width: width / columnCount - columnWidthInset,
 				height: boundsSize.height
 			));
 		}
