@@ -133,11 +133,14 @@ public extension CPCViewMeasuring {
 
 /// A view type that sizes instances using linear equation.
 public protocol CPCFixedAspectRatioView: CPCViewMeasuring {
+	/// Tuple representing multiplier `K` and constant `C` of a linear equation.
+	typealias AspectRatio = (multiplier: CGFloat, constant: CGFloat);
+	
 	/// Returns coefficients of equation `ViewHeight = K x ViewWidth + C` to fit content.
 	///
 	/// - Parameter attributes: View-specific layout attributes to perform layout calculations.
 	/// - Returns: Multiplier K and constant C.
-	static func aspectRatioComponents (for attributes: LayoutAttributes) -> (multiplier: CGFloat, constant: CGFloat)?;
+	static func aspectRatioComponents (for attributes: LayoutAttributes) -> AspectRatio?;
 }
 
 extension CPCFixedAspectRatioView {

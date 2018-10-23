@@ -445,15 +445,41 @@ extension CPCMonthView: CPCViewDelegatingSelectionHandling {
 }
 
 extension CPCMonthView: CPCFixedAspectRatioView {
-	public struct LayoutAttributes: CPCViewLayoutAttributes {
-		fileprivate let month: CPCMonth;
+	/// This type groups various non-calendric layout attributes into single structure.
+	public struct PartialLayoutAttributes {
 		fileprivate let titleHeight: CGFloat;
 		fileprivate let separatorWidth: CGFloat;
 		
+		/// Initializes new non-calendric layout attributes instance.
+		///
+		/// - Parameters:
+		///   - separatorWidth: Width of separator lines of the measured view. Typically is equal to `roundingScale`.
+		///   - titleFont: Font that the measure view would use to render month title.
+		///   - titleMargins: Additional month view title insets/outsets.
+		public init (separatorWidth: CGFloat, titleFont: UIFont, titleMargins: UIEdgeInsets) {
+			self.separatorWidth = separatorWidth;
+			self.titleHeight = (titleFont.lineHeight.rounded (.up, scale: separatorWidth) + titleMargins.top + titleMargins.bottom).rounded (.up, scale: separatorWidth);
+		}
+	};
+
+	public struct LayoutAttributes: CPCViewLayoutAttributes {
 		public var roundingScale: CGFloat {
 			return self.separatorWidth;
 		}
 		
+		fileprivate let weekLength: Int;
+		fileprivate let weekCount: Int;
+		
+		fileprivate var titleHeight: CGFloat {
+			return self.partialAttributes.titleHeight;
+		}
+		
+		fileprivate var separatorWidth: CGFloat {
+			return self.partialAttributes.separatorWidth;
+		}
+		
+		private let partialAttributes: PartialLayoutAttributes;
+
 		/// Initializes layout attributes to match currently use values in the specified view.
 		public init? (_ view: CPCMonthView) {
 			guard let month = view.month, !month.isEmpty else {
@@ -471,9 +497,22 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 		///   - titleFont: Font that the measure view would use to render month title.
 		///   - titleMargins: Additional month view title insets/outsets.
 		public init (month: CPCMonth, separatorWidth: CGFloat, titleFont: UIFont, titleMargins: UIEdgeInsets) {
-			self.month = month;
-			self.separatorWidth = separatorWidth;
-			self.titleHeight = (titleFont.lineHeight.rounded (.up, scale: separatorWidth) + titleMargins.top + titleMargins.bottom).rounded (.up, scale: separatorWidth);
+			self.init (month: month, partialAttributes: PartialLayoutAttributes (separatorWidth: separatorWidth, titleFont: titleFont, titleMargins: titleMargins));
+		}
+
+		/// Initializes layout attributes for a specific month view and other non-calendric partial attributes.
+		///
+		/// - Parameters:
+		///   - month: Month to be rendered by the measured view.
+		///   - partialAttributes: Non-ccalendric layout attributes.
+		public init (month: CPCMonth, partialAttributes: PartialLayoutAttributes) {
+			self.init (weekLength: month [0].count, weekCount: month.count, partialAttributes: partialAttributes);
+		}
+		
+		fileprivate init (weekLength: Int, weekCount: Int, partialAttributes: PartialLayoutAttributes) {
+			self.weekLength = weekLength;
+			self.weekCount = weekCount;
+			self.partialAttributes = partialAttributes;
 		}
 	};
 	
@@ -481,7 +520,7 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 		return LayoutAttributes (self);
 	}
 	
-	open class func aspectRatioComponents (for attributes: LayoutAttributes) -> (multiplier: CGFloat, constant: CGFloat)? {
+	open class func aspectRatioComponents (for attributes: LayoutAttributes) -> AspectRatio? {
 		/// | gridH = rowN * cellSize + (rowN + 1) * sepW       | gridH = rowN * (cellSize + sepW) + sepW       | gridH - sepW = rowN * (cellSize + sepW)
 		/// {                                               <=> {                                           <=> {                                          <=>
 		/// | gridW = colN * cellSize + (colsN - 1) * sepW      | gridW = colN * (cellSize + colsN) - sepW      | gridW + sepW = colN * (cellSize + colsN)
@@ -489,8 +528,33 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 		/// <=> (gridH - sepW) / (gridW + sepW) = rowN / colN
 		/// let R = rowN / colN, then (gridH - sepW) / (gridW + sepW) = R <=> gridH - sepW = gridW * R + sepW * R <=> gridH = gridW * R + (sepW + 1) * R
 		/// View width is equal to grid width; view height = gridW + titleHeight.
-		let month = attributes.month, aspectRatio = CGFloat (month.count) / CGFloat (month [0].count);
+		let aspectRatio = CGFloat (attributes.weekCount) / CGFloat (attributes.weekLength);
 		return (multiplier: aspectRatio, constant: (attributes.separatorWidth + 1.0) * aspectRatio + attributes.titleHeight);
+	}
+	
+	/// Returns range of possible aspect ratio components that the month view may use for various months.
+	///
+	/// - Parameters:
+	///   - partialAttributes: Non-calendric month view layout attributes to be used for measuring.
+	///   - calendar: Calendar to use for calculations.
+	/// - Returns: Minimum and maximum aspect ratio multipliers for a month view, paired with corresponding constants.
+	open class func aspectRatiosComponentsRange (for partialAttributes: PartialLayoutAttributes, using calendar: Calendar) -> (lower: AspectRatio, upper: AspectRatio) {
+		let weeksCountSpan = calendar.estimateSpan (of: .weekOfMonth, in: .month);
+		let weekLengthsSpan = calendar.estimateSpan (of: .weekday, in: .weekOfYear);
+		
+		// Force-unwrap is safe here, `CPCMonthView.aspectRatioComponents (for:)` does not actually return optional values.
+		return (
+			lower: self.aspectRatioComponents (for: LayoutAttributes (
+				weekLength: weekLengthsSpan.upperBound,
+				weekCount: weeksCountSpan.lowerBound,
+				partialAttributes: partialAttributes
+			))!,
+			upper: self.aspectRatioComponents (for: LayoutAttributes (
+				weekLength: weekLengthsSpan.lowerBound,
+				weekCount: weeksCountSpan.upperBound,
+				partialAttributes: partialAttributes
+			))!
+		);
 	}
 }
 
@@ -600,6 +664,26 @@ extension CPCMonthView {
 				continue;
 			}
 			self.setNeedsDisplay (layout.cellFrames [cellIndex]);
+		}
+	}
+}
+
+fileprivate extension Calendar {
+	fileprivate func estimateSpan (of unit: Calendar.Component, in other: Calendar.Component) -> ClosedRange <Int> {
+		if let minRange = self.minimumRange (of: unit), let maxRange = self.maximumRange (of: unit) {
+			return minRange.count ... maxRange.count;
+		} else if let currentRange = self.range (of: unit, in: other, for: Date ()) {
+			return currentRange.count ... currentRange.count;
+		} else {
+			// Just some safety fallbacks, previous two cases should always return a valid value
+			switch (unit) {
+			case .weekOfMonth:
+				return 4 ... 6;
+			case .weekday:
+				return 7 ... 7;
+			default:
+				return 1 ... 1;
+			}
 		}
 	}
 }
