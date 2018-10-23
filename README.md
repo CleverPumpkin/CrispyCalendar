@@ -4,19 +4,19 @@ Whether you are writing yet another one task tracker or calendar app, or simply 
 
 ### Features
 
-* Written with localization in mind.
+* **Written with localization in mind.**<br/>
   Specifically, many various (and even nonsensical) combinations of calendar types, locale identifiers
   and writing directions were tested. Also, this framework does not contain a single translation error
   simply because only standard Apple frameworks (hence, their translations) and none of third-party libraries.
-* Ease of integration, customization options and extensibility — you are free to choose any and all of those.
+* **Ease of integration, customization options and extensibility — you are free to choose any and all of those.**<br/>
   The framework contains out-of-the-box components for the most common tasks; in many cases a single line of
   code allows you to employ rich user interfaces, allowing you to concentrate on business logic implementation.
   But at the same time, every such solution is thoroughly equipped with tuning possibilities and is designed
   modularly, allowing you to freely reuse and combine basic blocks to suite your specific requests.
-* Optimized for performance.
+* **Optimized for performance.**<br/>
   Even seasoned devices like iPhone 5 are rendering the calendar at the acceptable frame rate to say the least.
   Minor sacrifices had to be made to achieve that, but the overall result is shining nonetheless.
-* Objective C support.
+* **Objective C support.**<br/>
   Whether you are constrained by legacy code or just not ready for Swift in production-grade code yet, using
   CrispyCalendar from Objective C is possible. Mostly, Swift-specific features only are missing, but blind
   spots here and there are possible.
@@ -123,7 +123,7 @@ Locale used by any component cannot be set explicitly, but Calendar's locale is 
 Available dates limiting, RTL and landscape orientation are fully supported.
 
 <table>
-<tr><th>Single day selection</th></tr>
+<tr><th>Dates limiting</th><th>RTL layout</th></tr>
 <tr><td>
   &lt;TBD GIF Dates limiting&gt;
 </td><td>
