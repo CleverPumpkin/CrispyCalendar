@@ -23,19 +23,6 @@
 
 import Foundation
 
-/// Represents style of a localized string representing a calendar unit.
-public enum CPCCalendarUnitSymbolStyle {
-	/// Full localized name of a calendar unit.
-	case normal;
-	/// Shortened localized name of calendar unit. Usually consists of just several letters.
-	case short;
-	/// The very shortest localized name for a calendar unit. Usually contains just a single letter.
-	case veryShort;
-	
-	/// Default symbol style that is used when no specific style is requested.
-	public static let `default` = normal;
-}
-
 /// Calendar unit that has a localizable symbol in addition to an integer value.
 public protocol CPCCalendarUnitSymbol {
 	/// Get a localized name of a calendar unit.
@@ -77,30 +64,8 @@ public extension CPCCalendarUnitSymbol {
 	}
 }
 
-extension CPCCalendarUnitSymbol.Style {
-	/// `CPCCalendarUnitSymbolStyle` value, equivalent to this `CPCCalendarUnitSymbol.Style` value.
-	public var cStyle: __CPCCalendarUnitSymbolStyle {
-		switch (self) {
-		case .normal:
-			return .normal;
-		case .short:
-			return .short;
-		case .veryShort:
-			return .veryShort;
-		}
-	}
-	
-	/// Creates new `CPCCalendarUnitSymbol.Style` equivalent to a `CPCCalendarUnitSymbolStyle` value.
-	///
-	/// - Parameter cStyle: `CPCCalendarUnitSymbolStyle` value to copy.
-	public init (_ cStyle: __CPCCalendarUnitSymbolStyle) {
-		switch cStyle {
-		case .normal:
-			self = .normal;
-		case .short:
-			self = .short;
-		case .veryShort:
-			self = .veryShort;
-		}
-	}
+/// Represents style of a localized string representing a calendar unit.
+public extension CPCCalendarUnitSymbol.Style {
+	/// Default symbol style that is used when no specific style is requested.
+	public static let `default` = normal;
 }

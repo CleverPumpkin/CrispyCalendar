@@ -58,12 +58,9 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	}
 	
 	/// Style of rendered symbols.
-	open var style: CPCDay.Weekday.Style {
+	@IBInspectable open dynamic var style: CPCDay.Weekday.Style {
 		get { return self.styleValue }
 		set {
-			guard !self.isAppearanceProxy else {
-				return self.cStyle = newValue.cStyle;
-			}
 			self.styleValue = newValue;
 			self.setNeedsDisplay ();
 		}
@@ -215,13 +212,5 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	
 	internal func adjustValues (for newCategory: UIContentSizeCategory) {
 		self.effectiveFont = self.scaledFont (self.font, using: CPCWeekView.fontMetrics, for: newCategory);
-	}
-}
-
-extension CPCWeekView {
-	/// Style value that can be accessed from Objective C code.
-	@IBInspectable open dynamic var cStyle: __CPCCalendarUnitSymbolStyle {
-		get { return self.style.cStyle }
-		set { self.style = CPCDay.Weekday.Style (newValue) }
 	}
 }

@@ -34,7 +34,7 @@ internal protocol CPCCalendarUnitSymbolImpl: CPCCalendarUnit, CPCCalendarUnitSym
 	var unitOrdinalValue: Int { get };
 }
 
-extension CPCCalendarUnitSymbolImpl {
+extension CPCCalendarUnitSymbolImpl {	
 	public func symbol (style: Style, standalone: Bool) -> String {
 		return self.calendar [keyPath: guarantee ((standalone ? Self.standaloneSymbolKeyPaths : Self.symbolKeyPaths) [style])] [self.unitOrdinalValue];
 	}

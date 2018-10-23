@@ -24,7 +24,7 @@
 #import <Foundation/Foundation.h>
 
 /**
- C/Objective C counterpart for `CPCCalendarUnitSymbol.Style`.
+ Represents style of a localized string representing a calendar unit.
  */
 typedef NS_ENUM (NSInteger, CPCCalendarUnitSymbolStyle) {
 	/** Full localized name of a calendar unit.
@@ -36,4 +36,4 @@ typedef NS_ENUM (NSInteger, CPCCalendarUnitSymbolStyle) {
 	/** The very shortest localized name for a calendar unit. Usually contains just a single letter.
 	 */
 	CPCCalendarUnitSymbolVeryShortStyle NS_SWIFT_NAME(veryShort),
-} NS_REFINED_FOR_SWIFT;
+} NS_SWIFT_NAME(CPCCalendarUnitSymbolStyle);

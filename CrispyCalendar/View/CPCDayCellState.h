@@ -29,7 +29,7 @@
 typedef NS_OPTIONS (NSUInteger, CPCDayCellState) {
 	/** Normal state of a day cell (not selected, highlighted or disabled).
 	 */
-	CPCDayCellStateNormal = 0 << 0,
+	CPCDayCellStateNormal = 0,
 	/** Highlighted state of a cell (current user touch is inside cell's bounds).
 	 */
 	CPCDayCellStateHighlighted = 1 << 0,
