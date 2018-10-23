@@ -190,25 +190,26 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	}
 	
 	private func drawSingleWeek (in rect: CGRect) {
+		let isContentsFlipped = self.effectiveUserInterfaceLayoutDirection == .rightToLeft;
 		let style = self.style, week = CPCWeek (containing: Date (), calendar: self.calendar), font = self.effectiveFont, lineHeight = font.lineHeight, scale = self.separatorWidth;
 		let cellOriginY = (rect.midY - lineHeight / 2).rounded (.down, scale: scale);
-		let cellWidth = rect.width / CGFloat (week.count), cellHeight = lineHeight.rounded (.up, scale: scale);
+		let cellWidth = rect.width / CGFloat (week.count) * (isContentsFlipped ? -1.0 : 1.0), cellHeight = lineHeight.rounded (.up, scale: scale);
 		let weekdayAttributes: [NSAttributedString.Key: Any] = [
 			.font: font,
 			.foregroundColor: self.textColor,
 			.paragraphStyle: NSParagraphStyle.centeredWithMiddleTruncation,
-			];
+		];
 		let weekendAttributes: [NSAttributedString.Key: Any] = {
 			var result = weekdayAttributes;
 			result [.foregroundColor] = self.weekendColor;
 			return result;
 		} ();
 		
-		var lastX = rect.minX;
-		for dayIndex in week.indices {
-			let weekday = week [dayIndex].weekday, frame = CGRect (x: lastX, y: cellOriginY, width: rect.minX + (cellWidth * CGFloat (dayIndex)) - lastX, height: cellHeight);
-			NSAttributedString (string: weekday.symbol (style: style, standalone: true), attributes: weekday.isWeekend ? weekendAttributes : weekdayAttributes).draw (in: frame);
-			lastX = frame.maxX;
+		var frame = CGRect (x: 0.0, y: cellOriginY, width: cellWidth, height: cellHeight);
+		for day in 0 ..< week.count {
+			let weekday = week [ordinal: day].weekday;
+			frame.origin.x = fma (cellWidth, CGFloat (day), isContentsFlipped ? rect.maxX : rect.minX);
+			NSAttributedString (string: weekday.symbol (style: style, standalone: true), attributes: weekday.isWeekend ? weekendAttributes : weekdayAttributes).draw (in: frame.standardized);
 		}
 	}
 	

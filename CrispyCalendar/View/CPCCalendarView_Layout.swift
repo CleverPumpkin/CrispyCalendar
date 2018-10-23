@@ -273,6 +273,14 @@ extension CPCCalendarView.Layout {
 		self.performPostUpdateActions (for: self.storage);
 	}
 	
+	internal override var developmentLayoutDirection: UIUserInterfaceLayoutDirection {
+		return .leftToRight;
+	}
+	
+	internal override var flipsHorizontallyInOppositeLayoutDirection: Bool {
+		return true;
+	}
+	
 	private func allowedDatesRangeDidChange () {
 		// TODO: constrain already calculated month views instead of performing full relayout
 		self.invalidateLayout ();

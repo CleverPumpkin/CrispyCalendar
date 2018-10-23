@@ -36,26 +36,6 @@ fileprivate extension UIRectCorner {
 	fileprivate static let anyTop: UIRectCorner = [.topLeft, .topRight];
 }
 
-fileprivate extension CGRect {
-	fileprivate func slice (atDistance distance: CGSize, from corner: UIRectCorner) -> CGRect {
-		precondition ([.topLeft, .topRight, .bottomLeft, .bottomRight].contains (corner), "Cannot slice rectangle from multiple corners");
-		
-		let x: CGFloat;
-		if ([.topLeft, .bottomLeft].contains (corner)) {
-			x = self.minX;
-		} else {
-			x = self.maxX - distance.width;
-		}
-		let y: CGFloat;
-		if ([.topLeft, .topRight].contains (corner)) {
-			y = self.minY;
-		} else {
-			y = self.maxY - distance.height;
-		}
-		return CGRect (origin: CGPoint (x: x, y: y), size: distance);
-	}
-}
-
 fileprivate extension DateFormatter {
 	private struct CacheKey: Hashable {
 		private let calendarWrapper: CPCCalendarWrapper;
@@ -224,7 +204,7 @@ internal extension CPCMonthView {
 private protocol CPCMonthViewRedrawContextImpl: CPCMonthViewRedrawContext {
 	var reusableFormatters: [DateFormatter] { get };
 	var month: CPCMonth { get };
-	var clearingContext: CPCMonthView.ClearingContext? { get }
+	var clearingContext: CPCMonthView.ClearingContext? { get };
 	
 	static func makeClearingContext (for rect: CGRect, ifNeededIn view: CPCMonthView) -> CPCMonthView.ClearingContext?;
 	
@@ -338,12 +318,12 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 	}
 	
 	private static func calculateAffectedIndices (of view: CPCMonthView, in rect: CGRect, for month: CPCMonth, using layout: Layout) -> AffectedIndices? {
-		let rect = rect.intersection (layout.gridFrame);
+		let rect = rect.intersection (layout.gridFrame), isContentsFlipped = view.isContentsFlippedHorizontally;
 		guard
 			!rect.isNull,
-			let topLeftIdx = layout.cellIndex (at: rect.origin, treatingSeparatorPointsAsEarlierIndexes: false),
-			let bottomRightIdx = layout.cellIndex (at: CGPoint (x: rect.maxX, y: rect.maxY), treatingSeparatorPointsAsEarlierIndexes: true),
-			let affected = layout.cellFrames.indices.subindices (forRows: topLeftIdx.row ... bottomRightIdx.row, columns: topLeftIdx.column ... bottomRightIdx.column),
+			let topLeadingIdx = layout.cellIndex (at: CGPoint (x: isContentsFlipped ? rect.maxX : rect.minX, y: rect.minY), treatingSeparatorPointsAsEarlierIndexes: false),
+			let bottomTrailingIdx = layout.cellIndex (at: CGPoint (x: (isContentsFlipped ? rect.minX : rect.maxX), y: rect.maxY), treatingSeparatorPointsAsEarlierIndexes: true),
+			let affected = layout.cellFrames.indices.subindices (forRows: topLeadingIdx.row ... bottomTrailingIdx.row, columns: topLeadingIdx.column ... bottomTrailingIdx.column),
 			!affected.isEmpty else {
 			return nil;
 		}
@@ -383,9 +363,9 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.cellIndices = indices;
 		self.cellRenderer = view.cellRenderer;
 		self.separatorColor = view.separatorColor;
+		self.backgroundColor = view.backgroundColor;
 		self.drawLeadingSeparator = view.drawsLeadingSeparator;
 		self.drawTrailingSeparator = view.drawsTrailingSeparator;
-		self.backgroundColor = view.backgroundColor;
 		self.clearingContext = CPCMonthView.GridRedrawContext.makeClearingContext (for: layout.gridFrame, ifNeededIn: view);
 		self.cellTitleFont = dayCellFont;
 		self.cellTextColorGetter = { view.effectiveAppearanceStorage.cellTextColors [$0] };
@@ -401,19 +381,17 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 			return;
 		}
 		
-		let layout = self.layout, halfSepW = layout.separatorWidth / 2.0;
+		let layout = self.layout, halfSepW = layout.separatorWidth / 2.0, isContentsFlipped = layout.isContentsFlippedHorizontally;
 		let minIndex = allIndices.minElement, minFrame = layout.cellFrames [minIndex];
 		let maxIndex = allIndices.maxElement.advanced (by: -1), maxFrame = layout.cellFrames [maxIndex];
 		let frame = minFrame.union (maxFrame).insetBy (dx: -halfSepW, dy: -halfSepW);
 		ctx.addRect (frame);
 		
 		if (firstIndex != minIndex) {
-			let firstCellFrame = layout.cellFrames [firstIndex];
-			ctx.addRect (frame.slice (atDistance: CGSize (width: firstCellFrame.minX - minFrame.minX, height: firstCellFrame.height), from: .topLeft));
+			ctx.addRect (layout.cellFrames [firstIndex.advanced (by: -1)].union (minFrame).offsetBy (dx: isContentsFlipped ? halfSepW : -halfSepW, dy: -halfSepW));
 		}
 		if (lastIndex != maxIndex) {
-			let lastCellFrame = layout.cellFrames [lastIndex];
-			ctx.addRect (frame.slice (atDistance: CGSize (width: maxFrame.maxX - lastCellFrame.maxX, height: lastCellFrame.height), from: .bottomRight));
+			ctx.addRect (layout.cellFrames [lastIndex.advanced (by: 1)].union (maxFrame).offsetBy (dx: isContentsFlipped ? -halfSepW : halfSepW, dy: halfSepW));
 		}
 		ctx.clip (using: .evenOdd);
 		

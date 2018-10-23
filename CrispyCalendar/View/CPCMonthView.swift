@@ -222,6 +222,10 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 	
 	internal let appearanceStorage = AppearanceStorage ();
 	
+	internal var isContentsFlippedHorizontally: Bool {
+		return self.effectiveUserInterfaceLayoutDirection == .rightToLeft;
+	}
+	
 	internal var effectiveAppearanceStorage: AppearanceStorage {
 		return self.monthViewsManager?.appearanceStorage ?? self.appearanceStorage;
 	}

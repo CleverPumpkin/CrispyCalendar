@@ -42,6 +42,10 @@ internal extension CPCMonthView {
 		internal let cellFrames: ComputedCollection <CellIndex, CGRect, CellIndices>;
 		internal let separatorOrigins: SeparatorOrigins;
 		
+		internal var isContentsFlippedHorizontally: Bool {
+			return self.cellSize.width < 0.0;
+		}
+		
 		internal var titleContentFrame: CGRect {
 			guard let titleFrame = self.titleFrame else {
 				return .null;
@@ -82,9 +86,11 @@ internal extension CPCMonthView {
 				let titleHeight = (titleMargins.top + view.effectiveTitleFont.lineHeight.rounded (.up, scale: separatorWidth) + titleMargins.bottom).rounded (.up, scale: separatorWidth);
 				(titleFrame, gridFrame) = view.bounds.divided (atDistance: titleHeight, from: .minYEdge);
 			}
-			let cellsOrigin = CGPoint (x: gridFrame.minX + separatorWidth / 2.0, y: gridFrame.minY + separatorWidth / 2.0);
+			let layoutTransform = view.isContentsFlippedHorizontally ? CGAffineTransform (a: -1.0, b: 0.0, c: 0.0, d: 1.0, tx: view.bounds.width, ty: 0.0) : .identity;
+			
+			let cellsOrigin = CGPoint (x: gridFrame.minX + separatorWidth / 2.0, y: gridFrame.minY + separatorWidth / 2.0).applying (layoutTransform);
 			let cellSize = CGSize (
-				width: (gridFrame.width - separatorWidth) / CGFloat (width),
+				width: (gridFrame.width - separatorWidth) / CGFloat (width) * (view.isContentsFlippedHorizontally ? -1.0 : 1.0),
 				height: (gridFrame.height - separatorWidth) / CGFloat (height)
 			);
 			
@@ -110,7 +116,7 @@ internal extension CPCMonthView {
 			self.cellFrames = ComputedCollection (indices: cellIndices) { index in
 				let column = index.column, columnMinX = separatorLocations.vertical [column], columnMaxX = separatorLocations.vertical [column + 1];
 				let row = index.row, rowMinY = separatorLocations.horizontal [row], rowMaxY = separatorLocations.horizontal [row + 1];
-				return CGRect (x: columnMinX, y: rowMinY, width: columnMaxX - columnMinX, height: rowMaxY - rowMinY);
+				return CGRect (x: columnMinX, y: rowMinY, width: columnMaxX - columnMinX, height: rowMaxY - rowMinY).standardized;
 			};
 		}
 		
@@ -165,7 +171,7 @@ internal extension CPCMonthView {
 		}
 		
 		private func cellCoordinate (at viewCoordinate: CGFloat, gridOrigin: CGFloat, cellSize: CGFloat, separatorOrigins: ComputedArray <Int, CGFloat>, treatSeparatorAsEarlierIndex: Bool) -> Int {
-			let result = ((viewCoordinate - gridOrigin) / cellSize).integerRounded (.down);
+			let result = ((viewCoordinate - gridOrigin) / cellSize).integerRounded (.towardZero);
 			return (treatSeparatorAsEarlierIndex && ((separatorOrigins [result] - viewCoordinate).magnitude < self.separatorWidth)) ? result - 1 : result;
 		}
 
@@ -196,6 +202,16 @@ internal extension CPCMonthView {
 		internal func verticalSeparatorIndexes (for columns: CountableRange <Int>, includeLeading: Bool, includeTrailing: Bool) -> CountableClosedRange <Int> {
 			return (columns.lowerBound ... columns.upperBound).clamped (to: (includeLeading ? 0 : 1) ... self.cellFrames.indices.columns.upperBound - (includeTrailing ? 0 : 1));
 		}
+	}
+}
+
+fileprivate extension CGFloat {
+	fileprivate func applyingForX (_ transform: CGAffineTransform) -> CGFloat {
+		return CGPoint (x: self, y: 0.0).applying (transform).x;
+	}
+
+	fileprivate func applyingForY (_ transform: CGAffineTransform) -> CGFloat {
+		return CGPoint (x: 0.0, y: self).applying (transform).y;
 	}
 }
 
