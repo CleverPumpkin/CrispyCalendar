@@ -511,17 +511,25 @@ extension CPCCalendarView.Layout.DefaultStorage: CPCCalendarViewLayoutStorage {
 			} else {
 				return .orderedSame;
 			}
-		}!;
+		}! / self.columnCount;
+	}
+}
+
+private func elementFromPointer <T> (_ pointer: UnsafePointer <T>) -> T {
+	if T.self is AnyObject.Type {
+		return Unmanaged <AnyObject>.fromOpaque (pointer).takeUnretainedValue () as! T;
+	} else {
+		return pointer.pointee;
 	}
 }
 
 fileprivate extension Array {
 	fileprivate func binarySearch (withGranularity granularity: Index = 1, using comparator: (Element) -> ComparisonResult) -> Index? {
-		return self.withUnsafeBufferPointer {
-			let base = $0.baseAddress!;
+		return self.withUnsafeBufferPointer { buffer in
+			let base = buffer.baseAddress!;
 			return withoutActuallyEscaping (comparator) { comparator in
-				guard let found = bsearch_b (nil, UnsafeRawPointer (base), self.count, MemoryLayout <Element>.stride * granularity, { _, element in
-					return Int32 (comparator (element!.assumingMemoryBound (to: Element.self).pointee).rawValue);
+				guard let found = bsearch_b (nil, UnsafeRawPointer (base), self.count / granularity, MemoryLayout <Element>.stride * granularity, { _, element in
+					return Int32 (comparator (elementFromPointer (element!.assumingMemoryBound (to: UnsafePointer <Element>.self).pointee)).rawValue);
 				}) else {
 					return nil;
 				};

@@ -130,6 +130,7 @@ internal final class CPCViewAppearanceStorage {
 	internal var titleMargins = UIEdgeInsets.defaultMonthTitle;
 	internal var dayCellFont = UIFont.defaultDayCellText;
 	internal var separatorColor = UIColor.defaultSeparator;
+
 	internal var cellRenderer: CPCDayCellRenderer = CPCDefaultDayCellRenderer ();
 	internal var cellTextColors: CPCDayCellStateBasedStorage <UIColor> = [
 		[]: UIColor.defaultDayCellText,

@@ -73,8 +73,21 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 		}
 	}
 	
+	@IBInspectable open dynamic var columnCount = 1 {
+		didSet {
+			self.setNeedsDisplay ();
+		}
+	}
+	
+	@IBInspectable open dynamic var columnContentInsets = UIEdgeInsets.zero {
+		didSet {
+			self.setNeedsDisplay ();
+		}
+	}
+	
+
 	open override var intrinsicContentSize: CGSize {
-		return CGSize (width: UIView.noIntrinsicMetric, height: self.font.lineHeight.rounded (.up, scale: self.separatorWidth));
+		return CGSize (width: UIView.noIntrinsicMetric, height: self.effectiveFont.lineHeight.rounded (.up, scale: self.separatorWidth));
 	}
 	
 	open var adjustsFontForContentSizeCategory: Bool {
@@ -119,23 +132,36 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	}
 	
 	open override func draw (_ rect: CGRect) {
+		let columnCount = CGFloat (self.columnCount), boundsSize = self.bounds.standardized.size;
+		let columnLeftInset = self.columnContentInsets.left, columnWidthInset = columnLeftInset + self.columnContentInsets.right;
+		for column in 0 ..< self.columnCount {
+			self.drawSingleWeek (in: CGRect (
+				x: columnLeftInset + CGFloat (column) / columnCount * boundsSize.width,
+				y: 0.0,
+				width: boundsSize.width / columnCount - columnWidthInset,
+				height: boundsSize.height
+			));
+		}
+	}
+	
+	private func drawSingleWeek (in rect: CGRect) {
 		let style = self.style, week = CPCWeek (containing: Date (), calendar: self.calendar), font = self.effectiveFont, lineHeight = font.lineHeight, scale = self.separatorWidth;
-		let cellOriginY = (self.bounds.midY - lineHeight / 2).rounded (.down, scale: scale);
-		let cellWidth = self.bounds.width / CGFloat (week.count), cellHeight = lineHeight.rounded (.up, scale: scale);
+		let cellOriginY = (rect.midY - lineHeight / 2).rounded (.down, scale: scale);
+		let cellWidth = rect.width / CGFloat (week.count), cellHeight = lineHeight.rounded (.up, scale: scale);
 		let weekdayAttributes: [NSAttributedString.Key: Any] = [
 			.font: font,
 			.foregroundColor: self.textColor,
 			.paragraphStyle: NSParagraphStyle.centeredWithMiddleTruncation,
-		];
+			];
 		let weekendAttributes: [NSAttributedString.Key: Any] = {
 			var result = weekdayAttributes;
 			result [.foregroundColor] = self.weekendColor;
 			return result;
 		} ();
 		
-		var lastX = CGFloat (0.0);
+		var lastX = rect.minX;
 		for dayIndex in week.indices {
-			let weekday = week [dayIndex].weekday, frame = CGRect (x: lastX, y: cellOriginY, width: (cellWidth * CGFloat (dayIndex)) - lastX, height: cellHeight);
+			let weekday = week [dayIndex].weekday, frame = CGRect (x: lastX, y: cellOriginY, width: rect.minX + (cellWidth * CGFloat (dayIndex)) - lastX, height: cellHeight);
 			NSAttributedString (string: weekday.symbol (style: style, standalone: true), attributes: weekday.isWeekend ? weekendAttributes : weekdayAttributes).draw (in: frame);
 			lastX = frame.maxX;
 		}

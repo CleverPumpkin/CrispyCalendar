@@ -40,6 +40,7 @@ class CPCDashboardVC: UIViewController, UITableViewDataSource, UITableViewDelega
 			initialSelection: .single (nil),
 			enabledDates: (Date (timeIntervalSinceNow: -30 * 86400.0) ..< Date (timeIntervalSinceNow: 30 * 86400.0))
 		),
+		ColumnedCalendarItem (localizedTitle: "Columned landscape view", calendarTitle: "Columned landscape view"),
 	];
 	
 	internal override func viewDidLoad () {
@@ -70,6 +71,10 @@ class CPCDashboardVC: UIViewController, UITableViewDataSource, UITableViewDelega
 	internal func tableView (_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 		CPCDashboardVC.configItems [indexPath.row].performAction (for: self);
 		tableView.deselectRow (at: indexPath, animated: true);
+	}
+	
+	internal override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+		return .portrait;
 	}
 }
 
@@ -178,6 +183,10 @@ private class SelectionTrackingCalendarVC: CPCCalendarViewController {
 		self.updateNavigationBarPrompt ();
 	}
 	
+	fileprivate override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+		return .portrait;
+	}
+
 	private func updateNavigationBarPrompt () {
 		let selectionDescription = self.selection.description;
 		self.selectionLabel.text = "Selection: \(selectionDescription.isEmpty ? "none" : selectionDescription)";
@@ -260,6 +269,32 @@ private class WeirdCalendarVC: SelectionTrackingCalendarVC {
 	}
 }
 
+private class ColumnedCalendarVC: SelectionTrackingCalendarVC {
+	fileprivate override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+		return [.portrait, .landscapeLeft, .landscapeRight];
+	}
+	
+	fileprivate override func viewDidLoad () {
+		super.viewDidLoad ();
+		self.updateLyaout (for: self.view.bounds.size);
+	}
+	
+	fileprivate override func viewWillTransition (to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+		super.viewWillTransition (to: size, with: coordinator);
+		self.updateLyaout (for: size);
+	}
+	
+	private func updateLyaout (for size: CGSize) {
+		if (size.width > size.height) {
+			self.columnCount = 2;
+			self.columnContentInsets = UIEdgeInsets (top: 8.0, left: 8.0, bottom: 8.0, right: 8.0);
+		} else {
+			self.columnCount = 1;
+			self.columnContentInsets = .zero;
+		}
+	}
+}
+
 private struct DefaultConfigItem: ConfigItemPushingCalendarController {
 	fileprivate let localizedTitle: String;
 	fileprivate let calendarTitle: String;
@@ -306,6 +341,19 @@ private struct WeirdCalendarItem: ConfigItemPushingCalendarController {
 	
 	fileprivate var calendarViewControllerClass: SelectionTrackingCalendarVC.Type {
 		return WeirdCalendarVC.self;
+	}
+	
+	fileprivate var initialSelection: CPCViewSelection {
+		return .none;
+	}
+}
+
+private struct ColumnedCalendarItem: ConfigItemPushingCalendarController {
+	fileprivate let localizedTitle: String;
+	fileprivate let calendarTitle: String;
+
+	fileprivate var calendarViewControllerClass: SelectionTrackingCalendarVC.Type {
+		return ColumnedCalendarVC.self;
 	}
 	
 	fileprivate var initialSelection: CPCViewSelection {

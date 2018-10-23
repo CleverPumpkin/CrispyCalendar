@@ -27,13 +27,15 @@ extension CPCCalendarView {
 	internal class Layout: UICollectionViewLayout {
 		internal var columnCount = 1 {
 			didSet {
-				self.invalidateLayout (); // TODO
+				self.invalidateLayout ();
+				self.collectionView?.reloadData ();
 			}
 		}
 		
 		internal var columnContentInsets = UIEdgeInsets.zero {
 			didSet {
-				self.invalidateLayout (); // TODO
+				self.invalidateLayout ();
+				self.collectionView?.reloadData ();
 			}
 		}
 		
@@ -261,7 +263,9 @@ extension CPCCalendarView.Layout {
 	internal final class Attributes: UICollectionViewLayoutAttributes {
 		internal var month: CPCMonth?;
 		internal var rowHeight = 0 as CGFloat;
-		
+		internal var drawLeadingSeparator = true;
+		internal var drawTrailingSeparator = true;
+
 		internal override func copy (with zone: NSZone? = nil) -> Any {
 			let attributes = super.copy (with: zone);
 			guard let result = attributes as? Attributes else {

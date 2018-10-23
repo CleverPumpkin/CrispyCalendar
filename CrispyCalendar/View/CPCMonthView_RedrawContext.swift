@@ -135,9 +135,7 @@ internal extension CPCMonthView {
 		fileprivate let month: CPCMonth;
 		fileprivate let clearingContext: ClearingContext?;
 		
-		private let backgroundColor: UIColor?;
 		private let formatter: DateFormatter;
-		private let titleFrame: CGRect;
 		private let titleContentFrame: CGRect;
 		private let titleAttributes: [NSAttributedString.Key: Any];
 	}
@@ -158,6 +156,8 @@ internal extension CPCMonthView {
 		private let cellIndices: AffectedIndices;
 		private let dayFormatter: DateFormatter;
 		private let separatorColor: UIColor;
+		private let drawLeadingSeparator: Bool;
+		private let drawTrailingSeparator: Bool;
 		private let cellTitleHeight: CGFloat;
 		private let cellRenderer: CellRenderer;
 		private let cellTitleFont: UIFont;
@@ -258,10 +258,8 @@ extension CPCMonthView.TitleRedrawContext: CPCMonthViewRedrawContextImpl {
 		}
 		
 		self.month = month;
-		self.titleFrame = titleFrame;
 		self.titleContentFrame = layout.titleContentFrame;
-		self.backgroundColor = view.backgroundColor;
-		self.clearingContext = CPCMonthView.TitleRedrawContext.makeClearingContext (for: rect, ifNeededIn: view);
+		self.clearingContext = CPCMonthView.TitleRedrawContext.makeClearingContext (for: titleFrame, ifNeededIn: view);
 		self.formatter = DateFormatter.dequeueFormatter (for: month, format: view.titleStyle.rawValue);
 		self.titleAttributes = [
 			.font: view.effectiveTitleFont,
@@ -271,14 +269,7 @@ extension CPCMonthView.TitleRedrawContext: CPCMonthViewRedrawContextImpl {
 	}
 	
 	fileprivate func run (context ctx: CGContext) {
-		let titleString = NSAttributedString (string: self.formatter.string (from: self.month.start), attributes: self.titleAttributes);
-		if let backgroundColor = self.backgroundColor, !backgroundColor.isInvisible {
-			ctx.setFillColor (backgroundColor.cgColor);
-			ctx.fill (self.titleFrame);
-		} else {
-			ctx.clear (self.titleFrame);
-		}
-		titleString.draw (in: self.titleContentFrame);
+		NSAttributedString (string: self.formatter.string (from: self.month.start), attributes: self.titleAttributes).draw (in: self.titleContentFrame);
 	}
 }
 
@@ -392,8 +383,10 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.cellIndices = indices;
 		self.cellRenderer = view.cellRenderer;
 		self.separatorColor = view.separatorColor;
+		self.drawLeadingSeparator = view.drawsLeadingSeparator;
+		self.drawTrailingSeparator = view.drawsTrailingSeparator;
 		self.backgroundColor = view.backgroundColor;
-		self.clearingContext = CPCMonthView.GridRedrawContext.makeClearingContext (for: rect, ifNeededIn: view);
+		self.clearingContext = CPCMonthView.GridRedrawContext.makeClearingContext (for: layout.gridFrame, ifNeededIn: view);
 		self.cellTitleFont = dayCellFont;
 		self.cellTextColorGetter = { view.effectiveAppearanceStorage.cellTextColors [$0] };
 		self.cellBackgroundColorGetter = { view.effectiveAppearanceStorage.cellBackgroundColors [$0] };
@@ -438,7 +431,8 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 			self.cellRenderer.drawCell (in: renderingContext);
 		}
 		
-		let verticalSeparatorIndexes = layout.verticalSeparatorIndexes (for: allIndices.columns), horizontalSeparatorIndexes = layout.horizontalSeparatorIndexes (for: allIndices.rows);
+		let verticalSeparatorIndexes = layout.verticalSeparatorIndexes (for: allIndices.columns, includeLeading: self.drawLeadingSeparator, includeTrailing: self.drawTrailingSeparator);
+		let horizontalSeparatorIndexes = layout.horizontalSeparatorIndexes (for: allIndices.rows);
 		var separatorPoints = [CGPoint] ();
 		separatorPoints.reserveCapacity (2 * (verticalSeparatorIndexes.count + horizontalSeparatorIndexes.count));
 		for verticalSepX in layout.separatorOrigins.vertical [verticalSeparatorIndexes] {

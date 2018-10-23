@@ -49,8 +49,8 @@ internal extension CPCMonthView {
 			
 			let result = titleFrame.inset (by: self.titleMargins), scale = self.separatorWidth;
 			return CGRect (
-				origin: CGPoint (x: result.minX.rounded (.up, scale: scale), y: result.minY.rounded (.up, scale: scale)),
-				size: CGSize (width: result.width.rounded (.down, scale: scale), height: result.height.rounded (.down, scale: scale))
+				origin: CGPoint (x: result.minX.rounded (.down, scale: scale), y: result.minY.rounded (.down, scale: scale)),
+				size: CGSize (width: result.width.rounded (.up, scale: scale), height: result.height.rounded (.up, scale: scale))
 			);
 		}
 		
@@ -82,9 +82,9 @@ internal extension CPCMonthView {
 				let titleHeight = (titleMargins.top + view.effectiveTitleFont.lineHeight.rounded (.up, scale: separatorWidth) + titleMargins.bottom).rounded (.up, scale: separatorWidth);
 				(titleFrame, gridFrame) = view.bounds.divided (atDistance: titleHeight, from: .minYEdge);
 			}
-			let cellsOrigin = CGPoint (x: gridFrame.minX - separatorWidth / 2.0, y: gridFrame.minY + separatorWidth / 2.0);
+			let cellsOrigin = CGPoint (x: gridFrame.minX + separatorWidth / 2.0, y: gridFrame.minY + separatorWidth / 2.0);
 			let cellSize = CGSize (
-				width: (gridFrame.width + separatorWidth) / CGFloat (width),
+				width: (gridFrame.width - separatorWidth) / CGFloat (width),
 				height: (gridFrame.height - separatorWidth) / CGFloat (height)
 			);
 			
@@ -124,7 +124,7 @@ internal extension CPCMonthView {
 				return false;
 			}
 			
-			let titleMargins = self.titleMargins, titleHeight = self.titleFrame.map { ($0.height - titleMargins.top - titleMargins.bottom).rounded (.down, scale: separatorWidth) };
+			let titleMargins = self.titleMargins, titleHeight = self.titleFrame.map { ($0.height - titleMargins.top - titleMargins.bottom).rounded (.up, scale: separatorWidth) };
 			let viewTitleMargins = view.effectiveTitleMargins, viewTitleHeight = ((view.titleStyle == .none) ? nil : view.effectiveTitleFont.lineHeight.rounded (.up, scale: viewSeparatorWidth));
 			switch (titleHeight, viewTitleHeight) {
 			case (nil, nil):
@@ -193,8 +193,8 @@ internal extension CPCMonthView {
 			return (rows.lowerBound ... rows.upperBound).clamped (to: 0 ... self.cellFrames.indices.rows.upperBound);
 		}
 
-		internal func verticalSeparatorIndexes (for columns: CountableRange <Int>) -> CountableClosedRange <Int> {
-			return (columns.lowerBound ... columns.upperBound).clamped (to: 1 ... self.cellFrames.indices.columns.upperBound - 1);
+		internal func verticalSeparatorIndexes (for columns: CountableRange <Int>, includeLeading: Bool, includeTrailing: Bool) -> CountableClosedRange <Int> {
+			return (columns.lowerBound ... columns.upperBound).clamped (to: (includeLeading ? 0 : 1) ... self.cellFrames.indices.columns.upperBound - (includeTrailing ? 0 : 1));
 		}
 	}
 }

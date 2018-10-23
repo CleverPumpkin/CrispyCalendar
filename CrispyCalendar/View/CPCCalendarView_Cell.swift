@@ -65,7 +65,7 @@ extension CPCCalendarView {
 			let monthView = Cell.makeMonthView (frame: frame);
 			self.monthView = monthView;
 			super.init (frame: frame);
-			self.contentView.addSubview (monthView);
+			self.commonInit (monthView);
 		}
 		
 		internal required init? (coder aDecoder: NSCoder) {
@@ -73,7 +73,12 @@ extension CPCCalendarView {
 			self.monthView = monthView;
 			super.init (coder: aDecoder);
 			monthView.frame = self.contentView.bounds;
+			self.commonInit (monthView);
+		}
+		
+		private func commonInit (_ monthView: CPCMonthView) {
 			self.contentView.addSubview (monthView);
+			self.clipsToBounds = false;
 		}
 		
 		deinit {
@@ -82,7 +87,11 @@ extension CPCCalendarView {
 		
 		internal override func apply (_ layoutAttributes: UICollectionViewLayoutAttributes) {
 			super.apply (layoutAttributes);
-			self.monthView.month = (layoutAttributes as? Layout.Attributes)?.month;
+			if let attributes = layoutAttributes as? Layout.Attributes {
+				let monthView = self.monthView;
+				monthView.month = attributes.month;
+				(monthView.drawsLeadingSeparator, monthView.drawsTrailingSeparator) = (attributes.drawLeadingSeparator, attributes.drawTrailingSeparator);
+			}
 			self.updateMonthViewManagingStatus ();
 		}
 		

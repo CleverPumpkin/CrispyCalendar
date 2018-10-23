@@ -141,6 +141,24 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
+	/// A boolean flag indicating whether view leading separator must be drawn.
+	@IBInspectable open dynamic var drawsLeadingSeparator = false {
+		didSet {
+			if self.drawsTrailingSeparator != oldValue {
+				self.gridAppearanceDidUpdate ();
+			}
+		}
+	}
+	
+	/// A boolean flag indicating whether view trailing separator must be drawn.
+	@IBInspectable open dynamic var drawsTrailingSeparator = false {
+		didSet {
+			if self.drawsTrailingSeparator != oldValue {
+				self.gridAppearanceDidUpdate ();
+			}
+		}
+	}
+	
 	open var cellRenderer: CPCDayCellRenderer {
 		get { return self.effectiveAppearanceStorage.cellRenderer }
 		set {
@@ -521,15 +539,15 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 	}
 	
 	open class func aspectRatioComponents (for attributes: LayoutAttributes) -> AspectRatio? {
-		/// | gridH = rowN * cellSize + (rowN + 1) * sepW       | gridH = rowN * (cellSize + sepW) + sepW       | gridH - sepW = rowN * (cellSize + sepW)
-		/// {                                               <=> {                                           <=> {                                          <=>
-		/// | gridW = colN * cellSize + (colsN - 1) * sepW      | gridW = colN * (cellSize + colsN) - sepW      | gridW + sepW = colN * (cellSize + colsN)
+		/// | gridH = rowN * cellSize + (rowN + 1) * sepW      | gridH = rowN * (cellSize + sepW) + sepW      | gridH - sepW = rowN * (cellSize + sepW)
+		/// {                                              <=> {                                          <=> {                                          <=>
+		/// | gridW = colN * cellSize + (colN + 1) * sepW      | gridW = colN * (cellSize + sepW) + sepW      | gridW - sepW = colN * (cellSize + sepW)
 		///
-		/// <=> (gridH - sepW) / (gridW + sepW) = rowN / colN
-		/// let R = rowN / colN, then (gridH - sepW) / (gridW + sepW) = R <=> gridH - sepW = gridW * R + sepW * R <=> gridH = gridW * R + (sepW + 1) * R
+		/// <=> (gridH - sepW) / (gridW - sepW) = rowN / colN
+		/// let R = rowN / colN, then (gridH - sepW) / (gridW - sepW) = R <=> gridH - sepW = gridW * R - sepW * R <=> gridH = gridW * R + (1 - sepW) * R
 		/// View width is equal to grid width; view height = gridW + titleHeight.
 		let aspectRatio = CGFloat (attributes.weekCount) / CGFloat (attributes.weekLength);
-		return (multiplier: aspectRatio, constant: (attributes.separatorWidth + 1.0) * aspectRatio + attributes.titleHeight);
+		return (multiplier: aspectRatio, constant: (1.0 - attributes.separatorWidth) * aspectRatio + attributes.titleHeight);
 	}
 	
 	/// Returns range of possible aspect ratio components that the month view may use for various months.

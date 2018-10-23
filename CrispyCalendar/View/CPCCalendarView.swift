@@ -101,6 +101,18 @@ open class CPCCalendarView: UIView {
 		set { self.layout.maximumDate = newValue }
 	}
 
+	/// The number of columns to display in a calendar view.
+	@IBInspectable open dynamic var columnCount: Int {
+		get { return self.layout.columnCount }
+		set { self.layout.columnCount = newValue }
+	}
+	
+	/// Insets or outsets that are applied to each calendar column.
+	@IBInspectable open dynamic var columnContentInsets: UIEdgeInsets {
+		get { return self.layout.columnContentInsets }
+		set { self.layout.columnContentInsets = newValue }
+	}
+	
 	internal unowned let collectionView: UICollectionView;
 
 	internal var calendarViewController: CPCCalendarViewController?;
