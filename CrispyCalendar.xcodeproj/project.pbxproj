@@ -44,6 +44,7 @@
 		436F53BB20A4C86B00ACE40A /* CPCViewProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436F53BA20A4C86B00ACE40A /* CPCViewProtocol.swift */; };
 		436F53BD20A4D8B900ACE40A /* CPCMultiMonthsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436F53BC20A4D8B900ACE40A /* CPCMultiMonthsView.swift */; };
 		436F53BF20A4DA1800ACE40A /* CPCDayCellState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 436F53BE20A4DA1800ACE40A /* CPCDayCellState.swift */; };
+		437D67032180A2AF0092A42B /* CPCCalendarUnitBacking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 437D67022180A2AF0092A42B /* CPCCalendarUnitBacking.swift */; };
 		437E314E20EE3BEB00B64A5F /* CrispyCalendar.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43C06FE820924E7400202ED8 /* CrispyCalendar.framework */; };
 		437E314F20EE3BF300B64A5F /* CrispyCalendar.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 43C06FE820924E7400202ED8 /* CrispyCalendar.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		438454CC20D27E0E00CDC209 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 438454C620D27E0E00CDC209 /* Assets.xcassets */; };
@@ -65,6 +66,7 @@
 		43C0700C2092F49D00202ED8 /* CPCCalendarUnit.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C0700B2092F49D00202ED8 /* CPCCalendarUnit.swift */; };
 		43C070102092F85200202ED8 /* guarantee.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C0700F2092F85200202ED8 /* guarantee.swift */; };
 		43C80F2720ED3A7000845440 /* CPCCalendarView_Layout_Storage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C80F2620ED3A7000845440 /* CPCCalendarView_Layout_Storage.swift */; };
+		43F8FE1E2182294800BE2EFE /* CPCCalendarUnitsStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 43F8FE1C2182294800BE2EFE /* CPCCalendarUnitsStorage.h */; settings = {ATTRIBUTES = (Private, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -130,6 +132,7 @@
 		436F53BA20A4C86B00ACE40A /* CPCViewProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCViewProtocol.swift; sourceTree = "<group>"; };
 		436F53BC20A4D8B900ACE40A /* CPCMultiMonthsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCMultiMonthsView.swift; sourceTree = "<group>"; };
 		436F53BE20A4DA1800ACE40A /* CPCDayCellState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCDayCellState.swift; sourceTree = "<group>"; };
+		437D67022180A2AF0092A42B /* CPCCalendarUnitBacking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarUnitBacking.swift; sourceTree = "<group>"; };
 		438454B320D27DA500CDC209 /* CrispyCalendarDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CrispyCalendarDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		438454C620D27E0E00CDC209 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		438454C820D27E0E00CDC209 /* CPCAppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCAppDelegate.swift; sourceTree = "<group>"; };
@@ -158,6 +161,19 @@
 		43C0700B2092F49D00202ED8 /* CPCCalendarUnit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarUnit.swift; sourceTree = "<group>"; };
 		43C0700F2092F85200202ED8 /* guarantee.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = guarantee.swift; sourceTree = "<group>"; };
 		43C80F2620ED3A7000845440 /* CPCCalendarView_Layout_Storage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarView_Layout_Storage.swift; sourceTree = "<group>"; };
+		43F8FE02218225DD00BE2EFE /* Selection Management.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "Selection Management.md"; sourceTree = "<group>"; };
+		43F8FE03218225DD00BE2EFE /* Guides.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Guides.md; sourceTree = "<group>"; };
+		43F8FE04218225DD00BE2EFE /* Responding to Selection Events.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "Responding to Selection Events.md"; sourceTree = "<group>"; };
+		43F8FE05218225DD00BE2EFE /* Data Model.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "Data Model.md"; sourceTree = "<group>"; };
+		43F8FE06218225DD00BE2EFE /* View Protocols.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "View Protocols.md"; sourceTree = "<group>"; };
+		43F8FE07218225DD00BE2EFE /* Views.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Views.md; sourceTree = "<group>"; };
+		43F8FE08218225DD00BE2EFE /* Custom Days Rendering.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "Custom Days Rendering.md"; sourceTree = "<group>"; };
+		43F8FE09218225DD00BE2EFE /* Tips.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = Tips.md; sourceTree = "<group>"; };
+		43F8FE0A218225DD00BE2EFE /* Getting Started.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "Getting Started.md"; sourceTree = "<group>"; };
+		43F8FE0B218225DD00BE2EFE /* View Controllers.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "View Controllers.md"; sourceTree = "<group>"; };
+		43F8FE0C218225DD00BE2EFE /* Appearance Customization.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "Appearance Customization.md"; sourceTree = "<group>"; };
+		43F8FE0D218225DD00BE2EFE /* View Customization.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = "View Customization.md"; sourceTree = "<group>"; };
+		43F8FE1C2182294800BE2EFE /* CPCCalendarUnitsStorage.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPCCalendarUnitsStorage.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -202,6 +218,7 @@
 			children = (
 				4307A2A9217A038B00A717F8 /* README.md */,
 				43B6E72320A0902700A7403B /* CrispyCalendar.podspec */,
+				43F8FE01218225B800BE2EFE /* docs */,
 			);
 			name = Pod;
 			sourceTree = "<group>";
@@ -304,6 +321,8 @@
 				43689DBA2093681100052C7A /* CPCCalendarUnitSymbol.swift */,
 				434D8F0020B45032006B3BF6 /* CPCCalendarUnitSymbolImpl.swift */,
 				43689DB72093656000052C7A /* CPCCompoundCalendarUnit.swift */,
+				43F8FE1C2182294800BE2EFE /* CPCCalendarUnitsStorage.h */,
+				437D67022180A2AF0092A42B /* CPCCalendarUnitBacking.swift */,
 				43C07000209259B900202ED8 /* CPCDay.swift */,
 				43C070092092F26500202ED8 /* CPCWeek.swift */,
 				43C070032092ED9C00202ED8 /* CPCMonth.swift */,
@@ -345,6 +364,41 @@
 			path = View;
 			sourceTree = "<group>";
 		};
+		43F8FE01218225B800BE2EFE /* docs */ = {
+			isa = PBXGroup;
+			children = (
+				43F8FE1B218226EE00BE2EFE /* guides */,
+				43F8FE1A218226CD00BE2EFE /* sections */,
+			);
+			path = docs;
+			sourceTree = "<group>";
+		};
+		43F8FE1A218226CD00BE2EFE /* sections */ = {
+			isa = PBXGroup;
+			children = (
+				43F8FE03218225DD00BE2EFE /* Guides.md */,
+				43F8FE05218225DD00BE2EFE /* Data Model.md */,
+				43F8FE06218225DD00BE2EFE /* View Protocols.md */,
+				43F8FE07218225DD00BE2EFE /* Views.md */,
+				43F8FE0B218225DD00BE2EFE /* View Controllers.md */,
+				43F8FE02218225DD00BE2EFE /* Selection Management.md */,
+				43F8FE0D218225DD00BE2EFE /* View Customization.md */,
+			);
+			path = sections;
+			sourceTree = "<group>";
+		};
+		43F8FE1B218226EE00BE2EFE /* guides */ = {
+			isa = PBXGroup;
+			children = (
+				43F8FE0A218225DD00BE2EFE /* Getting Started.md */,
+				43F8FE0C218225DD00BE2EFE /* Appearance Customization.md */,
+				43F8FE04218225DD00BE2EFE /* Responding to Selection Events.md */,
+				43F8FE08218225DD00BE2EFE /* Custom Days Rendering.md */,
+				43F8FE09218225DD00BE2EFE /* Tips.md */,
+			);
+			path = guides;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -355,6 +409,7 @@
 				43689DCA20937AF200052C7A /* CPCDayCellState.h in Headers */,
 				439D98B62177EDDC00FFB7DD /* CPCDayCellRenderer.h in Headers */,
 				4314535C20AEF2E50019EB01 /* CPCViewTitleStyle.h in Headers */,
+				43F8FE1E2182294800BE2EFE /* CPCCalendarUnitsStorage.h in Headers */,
 				4314536820B21A3C0019EB01 /* CPCCalendarUnitSymbolStyle.h in Headers */,
 				43689DCC20937C9F00052C7A /* CrispyCalendar.h in Headers */,
 			);
@@ -511,6 +566,7 @@
 				4314537320B22B340019EB01 /* CPCViewContentAdjusting.swift in Sources */,
 				43689DBF20936F2600052C7A /* CPCMonthView.swift in Sources */,
 				438454D920D2A41B00CDC209 /* CPCCalendarViewController.swift in Sources */,
+				437D67032180A2AF0092A42B /* CPCCalendarUnitBacking.swift in Sources */,
 				43101B95209CFBB400904529 /* CPCMonthView_Layout.swift in Sources */,
 				43101B97209CFBC100904529 /* CPCMonthView_RedrawContext.swift in Sources */,
 				438AAB5B20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift in Sources */,

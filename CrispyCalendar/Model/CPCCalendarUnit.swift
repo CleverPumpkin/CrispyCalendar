@@ -131,10 +131,12 @@ extension CPCCalendarUnit {
 		return self.calendarWrapper.calendar;
 	}
 	
+	@usableFromInline
 	internal var startValue: Date {
 		return self.backingValue.startDate (using: self.calendar);
 	}
 	
+	@usableFromInline
 	internal var endValue: Date {
 		return guarantee (self.calendar.date (byAdding: Self.representedUnit, value: 1, to: self.start));
 	}
@@ -149,8 +151,45 @@ extension CPCCalendarUnit {
 	}
 #endif
 	
+	@usableFromInline
 	internal init (containing date: Date, calendar: CalendarWrapper) {
 		self.init (backedBy: BackingType (containing: date, calendar: calendar.calendar), calendar: calendar);
+	}
+
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	public init (containing date: Date, calendarOf otherUnit: CPCDay) {
+		self.init (containing: date, calendar: otherUnit.calendarWrapper);
+	}
+	
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	public init (containing date: Date, calendarOf otherUnit: CPCWeek) {
+		self.init (containing: date, calendar: otherUnit.calendarWrapper);
+	}
+	
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	public init (containing date: Date, calendarOf otherUnit: CPCMonth) {
+		self.init (containing: date, calendar: otherUnit.calendarWrapper);
+	}
+	
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	public init (containing date: Date, calendarOf otherUnit: CPCYear) {
+		self.init (containing: date, calendar: otherUnit.calendarWrapper);
 	}
 }
 

@@ -21,6 +21,8 @@
 //  THE SOFTWARE.
 //
 
+#import <CrispyCalendar/CPCCalendarUnitsStorage.h>
+
 #import <CrispyCalendar/CPCCalendarUnitSymbolStyle.h>
 #import <CrispyCalendar/CPCDayCellState.h>
 #import <CrispyCalendar/CPCViewTitleStyle.h>

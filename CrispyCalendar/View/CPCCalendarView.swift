@@ -77,7 +77,7 @@ open class CPCCalendarView: UIView {
 			if #available (iOS 11.0, *) {
 				return .fromSafeAreaInsets;
 			} else {
-				return .fromLayoutMargins;
+				return .fromContentInset;
 			}
 		}
 	};
@@ -208,6 +208,7 @@ extension CPCCalendarView {
 		get { return self.layout.calendar }
 		set {
 			let layout = Layout (calendar: newValue);
+			layout.monthViewsManager.selectionDidChangeBlock = self.layout.monthViewsManager.selectionDidChangeBlock;
 			layout.prepare (collectionView: self.collectionView);
 			self.collectionView.collectionViewLayout = layout;
 		}

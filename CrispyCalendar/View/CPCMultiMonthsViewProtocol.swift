@@ -63,6 +63,10 @@ internal final class CPCMonthViewsManager {
 	fileprivate private (set) var unownedMonthViews = UnownedArray <CPCMonthView> ();
 	fileprivate var multiSelectionHandler = CPCViewDefaultSelectionHandler;
 	
+	internal init () {
+		
+	}
+	
 	internal func prepareForContainerDeallocation () {
 		self.monthViews.forEach (self.unassociateMonthView);
 	}

@@ -1,4 +1,6 @@
 {
+	"abstract": "docs/sections/*.md",
+	"documentation": "docs/guides/*.md",
 	"output": "docs/public/",
 	"min_acl": "public",
 
@@ -7,12 +9,21 @@
 	"hide_documentation_coverage": false,
 	"custom_categories": [
 		{
-			"name": "Model",
+			"name": "Guides",
+			"children": [
+				"Getting Started",
+				"Appearance Customization",
+				"Responding to Selection Events",
+				"Custom Days Rendering",
+				"Tips"
+			]
+		},
+		{
+			"name": "Data Model",
 			"children": [
 				"CPCDateInterval",
 				"CPCDateIntervalInitializable",
 				"CPCCalendarUnitSymbol",
-				"CPCCalendarUnitSymbolStyle",
 				"CPCDay",
 				"CPCWeek",
 				"CPCMonth",
@@ -35,13 +46,13 @@
 				"CPCCalendarView"
 			]
 		}, {
-			"name": "View Controller",
+			"name": "View Controllers",
 			"children": [
 				"CPCCalendarViewController",
 				"CPCCalendarViewControllerSelectionDelegate"
 			]
 		}, {
-			"name": "Selection management",
+			"name": "Selection Management",
 			"children": [
 				"CPCViewSelection",
 				"CPCMonthViewSelectionDelegate",
@@ -70,15 +81,11 @@
 		"CrispyCalendar/View/CPCViewDelegatingSelectionHandler.swift"
 	],
 
-	"clean": true,
 	"sdk": "iphonesimulator",
 	"swift_version": "4.2",
 	"module_version": "1.0.0",
-	"umbrella_header": "CrispyCalendar/Supporting Files/CrispyCalendar.h",
-
 	"module": "CrispyCalendar",
 	"source_directory": ".",
-	"xcodebuild_arguments": ["-project", "CrispyCalendar.xcodeproj", "-target", "CrispyCalendar"],
 
 	"author": "Cleverpumpkin, Ltd.",
 	"author_url": "http://cleverpumpkin.ru",

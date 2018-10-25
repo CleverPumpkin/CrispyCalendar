@@ -3,6 +3,7 @@ framework module CrispyCalendar {
 	header "CPCCalendarUnitSymbolStyle.h"
 	header "CPCViewTitleStyle.h"
 	
+	private header "CPCCalendarUnitsStorage.h"
 	private header "CPCDayCellState.h"
 	private header "CPCDayCellRenderer.h"
 	

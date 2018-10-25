@@ -24,19 +24,17 @@
 import Foundation
 
 /// Protocol, implementing a collection of smaller units that are contained in this calendar unit.
-internal protocol CPCCompoundCalendarUnit: CPCCalendarUnit, RandomAccessCollection where Element: CPCCalendarUnit, Indices == CountableRange <Int> {}
-
-extension CPCCompoundCalendarUnit {
+internal protocol CPCCompoundCalendarUnit: CPCCalendarUnit, RandomAccessCollection where Element: CPCCalendarUnit, Indices == CountableRange <Int> {
 	/// Calculate all possible indices for a given compound unit.
 	///
 	/// - Parameters:
 	///   - value: Backing value of a compound unit to perform calculations for.
 	///   - calendar: Calendar to perform calculations with.
 	/// - Returns: All indices that are valid for compound unit that contains a date represented by given `value`.
-	internal static func indices (for value: BackingType, using calendar: Calendar) -> CountableRange <Int> {
-		return guarantee (calendar.range (of: Element.representedUnit, in: self.representedUnit, for: value.startDate (using: calendar)));
-	}
-	
+	static func indices (for value: BackingType, using calendar: Calendar) -> CountableRange <Int>;
+}
+
+extension CPCCompoundCalendarUnit {
 	public var startIndex: Int {
 		return self.indices.lowerBound;
 	}

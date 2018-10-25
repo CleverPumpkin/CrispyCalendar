@@ -23,93 +23,8 @@
 
 import Foundation
 
-fileprivate extension Int {
-	fileprivate static let minSignedThreeQuarters = Int.min >> (Int.bitWidth / 4);
-	fileprivate static let maxSignedThreeQuarters = Int (bitPattern: UInt.max >> (UInt.bitWidth / 4 + 1));
-	fileprivate static let maxUnsignedQuarter = Int (bitPattern: UInt.max >> (UInt.bitWidth * 3 / 4));
-}
-
-private protocol CPCMonthBackingStorageProtocol: CustomStringConvertible {
-	var year: Int { get }
-	var month: Int { get }
-	
-	init (year: Int, month: Int)
-	
-#if swift(>=4.2)
-	func hash (into hasher: inout Hasher);
-#else
-	var hashValue: Int { get }
-#endif
-}
-
-extension CPCMonthBackingStorageProtocol {
-	fileprivate var description: String {
-		return "\(self.year)-\(self.month)";
-	}
-}
-
 /// Calendar unit that represents a month.
-public struct CPCMonth {
-	internal struct BackingStorage: Hashable, CustomStringConvertible, CPCMonthBackingStorageProtocol {
-		fileprivate struct Packed: Hashable, CustomStringConvertible, CPCMonthBackingStorageProtocol {
-			fileprivate static let acceptableYears = Int.minSignedThreeQuarters ... .maxSignedThreeQuarters;
-			fileprivate static let acceptableMonths = 0 ... .maxUnsignedQuarter;
-
-			private let value: Int;
-			
-			fileprivate var year: Int {
-				return self.value >> (Int.bitWidth / 4);
-			}
-			fileprivate var month: Int {
-				return self.value & .maxUnsignedQuarter;
-			}
-			
-			fileprivate init (year: Int, month: Int) {
-				self.value = (year << (Int.bitWidth / 4)) | month;
-			}
-		}
-		
-		fileprivate struct Default: Hashable, CustomStringConvertible, CPCMonthBackingStorageProtocol {
-			fileprivate let year: Int;
-			fileprivate let month: Int;
-		}
-		
-		internal static func == (lhs: BackingStorage, rhs: BackingStorage) -> Bool {
-			return (lhs.month == rhs.month) && (lhs.year == rhs.year);
-		}
-		
-		private let storage: CustomStringConvertible & CPCMonthBackingStorageProtocol;
-		
-		internal var year: Int {
-			return self.storage.year;
-		}
-		internal var month: Int {
-			return self.storage.month;
-		}
-		
-#if swift(>=4.2)
-		internal func hash (into hasher: inout Hasher) {
-			self.storage.hash (into: &hasher);
-		}
-#else
-		internal var hashValue: Int {
-			return self.storage.hashValue;
-		}
-#endif
-		
-		internal init (year: Int, month: Int) {
-			guard Packed.acceptableYears ~= year, Packed.acceptableMonths ~= month else {
-				self.storage = Default (year: year, month: month);
-				return;
-			}
-			self.storage = Packed (year: year, month: month);
-		}
-		
-		internal func containingYear (_ calendar: CalendarWrapper) -> CPCYear {
-			return CPCYear (backedBy: CPCYear.BackingStorage (year: self.year), calendar: calendar);
-		}
-	}
-
+public struct CPCMonth {	
 	public let indices: CountableRange <Int>;
 	internal let calendarWrapper: CalendarWrapper;
 	internal let backingValue: BackingStorage;	
@@ -124,42 +39,6 @@ extension CPCMonth: CPCCalendarUnitBase {
 	public init (containing date: Date, calendar: Calendar) {
 		self.init (containing: date, calendar: calendar.wrapped ());
 	}
-	
-	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - otherUnit: Calendar source.
-	public init (containing date: Date, calendarOf otherUnit: CPCDay) {
-		self.init (containing: date, calendar: otherUnit.calendarWrapper);
-	}
-	
-	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - otherUnit: Calendar source.
-	public init (containing date: Date, calendarOf otherUnit: CPCWeek) {
-		self.init (containing: date, calendar: otherUnit.calendarWrapper);
-	}
-	
-	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - otherUnit: Calendar source.
-	public init (containing date: Date, calendarOf otherUnit: CPCMonth) {
-		self.init (containing: date, calendar: otherUnit.calendarWrapper);
-	}
-	
-	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - otherUnit: Calendar source.
-	public init (containing date: Date, calendarOf otherUnit: CPCYear) {
-		self.init (containing: date, calendar: otherUnit.calendarWrapper);
-	}
 }
 
 extension CPCMonth: CPCCompoundCalendarUnit {
@@ -169,35 +48,14 @@ extension CPCMonth: CPCCompoundCalendarUnit {
 	internal static let representedUnit = Calendar.Component.month;
 	internal static let descriptionDateFormatTemplate = "LLyyyy";
 	
+	internal static func indices (for value: BackingStorage, using calendar: Calendar) -> CountableRange <Int> {
+		return guarantee (calendar.range (of: Element.representedUnit, in: self.representedUnit, for: value.startDate (using: calendar)));
+	}
+
 	internal init (backedBy value: BackingStorage, calendar: CalendarWrapper) {
 		self.calendarWrapper = calendar;
 		self.backingValue = value;
 		self.indices = CPCMonth.indices (for: value, using: calendar.calendar);
-	}
-}
-
-extension CPCMonth.BackingStorage: ExpressibleByDateComponents {
-	internal static let requiredComponents: Set <Calendar.Component> = CPCYear.BackingStorage.requiredComponents.union (.month);
-
-	internal init (_ dateComponents: DateComponents) {
-		self.init (
-			year: guarantee (dateComponents.year),
-			month: guarantee (dateComponents.month)
-		);
-	}
-}
-
-extension CPCMonth.BackingStorage: DateComponentsConvertible {
-	internal func dateComponents (_ calendar: Calendar) -> DateComponents {
-		return DateComponents (calendar: calendar, year: self.year, month: self.month);
-	}
-}
-
-extension CPCMonth.BackingStorage: CPCCalendarUnitBackingType {
-	internal typealias BackedType = CPCMonth;
-	
-	internal var description: String {
-		return self.storage.description;
 	}
 }
 
@@ -217,6 +75,11 @@ public extension CPCMonth {
 		return self.current.prev;
 	}
 	
+	/// Era of the represented month's year.
+	public var era: Int {
+		return self.backingValue.era;
+	}
+
 	/// Year of represented month.
 	public var year: Int {
 		return self.backingValue.year;
@@ -229,7 +92,7 @@ public extension CPCMonth {
 	
 	/// Year that contains represented month.
 	public var containingYear: CPCYear {
-		return self.backingValue.containingYear (self.calendarWrapper);
+		return CPCYear (backedBy: self.backingValue.containingYear (self.calendarWrapper), calendar: self.calendarWrapper);
 	}
 	
 	/// Create a new value, corresponding to a month in the future or past.

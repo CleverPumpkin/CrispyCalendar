@@ -61,12 +61,8 @@ private enum SelectionStorage {
 		private unowned let viewController: CPCCalendarViewController;
 		
 		fileprivate var selection: CPCViewSelection {
-			get {
-				return self.viewController.calendarView.selection;
-			}
-			set {
-				self.viewController.calendarView.selection = newValue;
-			}
+			get { return self.viewController.calendarView.selection }
+			set { self.viewController.calendarView.selection = newValue }
 		}
 		
 		fileprivate init (for viewController: CPCCalendarViewController) {
@@ -130,9 +126,7 @@ open class CPCCalendarViewController: UIViewController {
 	}
 	
 	open override var view: UIView! {
-		get {
-			return super.view;
-		}
+		get { return super.view }
 		set {
 			switch (newValue) {
 			case let newValue as CPCCalendarView:
@@ -159,12 +153,8 @@ open class CPCCalendarViewController: UIViewController {
 	
 	/// Selected days associated with this view controller.
 	open var selection: CPCViewSelection {
-		get {
-			return self.selectionStorage.selection;
-		}
-		set {
-			self.selectionStorage.selection = newValue;
-		}
+		get { return self.selectionStorage.selection }
+		set { self.selectionStorage.selection = newValue }
 	}
 	
 	/// The minimum date that a calendar view controller should present to user. Defaults to `nil` meaning no lower limit.

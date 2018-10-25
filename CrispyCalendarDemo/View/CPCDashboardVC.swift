@@ -33,7 +33,10 @@ class CPCDashboardVC: UIViewController, UITableViewDataSource, UITableViewDelega
 		DefaultConfigItem (localizedTitle: "Multiple days selection (ordered)", calendarTitle: "Ordered selection", initialSelection: .ordered ([])),
 		CustomSelectionHandlingItem (localizedTitle: "Custom selection handling", calendarTitle: "Custom selection"),
 		CustomDrawingItem (localizedTitle: "Custom drawing", calendarTitle: "Custom drawing"),
-		WeirdCalendarItem (localizedTitle: "Hebrew calendar", calendarTitle: "Hebrew calendar"),
+		WeirdCalendarItem (identifier: .hebrew),
+		WeirdCalendarItem (identifier: .chinese),
+		WeirdCalendarItem (identifier: .coptic),
+		WeirdCalendarItem (identifier: .ethiopicAmeteMihret),
 		DefaultConfigItem (
 			localizedTitle: "Prev, current & next months",
 			calendarTitle: "Constrained dates",
@@ -259,11 +262,26 @@ private class CustomDrawingVC: SelectionTrackingCalendarVC {
 }
 
 private class WeirdCalendarVC: SelectionTrackingCalendarVC {
+	fileprivate var identifier: Calendar.Identifier;
+	
+	fileprivate init (identifier: Calendar.Identifier) {
+		self.identifier = identifier;
+		super.init (title: Locale (identifier: "en_US_POSIX").localizedString (for: identifier) ?? "\(identifier)");
+	}
+	
+	fileprivate required init? (coder aDecoder: NSCoder) {
+		fatalError("init(coder:) has not been implemented")
+	}
+	
+	fileprivate required init(title: String) {
+		fatalError("init(title:) has not been implemented")
+	}
+	
 	fileprivate override func viewDidLoad () {
 		super.viewDidLoad ();
 		
-		var calendar = Calendar (identifier: .hebrew);
-		calendar.locale = Locale (identifier: "he");
+		var calendar = Calendar (identifier: self.identifier);
+		calendar.locale = Bundle.main.preferredLocalizations.first.map (Locale.init) ?? Locale.current;
 		self.calendarView.calendar = calendar;
 		self.weekView.calendar = calendar;
 	}
@@ -335,16 +353,18 @@ private struct CustomDrawingItem: ConfigItemPushingCalendarController {
 	}
 }
 
-private struct WeirdCalendarItem: ConfigItemPushingCalendarController {
-	fileprivate let localizedTitle: String;
-	fileprivate let calendarTitle: String;
-	
-	fileprivate var calendarViewControllerClass: SelectionTrackingCalendarVC.Type {
-		return WeirdCalendarVC.self;
+private struct WeirdCalendarItem: ConfigItemPushingViewController {
+	fileprivate var localizedTitle: String {
+		return Locale (identifier: "en_US_POSIX").localizedString (for: self.identifier) ?? "\(self.identifier)";
 	}
 	
-	fileprivate var initialSelection: CPCViewSelection {
-		return .none;
+	fileprivate let identifier: Calendar.Identifier;
+	
+	fileprivate var targetViewController: UIViewController {
+		let result = WeirdCalendarVC (identifier: self.identifier);
+		result.identifier = self.identifier;
+		result.selection = .range (.today ..< .today);
+		return result;
 	}
 }
 
