@@ -27,6 +27,9 @@ import Foundation
 
 /// Protocol containing common interface for CPCDay, CPCWeek, CPCMonth and CPCYear.
 public protocol CPCCalendarUnitBase: CustomStringConvertible, CustomDebugStringConvertible, Strideable, Hashable, CPCDateInterval where Stride == Int {
+	/// Calendar of the calenar unit.
+	var calendar: Calendar { get }
+	
 	/// Creates a new calendar unit that contains a given date in current time zone according to system calendar.
 	///
 	/// - Parameters:
@@ -155,14 +158,17 @@ extension CPCCalendarUnitBase {
 extension CPCCalendarUnit {
 	internal typealias CalendarWrapper = CPCCalendarWrapper;
 	
+	@inlinable
 	public var calendar: Calendar {
 		return self.calendarWrapper.calendar;
 	}
 	
+	@inlinable
 	public var start: Date {
 		return self.backingValue.startDate (using: self.calendar);
 	}
 	
+	@inlinable
 	public var end: Date {
 		return guarantee (self.calendar.date (byAdding: Self.representedUnit, value: 1, to: self.start));
 	}
