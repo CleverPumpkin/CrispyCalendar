@@ -151,6 +151,13 @@ open class CPCCalendarViewController: UIViewController {
 		didSet { self.calendarView.addSubview (weekView) }
 	}
 	
+	/// See `selection`.
+	@objc (selection)
+	open var _objcBridgedSelection: __CPCViewSelection {
+		get { return self.selection as __CPCViewSelection }
+		set { self.selection = newValue as CPCViewSelection }
+	}
+
 	/// Selected days associated with this view controller.
 	open var selection: CPCViewSelection {
 		get { return self.selectionStorage.selection }

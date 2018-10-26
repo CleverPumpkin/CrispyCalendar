@@ -96,3 +96,61 @@ extension CPCViewSelection: CustomStringConvertible, CustomDebugStringConvertibl
 		}
 	}
 }
+
+extension CPCViewSelection: ReferenceConvertible {
+	public typealias ReferenceType = _ObjectiveCType;
+	public typealias _ObjectiveCType = __CPCViewSelection;
+
+	public func _bridgeToObjectiveC () -> __CPCViewSelection {
+		switch (self) {
+		case .none:
+			return __CPCViewSelection.null ();
+		case .single (let day):
+			return __CPCViewSelection (singleDay: day?.start, calendar: day?.calendar);
+		case .range (let range):
+			return __CPCViewSelection (datesRange: DateInterval (start: range.lowerBound.start, end: range.upperBound.start), calendar: range.lowerBound.calendar);
+		case .unordered (let days):
+			return __CPCViewSelection (unorderedDatesSet: Set (days.map { $0.start }), calendar: days.first?.calendar);
+		case .ordered (let days):
+			return __CPCViewSelection (orderedDatesSet: NSOrderedSet (array: days.map { $0.start }), calendar: days.first?.calendar);
+		}
+	}
+	
+	public static func _forceBridgeFromObjectiveC (_ source: __CPCViewSelection, result: inout CPCViewSelection?) {
+		guard !source.isNull else {
+			return result = CPCViewSelection.none;
+		}
+		if let calendar = source.calendar {
+			if let orderedDates = source.orderedDates {
+				result = .ordered (orderedDates.map { CPCDay (containing: $0 as! Date, calendar: calendar) });
+			} else if let unorderedDates = source.unorderedDates {
+				result = .unordered (Set (unorderedDates.map { CPCDay (containing: $0, calendar: calendar) }));
+			} else if let datesInterval = source.datesInterval {
+				result = .range (CPCDay (containing: datesInterval.start, calendar: calendar) ..< CPCDay (containing: datesInterval.end, calendar: calendar));
+			} else {
+				result = .single (source.singleDay.map { CPCDay (containing: $0, calendar: calendar) });
+			}
+		} else {
+			if source.orderedDates != nil {
+				result = .ordered ([]);
+			} else if source.unorderedDates != nil {
+				result = .unordered ([]);
+			} else {
+				result = .single (nil);
+			}
+		}
+	}
+	
+	public static func _conditionallyBridgeFromObjectiveC (_ source: __CPCViewSelection, result: inout CPCViewSelection?) -> Bool {
+		self._forceBridgeFromObjectiveC (source, result: &result);
+		return true;
+	}
+	
+	public static func _unconditionallyBridgeFromObjectiveC (_ source: __CPCViewSelection?) -> CPCViewSelection {
+		var result: CPCViewSelection?;
+		if let source = source {
+			self._forceBridgeFromObjectiveC (source, result: &result);
+		}
+		return result ?? .none;
+	}
+}

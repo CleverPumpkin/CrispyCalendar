@@ -440,6 +440,13 @@ extension CPCMonthView: CPCViewContentAdjusting {
 }
 
 extension CPCMonthView: CPCViewDelegatingSelectionHandling {
+	/// See `selection`.
+	@objc (selection)
+	open var _objcBridgedSelection: __CPCViewSelection {
+		get { return self.selection as __CPCViewSelection }
+		set { self.selection = newValue as CPCViewSelection }
+	}
+
 	open var selection: CPCViewSelection {
 		get { return self.selectionHandler.selection }
 		set { self.setSelection (newValue) }

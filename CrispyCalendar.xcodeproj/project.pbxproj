@@ -59,6 +59,8 @@
 		43B53AC120D4194900AA27BB /* CPCCalendarView_Cell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B53AC020D4194900AA27BB /* CPCCalendarView_Cell.swift */; };
 		43B53AC320D421D900AA27BB /* unsafeCastConvenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B53AC220D421D900AA27BB /* unsafeCastConvenience.swift */; };
 		43B6E72120A0615400A7403B /* ThreadsafeStorage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43B6E72020A0615400A7403B /* ThreadsafeStorage.swift */; };
+		43BBBA9321836A7C005E7147 /* CPCViewSelection.h in Headers */ = {isa = PBXBuildFile; fileRef = 43BBBA9121836A7C005E7147 /* CPCViewSelection.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		43BBBA9421836A7C005E7147 /* CPCViewSelection.m in Sources */ = {isa = PBXBuildFile; fileRef = 43BBBA9221836A7C005E7147 /* CPCViewSelection.m */; };
 		43C07001209259B900202ED8 /* CPCDay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C07000209259B900202ED8 /* CPCDay.swift */; };
 		43C070042092ED9C00202ED8 /* CPCMonth.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C070032092ED9C00202ED8 /* CPCMonth.swift */; };
 		43C070062092EDC700202ED8 /* CPCDateInterval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43C070052092EDC700202ED8 /* CPCDateInterval.swift */; };
@@ -152,6 +154,8 @@
 		43B6E72020A0615400A7403B /* ThreadsafeStorage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ThreadsafeStorage.swift; sourceTree = "<group>"; };
 		43B6E72320A0902700A7403B /* CrispyCalendar.podspec */ = {isa = PBXFileReference; explicitFileType = text.script.ruby; path = CrispyCalendar.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		43B6E72920A0B93F00A7403B /* CrispyCalendar.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CrispyCalendar.modulemap; sourceTree = "<group>"; };
+		43BBBA9121836A7C005E7147 /* CPCViewSelection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPCViewSelection.h; sourceTree = "<group>"; };
+		43BBBA9221836A7C005E7147 /* CPCViewSelection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPCViewSelection.m; sourceTree = "<group>"; };
 		43C06FE820924E7400202ED8 /* CrispyCalendar.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CrispyCalendar.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		43C06FEB20924E7400202ED8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		43C07000209259B900202ED8 /* CPCDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCDay.swift; sourceTree = "<group>"; };
@@ -343,6 +347,8 @@
 				439D98B52177EDDC00FFB7DD /* CPCDayCellRenderer.h */,
 				4315019520B2A74600BD1186 /* CPCDayCellRenderer.swift */,
 				4314536C20B21DD90019EB01 /* CPCWeekView.swift */,
+				43BBBA9121836A7C005E7147 /* CPCViewSelection.h */,
+				43BBBA9221836A7C005E7147 /* CPCViewSelection.m */,
 				4314535920AEF0980019EB01 /* CPCViewSelection.swift */,
 				436F53BA20A4C86B00ACE40A /* CPCViewProtocol.swift */,
 				4314536020AF29BC0019EB01 /* CPCViewMeasuring.swift */,
@@ -409,6 +415,7 @@
 				43689DCA20937AF200052C7A /* CPCDayCellState.h in Headers */,
 				439D98B62177EDDC00FFB7DD /* CPCDayCellRenderer.h in Headers */,
 				4314535C20AEF2E50019EB01 /* CPCViewTitleStyle.h in Headers */,
+				43BBBA9321836A7C005E7147 /* CPCViewSelection.h in Headers */,
 				43F8FE1E2182294800BE2EFE /* CPCCalendarUnitsStorage.h in Headers */,
 				4314536820B21A3C0019EB01 /* CPCCalendarUnitSymbolStyle.h in Headers */,
 				43689DCC20937C9F00052C7A /* CrispyCalendar.h in Headers */,
@@ -548,6 +555,7 @@
 				4318950220A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */,
 				43689DBB2093681100052C7A /* CPCCalendarUnitSymbol.swift in Sources */,
 				4314536F20B220AB0019EB01 /* NSParagraphStyle_convenience.swift in Sources */,
+				43BBBA9421836A7C005E7147 /* CPCViewSelection.m in Sources */,
 				43689DB82093656000052C7A /* CPCCompoundCalendarUnit.swift in Sources */,
 				43C07001209259B900202ED8 /* CPCDay.swift in Sources */,
 				43C0700A2092F26500202ED8 /* CPCWeek.swift in Sources */,
