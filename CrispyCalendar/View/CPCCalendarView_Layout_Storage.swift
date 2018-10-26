@@ -27,23 +27,6 @@ internal extension CPCCalendarView.Layout {
 	internal typealias Storage = CPCCalendarViewLayoutStorage;
 	private typealias Column = (x: CGFloat, width: CGFloat);
 	
-	internal var currentReferenceContentInsets: UIEdgeInsets {
-		switch (self.columnContentInsetsReference) {
-		case .none:
-			return .zero;
-		case .fromContentInset:
-			return guarantee (self.collectionView).contentInset;
-		case .fromLayoutMargins:
-			return guarantee (self.collectionView).layoutMargins;
-		case .fromSafeAreaInsets:
-			if #available (iOS 11.0, *) {
-				return guarantee (self.collectionView).safeAreaInsets
-			} else { // can not happen
-				fatalError ("Something weird just happened");
-			}
-		}
-	}
-	
 	internal static func makeEmptyStorage () -> Storage {
 		return EmptyStorage ();
 	}
@@ -85,18 +68,19 @@ internal extension CPCCalendarView.Layout {
 	}
 	
 	private func performInitialLayoutCalculations () -> Storage {
-		let collectionView = guarantee (self.collectionView), layoutSize = CGSize (width: collectionView.bounds.width, height: collectionView.bounds.height * 5.0);
-		let columns = self.makeColumns (self.columnCount);
-		let middleRowInfo = self.makeMiddleRow (columns: columns, midY: layoutSize.height / 2);
+		let collectionView = guarantee (self.collectionView);
+		let columns = self.makeColumns (self.columnCount), layoutHeight = collectionView.bounds.height * 5.0;
+		let middleRowInfo = self.makeMiddleRow (columns: columns, midY: layoutHeight / 2);
 		let topRows = self.makeRows (before: middleRowInfo, columns: columns) { $0.frame.minY < 0.0 };
-		let bottomRows = self.makeRows (after: middleRowInfo, columns: columns) { $0.frame.maxY > layoutSize.height };
+		let bottomRows = self.makeRows (after: middleRowInfo, columns: columns) { $0.frame.maxY > layoutHeight };
 		
 		let rows = topRows + middleRowInfo + bottomRows;
 		guard let firstRow = rows.first, let lastRow = rows.last else {
 			return EmptyStorage ();
 		}
 		self.ignoreFirstBoundsChange = true;
-		return DefaultStorage (rows, boundsReach: (self.isMinimumDateReached (for: firstRow), self.isMaximumDateReached (for: lastRow)), contentSize: layoutSize);
+		let contentSize = CGSize (width: columns.last!.x + columns.last!.width - columns.first!.x, height: layoutHeight);
+		return DefaultStorage (rows, boundsReach: (self.isMinimumDateReached (for: firstRow), self.isMaximumDateReached (for: lastRow)), contentSize: contentSize);
 	}
 	
 	private func performScrollLayoutCalculations (using context: InvalidationContext, with verticalOffset: CGFloat, updating storage: Storage) -> Storage {
@@ -140,10 +124,28 @@ internal extension CPCCalendarView.Layout {
 	}
 	
 	private func makeColumns (_ columnCount: Int) -> [Column] {
-		let referenceInsets = self.currentReferenceContentInsets, collectionView = guarantee (self.collectionView), scale = collectionView.separatorWidth;
-		let leading = referenceInsets.left, width = collectionView.bounds.width - referenceInsets.left - referenceInsets.right, columnInsets = self.columnContentInsets;
-		let columnsX = (0 ... columnCount).map { fma (CGFloat ($0), width / CGFloat (columnCount), leading).rounded (scale: scale) };
-		return (0 ..< columnCount).map { (col: Int) in (x: columnsX [col] + columnInsets.left, width: columnsX [col + 1] - columnsX [col] - columnInsets.left - columnInsets.right) };
+		let collectionView = guarantee (self.collectionView);
+		let alternateInsets: UIEdgeInsets;
+		switch (self.columnContentInsetReference) {
+		case .fromContentInset:
+			alternateInsets = .zero;
+		case .fromLayoutMargins:
+			alternateInsets = collectionView.layoutMargins;
+		case .fromSafeAreaInsets:
+			if #available (iOS 11.0, *) {
+				alternateInsets = collectionView.safeAreaInsets;
+			} else {
+				alternateInsets = .zero;
+			}
+		}
+
+		let scale = collectionView.separatorWidth, contentInset = collectionView.effectiveContentInset;
+		let leading = max (alternateInsets.left - contentInset.left, 0.0);
+		let width = collectionView.bounds.width - max (alternateInsets.right, contentInset.right) - contentInset.left - leading;
+
+		let columnInsets = self.columnContentInset;
+		let columnsX = (0 ... columnCount).map { (CGFloat ($0) * width / CGFloat (columnCount)).rounded (scale: scale) };
+		return (0 ..< columnCount).map { (col: Int) in (x: columnsX [col] + columnInsets.left, width: columnsX [col + 1] - columnsX [col] - columnInsets.width) };
 	}
 	
 	private func makeRows (before rowInfo: RowInfo, columns: [Column], stop predicate: (RowInfo) -> Bool) -> [RowInfo] {
@@ -568,6 +570,20 @@ fileprivate extension Array where Element: Comparable {
 				return .orderedSame;
 			}
 		};
+	}
+}
+
+internal extension UIEdgeInsets {
+	internal var width: CGFloat {
+		return self.left + self.right;
+	}
+	
+	internal static func + (lhs: UIEdgeInsets, rhs: UIEdgeInsets) -> UIEdgeInsets {
+		return UIEdgeInsets (top: lhs.top + rhs.top, left: lhs.left + rhs.left, bottom: lhs.bottom + rhs.bottom, right: lhs.right + rhs.right);
+	}
+	
+	internal static func += (lhs: inout UIEdgeInsets, rhs: UIEdgeInsets) {
+		lhs = lhs + rhs;
 	}
 }
 

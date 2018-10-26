@@ -305,10 +305,10 @@ private class ColumnedCalendarVC: SelectionTrackingCalendarVC {
 	private func updateLyaout (for size: CGSize) {
 		if (size.width > size.height) {
 			self.columnCount = 2;
-			self.columnContentInsets = UIEdgeInsets (top: 8.0, left: 8.0, bottom: 8.0, right: 8.0);
+			self.columnContentInset = UIEdgeInsets (top: 8.0, left: 8.0, bottom: 8.0, right: 8.0);
 		} else {
 			self.columnCount = 1;
-			self.columnContentInsets = .zero;
+			self.columnContentInset = .zero;
 		}
 	}
 }

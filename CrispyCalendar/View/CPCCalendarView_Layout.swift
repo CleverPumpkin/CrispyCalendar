@@ -25,7 +25,7 @@ import UIKit
 
 extension CPCCalendarView {
 	internal class Layout: UICollectionViewLayout {
-		internal typealias ColumnContentInsetsReference = CPCCalendarView.ColumnContentInsetsReference;
+		internal typealias ColumnContentInsetReference = CPCCalendarView.ColumnContentInsetReference;
 		
 		internal var columnCount = 1 {
 			didSet {
@@ -34,14 +34,14 @@ extension CPCCalendarView {
 			}
 		}
 		
-		internal var columnContentInsets = UIEdgeInsets.zero {
+		internal var columnContentInset = UIEdgeInsets.zero {
 			didSet {
 				self.invalidateLayout ();
 				self.collectionView?.reloadData ();
 			}
 		}
 		
-		internal var columnContentInsetsReference: ColumnContentInsetsReference = .default {
+		internal var columnContentInsetReference: ColumnContentInsetReference = .fromContentInset {
 			didSet {
 				self.invalidateLayout ();
 				self.collectionView?.reloadData ();
@@ -151,13 +151,13 @@ extension CPCCalendarView.Layout: UICollectionViewDelegate {
 	}
 	
 	internal func layoutMarginsDidChange () {
-		if (self.columnContentInsetsReference == .fromLayoutMargins) {
+		if (self.columnContentInsetReference == .fromLayoutMargins) {
 			self.invalidateLayout ();
 		}
 	}
 	
 	internal func safeAreaInsetsDidChange () {
-		if (self.columnContentInsetsReference == .fromSafeAreaInsets) {
+		if (self.columnContentInsetReference == .fromSafeAreaInsets) {
 			self.invalidateLayout ();
 		}
 	}
@@ -208,13 +208,8 @@ extension CPCCalendarView.Layout: UICollectionViewDelegate {
 		guard let collectionView = self.collectionView else {
 			return false;
 		}
-		let effectiveContentInset: UIEdgeInsets;
-		if #available (iOS 11.0, *) {
-			effectiveContentInset = collectionView.adjustedContentInset
-		} else {
-			effectiveContentInset = collectionView.contentInset;
-		};
-		let bounds = collectionView.bounds.inset (by: effectiveContentInset), targetRect = bounds.offsetBy (dx: 0.0, dy: dayCellY + dayCellHeight / 2 - bounds.midY);
+		let bounds = collectionView.bounds.inset (by: collectionView.effectiveContentInset);
+		let targetRect = bounds.offsetBy (dx: 0.0, dy: dayCellY + dayCellHeight / 2 - bounds.midY);
 		collectionView.scrollRectToVisible (targetRect, animated: animated);
 		return true;
 	}
@@ -242,6 +237,10 @@ extension CPCCalendarView.Layout {
 	}
 	
 	internal override func shouldInvalidateLayout (forBoundsChange newBounds: CGRect) -> Bool {
+		guard let collectionView = self.collectionView else {
+			return false;
+		}
+		
 		if (self.ignoreFirstBoundsChange) {
 			self.ignoreFirstBoundsChange = false;
 			return false;
@@ -249,13 +248,13 @@ extension CPCCalendarView.Layout {
 		
 		if
 			let invalidationContext = self.currentInvalidationContext,
-			let collectionView = self.collectionView,
 			let verticalOffset = invalidationContext.verticalOffset,
 			((newBounds.minY - collectionView.bounds.minY).magnitude - verticalOffset.magnitude).magnitude < 1e-3 {
 			return false;
 		}
 		
-		guard let invalidationContext = InvalidationContext.forBoundsChange (newBounds, currentStorage: self.storage) else {
+		let contentBounds = newBounds.inset (by: collectionView.effectiveContentInset);
+		guard let invalidationContext = InvalidationContext.forBoundsChange (contentBounds, currentStorage: self.storage) else {
 			return false;
 		}
 		self.currentInvalidationContext = invalidationContext;
@@ -336,6 +335,16 @@ extension CPCCalendarView.Layout {
 			self.contentSizeAdjustment = CGSize (width: 0.0, height: verticalOffset.magnitude);
 			self.contentOffsetAdjustment = CGPoint (x: 0.0, y: max (verticalOffset, 0.0));
 		}
+	}
+}
+
+internal extension UICollectionView {
+	internal var effectiveContentInset: UIEdgeInsets {
+		if #available (iOS 11.0, *) {
+			return self.adjustedContentInset
+		} else {
+			return self.contentInset;
+		};
 	}
 }
 

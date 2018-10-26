@@ -4,7 +4,7 @@ Whether you are writing yet another one task tracker or calendar app, or simply 
 
 [![CocoaPods Compatible](https://img.shields.io/cocoapods/v/CrispyCalendar.svg?style=popout)](https://cocoapods.org/pods/CrispyCalendar)
 ![Platform support](https://img.shields.io/cocoapods/p/CrispyCalendar.svg?style=popout)
-[![Documentation](https://img.shields.io/cocoapods/metrics/doc-percent/CrispyCalendar.svg?style=popout)](https://cleverpumpkin.github.io/CrispyCalendarDocs/public/)
+[![Documentation](https://github.com/CleverPumpkin/CrispyCalendarDocs/blob/master/public/badge.svg)](https://cleverpumpkin.github.io/CrispyCalendarDocs/public/)
 [![License](https://img.shields.io/cocoapods/l/CrispyCalendar.svg?style=popout)](https://github.com/ReSwift/ReSwift/blob/master/LICENSE.md)
 
 ## Features

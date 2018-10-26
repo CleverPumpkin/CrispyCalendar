@@ -122,7 +122,7 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	open override func layoutMarginsDidChange () {
 		super.layoutMarginsDidChange ();
 		
-		switch (self.calendarView?.columnContentInsetsReference) {
+		switch (self.calendarView?.columnContentInsetReference) {
 		case nil, .some (.fromLayoutMargins):
 			self.setNeedsDisplay ();
 		default:
@@ -134,7 +134,7 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	open override func safeAreaInsetsDidChange () {
 		super.safeAreaInsetsDidChange ();
 
-		switch (self.calendarView?.columnContentInsetsReference) {
+		switch (self.calendarView?.columnContentInsetReference) {
 		case nil, .some (.fromSafeAreaInsets):
 			self.setNeedsDisplay ();
 		default:
@@ -143,45 +143,54 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	}
 	
 	open override func draw (_ rect: CGRect) {
-		let columnCount: Int, referenceInsets: UIEdgeInsets, columnContentInsets: UIEdgeInsets;
+		let columnCount: Int, columnContentInset: UIEdgeInsets, leading: CGFloat, width: CGFloat;
 		if let calendarView = self.calendarView {
 			columnCount = calendarView.columnCount;
-			columnContentInsets = calendarView.columnContentInsets;
-			referenceInsets = calendarView.layout.currentReferenceContentInsets;
+			columnContentInset = calendarView.columnContentInset;
+			
+			let contentInset: UIEdgeInsets;
+			if #available (iOS 11.0, *) {
+				contentInset = calendarView.adjustedContentInset;
+			} else {
+				contentInset = calendarView.contentInset;
+			}
+			let boundsWidth = calendarView.bounds.width;
+			switch (calendarView.columnContentInsetReference) {
+			case .fromContentInset:
+				leading = contentInset.left;
+				width = boundsWidth - contentInset.width;
+			case .fromLayoutMargins:
+				leading = max (calendarView.layoutMargins.left, contentInset.left);
+				width = boundsWidth - max (calendarView.layoutMargins.right, contentInset.right) - leading;
+			case .fromSafeAreaInsets:
+				if #available (iOS 11.0, *) {
+					leading = max (calendarView.safeAreaInsets.left, contentInset.left);
+					width = boundsWidth - max (calendarView.safeAreaInsets.right, contentInset.right) - leading;
+				} else {
+					leading = contentInset.left;
+					width = boundsWidth - contentInset.width;
+				}
+			}
 		} else {
 			columnCount = 1;
-			columnContentInsets = .zero;
+			columnContentInset = .zero;
 			if #available (iOS 11.0, *) {
-				let safeAreaInsets = self.safeAreaInsets, layoutMargins = self.layoutMargins;
-				if self.insetsLayoutMarginsFromSafeArea {
-					referenceInsets = UIEdgeInsets (
-						top: safeAreaInsets.top + layoutMargins.top,
-						left: safeAreaInsets.left + layoutMargins.left,
-						bottom: safeAreaInsets.bottom + layoutMargins.bottom,
-						right: safeAreaInsets.right + layoutMargins.right
-					);
-				} else {
-					referenceInsets = UIEdgeInsets (
-						top: max (safeAreaInsets.top, layoutMargins.top),
-						left: max (safeAreaInsets.left, layoutMargins.left),
-						bottom: max (safeAreaInsets.bottom, layoutMargins.bottom),
-						right: max (safeAreaInsets.right, layoutMargins.right)
-					);
-				}
+				leading = self.safeAreaInsets.left;
+				width = self.bounds.width - self.safeAreaInsets.width;
 			} else {
-				referenceInsets = self.layoutMargins;
+				leading = 0.0;
+				width = self.bounds.width;
 			}
 		}
-		
-		let boundsSize = self.bounds.standardized.size, leading = referenceInsets.left, width = boundsSize.width - referenceInsets.left - referenceInsets.right;
-		let columnLeftInset = columnContentInsets.left, columnWidthInset = columnLeftInset + columnContentInsets.right;
+
+		let columnLeading = columnContentInset.left, columnWidthInset = columnContentInset.width, boundsHeight = self.bounds.height;
 		for column in 0 ..< columnCount {
 			let columnCount = CGFloat (columnCount);
 			self.drawSingleWeek (in: CGRect (
-				x: leading + columnLeftInset + CGFloat (column) / columnCount * width,
+				x: fma (CGFloat (column) / columnCount, width, leading + columnLeading),
 				y: 0.0,
 				width: width / columnCount - columnWidthInset,
-				height: boundsSize.height
+				height: boundsHeight
 			));
 		}
 	}

@@ -66,20 +66,15 @@ public protocol CPCCalendarViewSelectionDelegate: AnyObject {
 /// the same unified selection handling and appearance attributes management, but assigning
 /// month values to specific views or arranging them visually remains under user control.
 open class CPCCalendarView: UIView {
-	@objc (CPCCalendarViewColumnContentInsetsReference)
-	public enum ColumnContentInsetsReference: Int {
-		case none;
+	/// Defines the boundary for ccalendar view content.
+	@objc (CPCCalendarViewColumnContentInsetReference)
+	public enum ColumnContentInsetReference: Int {
+		/// Uses `contentInset` as zero boundary.
 		case fromContentInset;
+		/// Uses `layoutMargin` as zero boundary.
 		case fromLayoutMargins;
+		/// Uses `safeAreaInsets` as zero boundary.
 		case fromSafeAreaInsets;
-		
-		internal static var `default`: ColumnContentInsetsReference {
-			if #available (iOS 11.0, *) {
-				return .fromSafeAreaInsets;
-			} else {
-				return .fromContentInset;
-			}
-		}
 	};
 	
 	/// Calendar to be used for various locale-dependent info.
@@ -124,14 +119,18 @@ open class CPCCalendarView: UIView {
 	}
 	
 	/// Insets or outsets that are applied to each calendar column.
-	@IBInspectable open dynamic var columnContentInsets: UIEdgeInsets {
-		get { return self.layout.columnContentInsets }
-		set { self.layout.columnContentInsets = newValue }
+	@IBInspectable open dynamic var columnContentInset: UIEdgeInsets {
+		get { return self.layout.columnContentInset }
+		set { self.layout.columnContentInset = newValue }
 	}
 	
-	@IBInspectable open dynamic var columnContentInsetsReference: ColumnContentInsetsReference {
-		get { return self.layout.columnContentInsetsReference }
-		set { self.layout.columnContentInsetsReference = newValue }
+	/// Defines the boundary used for layout calculations.
+	///
+	/// - Note: calendar view's behaviour when using this value is analagous to that exhibited by
+	/// `UICollectionViewFlowLayout.sectionInsetReference`, meaning contentInset are always respected.
+	@IBInspectable open dynamic var columnContentInsetReference: ColumnContentInsetReference {
+		get { return self.layout.columnContentInsetReference }
+		set { self.layout.columnContentInsetReference = newValue }
 	}
 	
 	internal unowned let collectionView: UICollectionView;

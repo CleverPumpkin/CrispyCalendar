@@ -184,9 +184,9 @@ open class CPCCalendarViewController: UIViewController {
 	}
 	
 	/// Insets or outsets that are applied to each calendar column.
-	@IBInspectable open dynamic var columnContentInsets: UIEdgeInsets {
-		get { return self.calendarView.columnContentInsets }
-		set { self.calendarView.columnContentInsets = newValue }
+	@IBInspectable open dynamic var columnContentInset: UIEdgeInsets {
+		get { return self.calendarView.columnContentInset }
+		set { self.calendarView.columnContentInset = newValue }
 	}
 
 	private var selectionStorage: SelectionStorageProtocol!;

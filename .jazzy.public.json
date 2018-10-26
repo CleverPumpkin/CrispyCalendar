@@ -2,6 +2,7 @@
 	"abstract": "docs/sections/*.md",
 	"documentation": "docs/guides/*.md",
 	"output": "docs/public/",
+	"clean": true,
 	"min_acl": "public",
 
 	"theme": "fullwidth",
@@ -74,6 +75,7 @@
 		"CrispyCalendar/Util/GridIndices.swift",
 		"CrispyCalendar/Model/CPCCalendarUnit.swift",
 		"CrispyCalendar/Model/CPCCalendarUnit_CalendarWrapper.swift",
+		"CrispyCalendar/Model/CPCCalendarUnitBacking.swift",
 		"CrispyCalendar/Model/CPCCompoundCalendarUnit.swift",
 		"CrispyCalendar/Model/CPCCalendarUnitSymbolImpl.swift",
 		"CrispyCalendar/View/CPCViewSelectionHandling.swift",
