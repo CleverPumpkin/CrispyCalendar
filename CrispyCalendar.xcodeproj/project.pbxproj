@@ -156,6 +156,7 @@
 		43B6E72920A0B93F00A7403B /* CrispyCalendar.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CrispyCalendar.modulemap; sourceTree = "<group>"; };
 		43BBBA9121836A7C005E7147 /* CPCViewSelection.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CPCViewSelection.h; sourceTree = "<group>"; };
 		43BBBA9221836A7C005E7147 /* CPCViewSelection.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CPCViewSelection.m; sourceTree = "<group>"; };
+		43BBBA9521838B2C005E7147 /* ar */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ar; path = ar.lproj/Localizable.strings; sourceTree = "<group>"; };
 		43C06FE820924E7400202ED8 /* CrispyCalendar.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CrispyCalendar.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		43C06FEB20924E7400202ED8 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		43C07000209259B900202ED8 /* CPCDay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCDay.swift; sourceTree = "<group>"; };
@@ -489,6 +490,7 @@
 				en,
 				ru,
 				es,
+				ar,
 			);
 			mainGroup = 43AF4AC32092311B001A0F40;
 			productRefGroup = 43AF4ACE2092311B001A0F40 /* Products */;
@@ -603,6 +605,7 @@
 				439D98B12177BC6C00FFB7DD /* en */,
 				439D98B32177BC8000FFB7DD /* ru */,
 				439D98B42177BC8800FFB7DD /* es */,
+				43BBBA9521838B2C005E7147 /* ar */,
 			);
 			name = Localizable.strings;
 			sourceTree = "<group>";

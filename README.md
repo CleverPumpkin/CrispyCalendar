@@ -87,9 +87,9 @@ Prebuilt UI commonly uses [CPCMonthView](https://cleverpumpkin.github.io/CrispyC
 <table>
 <tr><th>Single day selection</th><th>Days range selection</th></tr>
 <tr><td>
-  &lt;TBD GIF Single selection&gt;
+	<img src="https://user-images.githubusercontent.com/2410233/47583322-be24bf80-d95f-11e8-8f80-5716294e53b3.gif" alt="single" width="375" />
 </td><td>
-  &lt;TBD GIF Range selection&gt;
+	<img src="https://user-images.githubusercontent.com/2410233/47583320-be24bf80-d95f-11e8-93ed-85c08f1f9248.gif" alt="range" width="375" />
 </td></tr></table>
 
 ### Ordered & unordered selection
@@ -97,11 +97,11 @@ Prebuilt UI commonly uses [CPCMonthView](https://cleverpumpkin.github.io/CrispyC
 Selection process is fully controlled externally by corresponding view's delegate. Note that delegates for views inside containers are not supported.
 
 <table>
-<tr><th>Single day selection</th><th>Days range selection</th></tr>
+<tr><th>Unordered selection</th><th>Ordered selection</th></tr>
 <tr><td>
-  &lt;TBD GIF Ordered selection&gt;
+	<img src="https://user-images.githubusercontent.com/2410233/47583318-bd8c2900-d95f-11e8-9b2b-910eb06f4184.gif" alt="unordered" width="375" />
 </td><td>
-  &lt;TBD GIF Unordered selection&gt;
+	<img src="https://user-images.githubusercontent.com/2410233/47583317-bd8c2900-d95f-11e8-9e64-8ac47766a96d.gif" alt="ordered" width="375" />
 </td></tr></table>
 
 ### Custom draw handlers
@@ -111,7 +111,7 @@ Selection process is fully controlled externally by corresponding view's delegat
 <table>
 <tr><th>Custom cell renderer example</th></tr>
 </td><td>
-  &lt;TBD GIF Custom rendering&gt;
+	<img src="https://user-images.githubusercontent.com/2410233/47583315-bd8c2900-d95f-11e8-847e-d394551f906c.gif" alt="drawing" width="375" />
 </td></tr></table>
 
 ### Localization
@@ -121,7 +121,7 @@ Locale used by any component cannot be set explicitly, but Calendar's locale is 
 <table>
 <tr><th>Non-gregorian calendar rendering</th></tr>
 </td><td>
-  &lt;TBD GIF Hebrew calendar&gt;
+  <img src="https://user-images.githubusercontent.com/2410233/47583313-bd8c2900-d95f-11e8-884b-6ec1da3c27b8.gif" alt="hebrew" width="375" />
 </td></tr></table>
 
 ### Other
@@ -129,18 +129,18 @@ Locale used by any component cannot be set explicitly, but Calendar's locale is 
 Available dates limiting, RTL and landscape orientation are fully supported.
 
 <table>
-<tr><th>Dates limiting</th><th>RTL layout</th></tr>
+<tr><th>Dates limiting</th><th>Columned mode</th></tr>
 <tr><td>
-  &lt;TBD GIF Dates limiting&gt;
+  <img src="https://user-images.githubusercontent.com/2410233/47583312-bd8c2900-d95f-11e8-88b7-ab6d293c7e9b.gif" alt="constrained" width="375" />
 </td><td>
-  &lt;TBD GIF Flipped&gt;
+	<img src="https://user-images.githubusercontent.com/2410233/47583311-bd8c2900-d95f-11e8-9f00-7ed865e135d9.gif" alt="columns" width="375" />
 </td></tr></table>
 
 
 <table>
-<tr><th>Columned mode</th></tr>
+<tr><th>RTL layout</th></tr>
 <tr><td>
-  &lt;TBD GIF Landscape view&gt;
+	<img src="https://user-images.githubusercontent.com/2410233/47584227-5328b800-d962-11e8-86cb-708befe84246.gif" alt="rtl" width="812" />
 </td></tr></table>
 
 ## Credits
