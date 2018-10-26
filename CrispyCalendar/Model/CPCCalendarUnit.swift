@@ -69,6 +69,34 @@ public protocol CPCCalendarUnitBase: CustomStringConvertible, CustomDebugStringC
 	///   - timeZone: Time zone to perform calculations in.
 	///   - calendar: Calendar to perform calculations with.
 	init (containing date: Date, timeZone: TimeZone, calendar: Calendar);
+	
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	init (containing date: Date, calendarOf otherUnit: CPCDay);
+	
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	init (containing date: Date, calendarOf otherUnit: CPCWeek);
+	
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	init (containing date: Date, calendarOf otherUnit: CPCMonth);
+
+	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
+	///
+	/// - Parameters:
+	///   - date: Date to perform calculations for.
+	///   - otherUnit: Calendar source.
+	init (containing date: Date, calendarOf otherUnit: CPCYear);
 }
 
 /// Common protocol implementing most of CPCDay, CPCWeek, CPCMonth and CPCYear functionality.
@@ -131,13 +159,11 @@ extension CPCCalendarUnit {
 		return self.calendarWrapper.calendar;
 	}
 	
-	@usableFromInline
-	internal var startValue: Date {
+	public var start: Date {
 		return self.backingValue.startDate (using: self.calendar);
 	}
 	
-	@usableFromInline
-	internal var endValue: Date {
+	public var end: Date {
 		return guarantee (self.calendar.date (byAdding: Self.representedUnit, value: 1, to: self.start));
 	}
 	
@@ -156,38 +182,18 @@ extension CPCCalendarUnit {
 		self.init (backedBy: BackingType (containing: date, calendar: calendar.calendar), calendar: calendar);
 	}
 
-	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - otherUnit: Calendar source.
 	public init (containing date: Date, calendarOf otherUnit: CPCDay) {
 		self.init (containing: date, calendar: otherUnit.calendarWrapper);
 	}
 	
-	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - otherUnit: Calendar source.
 	public init (containing date: Date, calendarOf otherUnit: CPCWeek) {
 		self.init (containing: date, calendar: otherUnit.calendarWrapper);
 	}
 	
-	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - otherUnit: Calendar source.
 	public init (containing date: Date, calendarOf otherUnit: CPCMonth) {
 		self.init (containing: date, calendar: otherUnit.calendarWrapper);
 	}
 	
-	/// Creates a new calendar unit that contains a given date according to the calendar of another calendar unit.
-	///
-	/// - Parameters:
-	///   - date: Date to perform calculations for.
-	///   - otherUnit: Calendar source.
 	public init (containing date: Date, calendarOf otherUnit: CPCYear) {
 		self.init (containing: date, calendar: otherUnit.calendarWrapper);
 	}

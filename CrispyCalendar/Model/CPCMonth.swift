@@ -30,11 +30,6 @@ public struct CPCMonth {
 	internal let backingValue: BackingStorage;	
 }
 
-extension CPCMonth: CPCDateInterval {
-	public var start: Date { return self.startValue }
-	public var end: Date { return self.endValue };
-}
-
 extension CPCMonth: CPCCalendarUnitBase {
 	public init (containing date: Date, calendar: Calendar) {
 		self.init (containing: date, calendar: calendar.wrapped ());
