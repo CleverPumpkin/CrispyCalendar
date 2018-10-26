@@ -41,10 +41,7 @@ internal extension CPCCalendarView.Layout {
 	internal func performPostUpdateActions (for layoutStorage: Storage) {
 		if let storage = layoutStorage as? DefaultStorage, !storage.isInitial {
 			self.collectionView?.reloadData ();
-		} else {
-			DispatchQueue.main.async {
-				self.scrollToDay (CPCDay (containing: self.layoutInitialDate, calendar: self.calendar), animated: false);
-			};
+			self.layoutInitialDate = nil;
 		}
 	}
 	
@@ -80,7 +77,21 @@ internal extension CPCCalendarView.Layout {
 		}
 		self.ignoreFirstBoundsChange = true;
 		let contentSize = CGSize (width: layoutWidth, height: layoutHeight);
-		return DefaultStorage (rows, boundsReach: (self.isMinimumDateReached (for: firstRow), self.isMaximumDateReached (for: lastRow)), contentSize: contentSize);
+		let result = DefaultStorage (rows, boundsReach: (self.isMinimumDateReached (for: firstRow), self.isMaximumDateReached (for: lastRow)), contentSize: contentSize);
+		let initialMonth = CPCMonth (containing: self.layoutInitialDate!, calendar: self.calendar), initialY: CGFloat;
+		if let initialIndexPath = result.indexPath (for: initialMonth) {
+			let viewsMgr = self.monthViewsManager;
+			let targetWeekIdx = initialMonth [ordinal: 0].distance (to: CPCWeek (containing: self.layoutInitialDate!, calendar: self.calendar));
+			let titleHeight = viewsMgr.titleMargins.top + viewsMgr.titleFont.lineHeight + viewsMgr.titleMargins.bottom;
+			let monthFrame = result [initialIndexPath]!.frame;
+			initialY = monthFrame.minY + titleHeight + CGFloat (targetWeekIdx) / CGFloat (initialMonth.count) * monthFrame.height;
+		} else {
+			initialY = layoutHeight / 2;
+		}
+		self.layoutInitialDate = nil;
+		let bounds = collectionView.bounds, insets = collectionView.effectiveContentInset;
+		collectionView.contentOffset = CGPoint (x: 0.0, y: initialY - bounds.height / 2 + insets.top / 2 - insets.bottom / 2);
+		return result;
 	}
 	
 	private func performScrollLayoutCalculations (using context: InvalidationContext, with verticalOffset: CGFloat, updating storage: Storage) -> Storage {
@@ -174,8 +185,15 @@ internal extension CPCCalendarView.Layout {
 	}
 	
 	private func makeMiddleRow (columns: [Column], midY: CGFloat) -> RowInfo {
-		let currentMonth = CPCMonth (containing: self.layoutInitialDate, calendar: self.calendar), currentMonthIndex = currentMonth.unitOrdinalValue;
-		let firstMonthOfMiddleRow = currentMonth.advanced (by: -(currentMonthIndex % columnCount)), scale = guarantee (self.collectionView).separatorWidth;
+		let initialDate: Date;
+		if let predefinedDate = self.layoutInitialDate {
+			initialDate = predefinedDate;
+		} else {
+			initialDate = Date ();
+			self.layoutInitialDate = initialDate;
+		}
+		let middleMonth = CPCMonth (containing: initialDate, calendar: self.calendar), currentMonthIndex = middleMonth.unitOrdinalValue;
+		let firstMonthOfMiddleRow = middleMonth.advanced (by: -(currentMonthIndex % columnCount)), scale = guarantee (self.collectionView).separatorWidth;
 		return self.makeRow (startingWith: firstMonthOfMiddleRow, columns: columns) { (midY - $0 / 2).rounded (scale: scale) };
 	}
 
@@ -286,6 +304,17 @@ extension CPCCalendarView.Layout {
 			self.attributes = attributes;
 			self.edgeRows = edges;
 			self.boundsReach = boundsReach;
+#if DEBUG
+			let counted = NSCountedSet ();
+			for attrs in attributes {
+				counted.add (attrs.indexPath);
+			}
+			for indexPath in counted {
+				if counted.count (for: indexPath) > 1 {
+					print ("FFFFFFFUUUUUU~");
+				}
+			}
+#endif
 		}
 	}
 }
@@ -417,7 +446,7 @@ fileprivate extension CPCCalendarView.Layout.DefaultStorage {
 		}
 		
 		let prependedAttributes = DefaultStorage.attributes (for: rows, columnCount: self.columnCount, sectionForFirstRow: 0);
-		let offsetExistingAttributes = DefaultStorage.attributes (self.attributes, offsetBy: rows.count / self.columnCount);
+		let offsetExistingAttributes = DefaultStorage.attributes (self.attributes, offsetBy: rows.count);
 		
 		return DefaultStorage (
 			for: DefaultStorage.attributes (prependedAttributes + offsetExistingAttributes, offsetBy: verticalOffset),

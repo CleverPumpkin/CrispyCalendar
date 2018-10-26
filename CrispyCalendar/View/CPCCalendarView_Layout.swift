@@ -81,11 +81,7 @@ extension CPCCalendarView {
 		}
 		
 		internal var ignoreFirstBoundsChange = false;
-		internal var layoutInitialDate = Date () {
-			didSet {
-				self.invalidateLayout ();
-			}
-		}
+		internal var layoutInitialDate: Date?;
 		
 		private var storage = makeEmptyStorage ();
 		private var currentInvalidationContext: InvalidationContext?;
@@ -185,6 +181,7 @@ extension CPCCalendarView.Layout: UICollectionViewDelegate {
 	@discardableResult
 	internal func scrollToDay (_ day: CPCDay, animated: Bool = true) -> Bool {
 		guard !self.storage.isEmpty else {
+			self.invalidateLayout ();
 			if let minimumDate = self.minimumDate, minimumDate > day.end {
 				self.layoutInitialDate = minimumDate;
 				return false;
@@ -203,6 +200,7 @@ extension CPCCalendarView.Layout: UICollectionViewDelegate {
 			guard self.storage.indexPath (for: targetMonth) != nil else {
 				return false;
 			}
+			self.invalidateLayout ();
 			self.layoutInitialDate = day.start;
 			self.collectionView?.reloadData ();
 			return true;
@@ -268,12 +266,20 @@ extension CPCCalendarView.Layout {
 		guard let invalidationContext = InvalidationContext.forBoundsChange (contentBounds, currentStorage: self.storage) else {
 			return false;
 		}
+		if (invalidationContext.verticalOffset == nil) {
+			self.saveCurrentPositionIfPossible ();
+		}
 		self.currentInvalidationContext = invalidationContext;
 		return true;
 	}
 	
 	internal override func invalidationContext (forBoundsChange newBounds: CGRect) -> UICollectionViewLayoutInvalidationContext {
 		return self.currentInvalidationContext ?? super.invalidationContext (forBoundsChange: newBounds);
+	}
+	
+	internal override func invalidateLayout (with context: UICollectionViewLayoutInvalidationContext) {
+		self.saveCurrentPositionIfPossible ();
+		super.invalidateLayout (with: context);
 	}
 	
 	internal override func prepare () {
@@ -295,6 +301,32 @@ extension CPCCalendarView.Layout {
 		// TODO: constrain already calculated month views instead of performing full relayout
 		self.invalidateLayout ();
 		self.collectionView?.reloadData ();
+	}
+	
+	private func saveCurrentPositionIfPossible () {
+		guard let collectionView = self.collectionView, self.currentInvalidationContext?.verticalOffset == nil, self.layoutInitialDate == nil else {
+			return;
+		}
+		let contentBounds = collectionView.bounds.inset (by: collectionView.effectiveContentInset);
+		let boundsCenter = CGPoint (x: contentBounds.midX, y: contentBounds.midY);
+		guard let attributesForVisibeMonths = self.storage [CGRect (origin: boundsCenter, size: .zero)], !attributesForVisibeMonths.isEmpty else {
+			return;
+		}
+		guard let savedItemAttributes = attributesForVisibeMonths [..<((attributesForVisibeMonths.count + 1) / 2)].reversed ().first (where: { $0.month != nil }) else {
+			return;
+		}
+		let savedMonth = savedItemAttributes.month!, savedFrame = savedItemAttributes.frame;
+		let viewsMgr = self.monthViewsManager;
+		let titleHeight = viewsMgr.titleMargins.top + viewsMgr.titleFont.lineHeight + viewsMgr.titleMargins.bottom;
+		if (boundsCenter.y < savedFrame.minY + titleHeight) {
+			self.layoutInitialDate = savedMonth.start;
+		} else if (boundsCenter.y > savedFrame.maxY) {
+			self.layoutInitialDate = savedMonth.end;
+		} else {
+			let weekIndex = ((boundsCenter.y - titleHeight - savedFrame.minY) / (savedFrame.height - titleHeight) * CGFloat (savedMonth.count)).integerRounded (.down);
+			let savedWeek = savedMonth [ordinal: weekIndex];
+			self.layoutInitialDate = savedWeek.start + savedWeek.duration / 2;
+		}
 	}
 }
 
