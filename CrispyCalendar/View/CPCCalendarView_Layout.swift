@@ -24,11 +24,22 @@
 import UIKit
 
 extension CPCCalendarView {
-	internal class Layout: UICollectionViewLayout {
+	internal final class Layout: UICollectionViewLayout {
 		internal typealias ColumnContentInsetReference = CPCCalendarView.ColumnContentInsetReference;
+		
+		private static var defaultColumnContentInsetReference: ColumnContentInsetReference {
+			if #available (iOS 11.0, *) {
+				return .fromSafeAreaInsets;
+			} else {
+				return .fromContentInset;
+			}
+		}
 		
 		internal var columnCount = 1 {
 			didSet {
+				guard self.columnCount > 0 else {
+					return self.columnCount = 1;
+				}
 				self.invalidateLayout ();
 				self.collectionView?.reloadData ();
 			}
@@ -41,7 +52,7 @@ extension CPCCalendarView {
 			}
 		}
 		
-		internal var columnContentInsetReference: ColumnContentInsetReference = .fromContentInset {
+		internal var columnContentInsetReference: ColumnContentInsetReference = Layout.defaultColumnContentInsetReference {
 			didSet {
 				self.invalidateLayout ();
 				self.collectionView?.reloadData ();

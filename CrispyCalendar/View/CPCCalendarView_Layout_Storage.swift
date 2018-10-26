@@ -53,7 +53,7 @@ internal extension CPCCalendarView.Layout {
 			return layoutStorage;
 		}
 		
-		let columns = self.makeColumns (self.columnCount);
+		let columns = self.makeColumns (self.columnCount).columns;
 		if let firstMonth = storage [IndexPath (item: 0, section: 0)]?.month, firstMonth > month {
 			let insertedRows = self.makeRows (before: storage.firstRowInfo, columns: columns) { $0.months.lowerBound <= month };
 			return storage.prepending (insertedRows, verticalOffset: -(insertedRows.first?.frame.minY ?? 0.0));
@@ -69,7 +69,7 @@ internal extension CPCCalendarView.Layout {
 	
 	private func performInitialLayoutCalculations () -> Storage {
 		let collectionView = guarantee (self.collectionView);
-		let columns = self.makeColumns (self.columnCount), layoutHeight = collectionView.bounds.height * 5.0;
+		let (columns, layoutWidth) = self.makeColumns (self.columnCount), layoutHeight = collectionView.bounds.height * 5.0;
 		let middleRowInfo = self.makeMiddleRow (columns: columns, midY: layoutHeight / 2);
 		let topRows = self.makeRows (before: middleRowInfo, columns: columns) { $0.frame.minY < 0.0 };
 		let bottomRows = self.makeRows (after: middleRowInfo, columns: columns) { $0.frame.maxY > layoutHeight };
@@ -79,7 +79,7 @@ internal extension CPCCalendarView.Layout {
 			return EmptyStorage ();
 		}
 		self.ignoreFirstBoundsChange = true;
-		let contentSize = CGSize (width: columns.last!.x + columns.last!.width - columns.first!.x, height: layoutHeight);
+		let contentSize = CGSize (width: layoutWidth, height: layoutHeight);
 		return DefaultStorage (rows, boundsReach: (self.isMinimumDateReached (for: firstRow), self.isMaximumDateReached (for: lastRow)), contentSize: contentSize);
 	}
 	
@@ -88,7 +88,7 @@ internal extension CPCCalendarView.Layout {
 			fatalError ("[CrispyCalendar] Internal error: cannot update empty storage");
 		}
 		
-		let columns = self.makeColumns (self.columnCount);
+		let columns = self.makeColumns (self.columnCount).columns;
 		if (verticalOffset > 0.0) {
 			let insertedRows = self.makeRows (before: storage.firstRowInfo, columns: columns) { $0.frame.minY < -verticalOffset };
 			if let topRow = insertedRows.first, self.isMinimumDateReached (for: topRow) {
@@ -123,7 +123,7 @@ internal extension CPCCalendarView.Layout {
 		return self.maximumDate.map { months.upperBound.start >= $0 } ?? false;
 	}
 	
-	private func makeColumns (_ columnCount: Int) -> [Column] {
+	private func makeColumns (_ columnCount: Int) -> (columns: [Column], layoutWidth: CGFloat) {
 		let collectionView = guarantee (self.collectionView);
 		let alternateInsets: UIEdgeInsets;
 		switch (self.columnContentInsetReference) {
@@ -140,12 +140,13 @@ internal extension CPCCalendarView.Layout {
 		}
 
 		let scale = collectionView.separatorWidth, contentInset = collectionView.effectiveContentInset;
-		let leading = max (alternateInsets.left - contentInset.left, 0.0);
-		let width = collectionView.bounds.width - max (alternateInsets.right, contentInset.right) - contentInset.left - leading;
+		let leading = fdim (alternateInsets.left, contentInset.left), trailing = fdim (alternateInsets.right, contentInset.right);
+		let width = collectionView.bounds.width - max (alternateInsets.right, contentInset.right) - max (alternateInsets.left, contentInset.left);
 
 		let columnInsets = self.columnContentInset;
-		let columnsX = (0 ... columnCount).map { (CGFloat ($0) * width / CGFloat (columnCount)).rounded (scale: scale) };
-		return (0 ..< columnCount).map { (col: Int) in (x: columnsX [col] + columnInsets.left, width: columnsX [col + 1] - columnsX [col] - columnInsets.width) };
+		let columnsX = (0 ... columnCount).map { fma (CGFloat ($0), width / CGFloat (columnCount), leading).rounded (scale: scale) };
+		let columns = (0 ..< columnCount).map { (col: Int) in (x: columnsX [col] + columnInsets.left, width: columnsX [col + 1] - columnsX [col] - columnInsets.width) };
+		return (columns: columns, layoutWidth: leading + width + trailing);
 	}
 	
 	private func makeRows (before rowInfo: RowInfo, columns: [Column], stop predicate: (RowInfo) -> Bool) -> [RowInfo] {
@@ -416,7 +417,7 @@ fileprivate extension CPCCalendarView.Layout.DefaultStorage {
 		}
 		
 		let prependedAttributes = DefaultStorage.attributes (for: rows, columnCount: self.columnCount, sectionForFirstRow: 0);
-		let offsetExistingAttributes = prependedAttributes + DefaultStorage.attributes (self.attributes, offsetBy: rows.count / self.columnCount);
+		let offsetExistingAttributes = DefaultStorage.attributes (self.attributes, offsetBy: rows.count / self.columnCount);
 		
 		return DefaultStorage (
 			for: DefaultStorage.attributes (prependedAttributes + offsetExistingAttributes, offsetBy: verticalOffset),

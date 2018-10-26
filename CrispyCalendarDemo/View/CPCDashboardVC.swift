@@ -294,15 +294,15 @@ private class ColumnedCalendarVC: SelectionTrackingCalendarVC {
 	
 	fileprivate override func viewDidLoad () {
 		super.viewDidLoad ();
-		self.updateLyaout (for: self.view.bounds.size);
+		self.updateLayout (for: self.view.bounds.size);
 	}
 	
 	fileprivate override func viewWillTransition (to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
 		super.viewWillTransition (to: size, with: coordinator);
-		self.updateLyaout (for: size);
+		self.updateLayout (for: size);
 	}
 	
-	private func updateLyaout (for size: CGSize) {
+	private func updateLayout (for size: CGSize) {
 		if (size.width > size.height) {
 			self.columnCount = 2;
 			self.columnContentInset = UIEdgeInsets (top: 8.0, left: 8.0, bottom: 8.0, right: 8.0);
