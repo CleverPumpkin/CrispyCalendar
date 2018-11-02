@@ -66,7 +66,12 @@ internal extension FloatingBaseArray /* RangeReplacementCollection subset */ {
 		self.backing = ContiguousArray ();
 		self.baseOffset = baseOffset;
 	}
-	
+
+	internal init (_ other: FloatingBaseArray) {
+		self.backing = other.backing;
+		self.baseOffset = other.baseOffset;
+	}
+
 	internal init <S> (_ elements: S, baseOffset: Int = 0) where S: Sequence, S.Element == Element {
 		self.backing = ContiguousArray (elements);
 		self.baseOffset = baseOffset;
@@ -138,5 +143,28 @@ internal extension FloatingBaseArray {
 internal extension Range where Bound: Strideable {
 	internal func offset (by offset: Bound.Stride) -> Range {
 		return self.lowerBound.advanced (by: offset) ..< self.upperBound.advanced (by: offset);
+	}
+}
+
+internal extension FloatingBaseArray where Element: NSObject, Element: NSCopying {
+	internal init (_ other: FloatingBaseArray, copyItems: Bool) {
+		if (copyItems) {
+			self.init (other.backing, baseOffset: other.baseOffset, copyItems: true);
+		} else {
+			self.init (other);
+		}
+	}
+
+	internal init <S> (_ elements: S, baseOffset: Int = 0, copyItems: Bool) where S: Sequence, S.Element == Element {
+		guard copyItems else {
+			self.init (elements, baseOffset: baseOffset);
+			return;
+		}
+		
+		self.init (baseOffset: baseOffset);
+		self.backing.reserveCapacity (elements.underestimatedCount);
+		for element in elements {
+			self.backing.append (element.copy () as! Element);
+		}
 	}
 }

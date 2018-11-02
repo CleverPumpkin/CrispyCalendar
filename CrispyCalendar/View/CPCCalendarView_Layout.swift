@@ -34,6 +34,10 @@ internal extension CPCCalendarView {
 	internal final class Layout: UICollectionViewLayout {
 		internal typealias ColumnContentInsetReference = CPCCalendarView.ColumnContentInsetReference;
 		
+		internal override class var invalidationContextClass: AnyClass {
+			return InvalidationContext.self;
+		}
+		
 		private static var defaultColumnContentInsetReference: ColumnContentInsetReference {
 			if #available (iOS 11.0, *) {
 				return .fromSafeAreaInsets;
@@ -47,43 +51,24 @@ internal extension CPCCalendarView {
 				guard self.columnCount > 0 else {
 					return self.columnCount = 1;
 				}
-				self.invalidateLayout ();
-				self.collectionView?.reloadData ();
+				self.columnCountDidChange ();
 			}
 		}
 		
 		internal var columnContentInset = UIEdgeInsets.zero {
 			didSet {
-				self.invalidateLayout ();
-				self.collectionView?.reloadData ();
+				self.contentGuideDidChange ();
 			}
 		}
 		
 		internal var columnContentInsetReference: ColumnContentInsetReference = Layout.defaultColumnContentInsetReference {
 			didSet {
-				self.invalidateLayout ();
-				self.collectionView?.reloadData ();
+				self.contentGuideDidChange ();
 			}
 		}
 		
 		internal override var collectionViewContentSize: CGSize {
-			return CGSize (width: guarantee (self.collectionView).bounds.width, height: .virtualContentHeight);
-		}
-		
-		internal override func invalidateLayout (with context: UICollectionViewLayoutInvalidationContext) {
-			let collectionView = guarantee (self.collectionView);
-			if (context.invalidateDataSourceCounts) {
-				self.referenceIndexPath = self.delegate?.referenceIndexPathForCollectionView (collectionView) ?? IndexPath ();
-			}
-			if (context.invalidateEverything) {
-				self.storage = nil;
-				collectionView.contentOffset = CGPoint (x: 0.0, y: .virtualOriginHeight - collectionView.bounds.height / 2.0);
-			}
-			super.invalidateLayout (with: context);
-		}
-		
-		internal override func prepare () {
-			super.prepare ();
+			return CGSize (width: self.visibleContentBounds.width, height: .virtualContentHeight);
 		}
 		
 		private var delegate: CPCCalendarViewLayoutDelegate? {
@@ -96,21 +81,21 @@ internal extension CPCCalendarView {
 			return layoutDelegate;
 		}
 		
-		internal var storage: Storage?;
-		internal var referenceIndexPath = IndexPath ();
+		private var storage: Storage?;
+		private var referenceIndexPath: IndexPath = [];
 		
-		private weak var invalidationContext: InvalidationContext?;
+		private var prevStorage: Storage?;
+		private var invalidationContext: InvalidationContext?;
 		
 		internal override func layoutAttributesForItem (at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
 			guard let storage = self.storage ?? self.makeInitialStorage () else {
 				return nil;
 			}
-			let requestedRow = (indexPath.item - self.referenceIndexPath.item) / self.columnCount;
-			if (storage.lastRowIndex <= requestedRow) {
-				storage.appendRows ((storage.lastRowIndex ... requestedRow).map { self.estimateAspectRatios (forRowAt: $0) });
+			while storage.lastIndexPath <= indexPath {
+				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath));
 			}
-			if (storage.firstRowIndex > requestedRow) {
-				storage.prependRows (stride (from: storage.firstRowIndex - 1, through: requestedRow, by: -1).map { self.estimateAspectRatios (forRowAt: $0) });
+			while storage.firstIndexPath > indexPath {
+				storage.appendRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath));
 			}
 			return storage [indexPath];
 		}
@@ -120,12 +105,112 @@ internal extension CPCCalendarView {
 				return nil;
 			}
 			while rect.minY < storage.minY {
-				storage.prependRow (self.estimateAspectRatios (forRowAt: storage.firstRowIndex - 1));
+				storage.prependRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath));
 			}
 			while rect.maxY > storage.maxY {
-				storage.appendRow (self.estimateAspectRatios (forRowAt: storage.lastRowIndex));
+				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath));
 			}
 			return storage [rect];
+		}
+		
+		internal override func invalidateLayout (with context: UICollectionViewLayoutInvalidationContext) {
+			let collectionView = guarantee (self.collectionView);
+			if (context.invalidateDataSourceCounts) {
+				self.referenceIndexPath = self.delegate?.referenceIndexPathForCollectionView (collectionView) ?? [];
+			}
+			if (context.invalidateEverything) {
+				self.storage = nil;
+				collectionView.contentOffset = CGPoint (x: 0.0, y: .virtualOriginHeight - collectionView.visibleContentBounds.height / 2.0);
+			}
+			super.invalidateLayout (with: context);
+		}
+		
+		internal override func shouldInvalidateLayout (forPreferredLayoutAttributes preferredAttributes: UICollectionViewLayoutAttributes, withOriginalAttributes originalAttributes: UICollectionViewLayoutAttributes) -> Bool {
+			guard let originalAttributes = originalAttributes as? Attributes, let preferredAttributes = preferredAttributes as? Attributes else {
+				return false;
+			}
+			return (
+				((originalAttributes.aspectRatio.multiplier - preferredAttributes.aspectRatio.multiplier).magnitude > 1e-3) ||
+				((originalAttributes.aspectRatio.constant - preferredAttributes.aspectRatio.constant).magnitude > 1e-3)
+			);
+		}
+		
+		internal override func invalidationContext (forPreferredLayoutAttributes preferredAttributes: UICollectionViewLayoutAttributes, withOriginalAttributes originalAttributes: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutInvalidationContext {
+			guard let original = originalAttributes as? Attributes, let preferred = preferredAttributes as? Attributes, let storage = self.storage else {
+				return super.invalidationContext (forPreferredLayoutAttributes: preferredAttributes, withOriginalAttributes: originalAttributes);
+			}
+			
+			let indexPath = original.indexPath;
+			let context = self.makeInvalidationContext ();
+			context.updatedAspectRatios = [original.position: preferred.aspectRatio];
+			if (indexPath.item < self.referenceIndexPath.item) {
+				context.invalidateItems (at: stride (from: indexPath.item, through: storage.firstIndexPath.item, by: -1).map { IndexPath (item: $0, section: 0) });
+			} else {
+				context.invalidateItems (at: stride (from: indexPath.item, to: storage.lastIndexPath.item, by: 1).map { IndexPath (item: $0, section: 0) });
+			}
+			return context;
+		}
+
+		internal override func shouldInvalidateLayout (forBoundsChange newBounds: CGRect) -> Bool {
+			guard let storage = self.storage, !storage.isStorageValid (forContentGuide: self.contentGuide, columnSpacing: self.columnSpacing) else {
+				return self.storage == nil;
+			}
+			return true;
+		}
+		
+		internal override func invalidationContext (forBoundsChange newBounds: CGRect) -> UICollectionViewLayoutInvalidationContext {
+			guard let context = self.invalidationContext else {
+				return super.invalidationContext (forBoundsChange: newBounds);
+			}
+			context.updatedContentGuide = true;
+			return context;
+		}
+		
+		internal override func prepare () {
+			super.prepare ();
+			
+			if let context = self.invalidationContext, let storage = self.storage, let collectionView = self.collectionView {
+				storage.updateStoredAttributes (using: context.updatedAspectRatios);
+				if context.updatedColumnCount {
+					let prevBounds = context.prevBounds, bounds = collectionView.visibleContentBounds;
+					let visibleIndexPaths = storage [CGRect (x: prevBounds.midX - 1.0, y: prevBounds.midY - 1.0, width: 2.0, height: 2.0)];
+					let middleIndexPath	= (visibleIndexPaths.isEmpty ? self.referenceIndexPath : visibleIndexPaths [visibleIndexPaths.count / 2].indexPath);
+					let additionalOffset = ((storage [middleIndexPath]?.frame.midY).map { $0 - prevBounds.midY } ?? 0.0) / prevBounds.height * bounds.height;
+					
+					let layoutInfo = Storage.LayoutInfo (
+						columnCount: self.columnCount,
+						contentGuide: self.contentGuide,
+						columnSpacing: self.columnSpacing,
+						contentScale: collectionView.separatorWidth,
+						middleRowOrigin: bounds.midY + additionalOffset
+					);
+					
+					self.prevStorage = self.storage;
+					self.makeStorage (middleIndexPath: middleIndexPath, layoutInfo: layoutInfo);
+				} else if context.updatedContentGuide {
+					storage.updateContentGuide (self.contentGuide);
+				}
+			}
+			
+			self.invalidationContext = nil;
+		}
+		
+		internal override func prepare (forAnimatedBoundsChange oldBounds: CGRect) {
+			super.prepare (forAnimatedBoundsChange: oldBounds);
+			self.prevStorage = self.storage?.copy ();
+		}
+		
+		internal override func initialLayoutAttributesForAppearingItem (at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+			return self.prevStorage? [itemIndexPath];
+		}
+		
+		override func finalLayoutAttributesForDisappearingItem (at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+			return self.storage? [itemIndexPath];
+		}
+		
+		internal override func finalizeAnimatedBoundsChange () {
+			self.prevStorage = nil;
+			super.finalizeAnimatedBoundsChange ();
 		}
 	}
 }
@@ -134,14 +219,33 @@ internal extension CPCCalendarView.Layout {
 	internal final class Attributes: UICollectionViewLayoutAttributes {
 		internal var drawsLeadingSeparator = false;
 		internal var drawsTrailingSeparator = false;
+		internal var position = Storage.AttributesPosition (row: 0, item: 0);
 		internal var rowHeight = 0.0 as CGFloat;
 		internal var aspectRatio: CPCMonthView.AspectRatio = (0.0, 0.0);
 		
+		internal override func isEqual (_ object: Any?) -> Bool {
+			guard super.isEqual (object), let object = object as? Attributes else {
+				return false;
+			}
+			if self === object {
+				return true;
+			}
+			return (
+				(self.drawsLeadingSeparator == object.drawsLeadingSeparator) &&
+				(self.drawsTrailingSeparator == object.drawsTrailingSeparator) &&
+				(self.position == object.position) &&
+				((self.rowHeight - object.rowHeight).magnitude < 1e-3) &&
+				((self.aspectRatio.constant - object.aspectRatio.constant).magnitude < 1e-3) &&
+				((self.aspectRatio.multiplier - object.aspectRatio.multiplier).magnitude < 1e-3)
+			);
+		}
+
 		internal override func copy (with zone: NSZone? = nil) -> Any {
 			let copiedValue = super.copy (with: zone);
 			if let copiedAttributes = copiedValue as? Attributes {
 				copiedAttributes.drawsLeadingSeparator = self.drawsLeadingSeparator;
 				copiedAttributes.drawsTrailingSeparator = self.drawsTrailingSeparator;
+				copiedAttributes.position = self.position;
 				copiedAttributes.rowHeight = self.rowHeight;
 				copiedAttributes.aspectRatio = self.aspectRatio;
 			}
@@ -149,47 +253,74 @@ internal extension CPCCalendarView.Layout {
 		}
 		
 		internal override var description: String {
-			return "<Attributes \(UnsafePointer (to: self)); frame: \(self.frame.offsetBy (dx: 0.0, dy: -.virtualOriginHeight)); height = \(self.aspectRatio.multiplier) x width + \(self.aspectRatio.constant); indexPath = \(self.indexPath))>"
+			return "<Attributes \(UnsafePointer (to: self)); frame: \(self.frame.offsetBy (dx: 0.0, dy: -.virtualOriginHeight)); height = \(self.aspectRatio.multiplier) x width + \(self.aspectRatio.constant); indexPath = \(self.indexPath)); position = [\(self.position.row, self.position.item)]>"
 		}
-	}
-	
-	private final class InvalidationContext: UICollectionViewLayoutInvalidationContext {
-		
 	}
 	
 	internal func layoutMarginsDidChange () {
-		if (self.columnContentInsetReference == .fromLayoutMargins) {
-			self.invalidateLayout ();
-		}
+		self.contentGuideDidChange ();
 	}
 	
 	internal func safeAreaInsetsDidChange () {
-		if (self.columnContentInsetReference == .fromSafeAreaInsets) {
-			self.invalidateLayout ();
-		}
+		self.contentGuideDidChange ();
 	}
 }
 
 private extension CPCCalendarView.Layout {
-	private var layoutInfo: Storage.LayoutInfo? {
-		guard let collectionView = self.collectionView else {
-			return nil;
+	private final class InvalidationContext: UICollectionViewLayoutInvalidationContext {
+		fileprivate let prevBounds: CGRect;
+
+		fileprivate var updatedAspectRatios = [Storage.AttributesPosition: AspectRatio] ();
+		fileprivate var updatedContentGuide = false;
+		fileprivate var updatedColumnCount = false;
+		
+		fileprivate convenience override init () {
+			self.init (bounds: .null);
 		}
-		return Storage.LayoutInfo (
-			columnCount: self.columnCount,
-			contentGuide: 0.0 ..< collectionView.bounds.width,
-			contentScale: collectionView.separatorWidth,
-			middleRowOrigin: .virtualOriginHeight
-		);
+		
+		fileprivate init (bounds: CGRect) {
+			self.prevBounds = bounds;
+			super.init ();
+		}
+	}
+	
+	private var visibleContentBounds: CGRect {
+		return self.collectionView.map { $0.visibleContentBounds } ?? .null;
+	}
+	
+	private var contentGuide: Range <CGFloat> {
+		guard let contentBounds = self.collectionView?.visibleContentBounds else {
+			return .nan ..< .nan;
+		}
+		return self.columnContentInset.left ..< contentBounds.maxX - self.columnContentInset.right;
+	}
+	
+	private var columnSpacing: CGFloat {
+		return (self.columnContentInset.left + self.columnContentInset.right) / 2.0;
 	}
 	
 	private func makeInitialStorage () -> Storage? {
-		guard let collectionView = self.collectionView, let delegate = self.delegate, let layoutInfo = self.layoutInfo else {
+		guard let collectionView = self.collectionView else {
 			return nil;
 		}
-		let sectionStart = delegate.collectionView (collectionView, startOfSectionFor: self.referenceIndexPath);
-		let sectionEnd = delegate.collectionView (collectionView, endOfSectionFor: self.referenceIndexPath);
-		let middleRowStartItem = self.referenceIndexPath.item - (self.referenceIndexPath.item - sectionStart.item) % self.columnCount;
+		let layoutInfo = Storage.LayoutInfo (
+			columnCount: self.columnCount,
+			contentGuide: self.contentGuide,
+			columnSpacing: self.columnSpacing,
+			contentScale: collectionView.separatorWidth,
+			middleRowOrigin: .virtualOriginHeight
+		);
+		return self.makeStorage (middleIndexPath: self.referenceIndexPath, layoutInfo: layoutInfo);
+	}
+	
+	@discardableResult
+	private func makeStorage (middleIndexPath: IndexPath, layoutInfo: Storage.LayoutInfo) -> Storage? {
+		guard let collectionView = self.collectionView, let delegate = self.delegate else {
+			return nil;
+		}
+		let sectionStart = delegate.collectionView (collectionView, startOfSectionFor: middleIndexPath);
+		let sectionEnd = delegate.collectionView (collectionView, endOfSectionFor: middleIndexPath);
+		let middleRowStartItem = sectionStart.item + (middleIndexPath.item - sectionStart.item) / self.columnCount * self.columnCount;
 		let middleRowEndItem = min (sectionEnd.item, middleRowStartItem + self.columnCount);
 		
 		let middleRowData: [(IndexPath, AspectRatio)] = (middleRowStartItem ..< middleRowEndItem).map {
@@ -200,13 +331,71 @@ private extension CPCCalendarView.Layout {
 		return self.storage;
 	}
 	
-	private func estimateAspectRatios (forRowAt index: Int) -> [AspectRatio] {
+	private func estimateAspectRatios (forRowBefore indexPath: IndexPath) -> [AspectRatio] {
+		return self.estimateAspectRatios (startingAt: indexPath, using: self.rowItemIndices (forRowBefore:in:delegate:));
+	}
+
+	private func estimateAspectRatios (forRowAfter indexPath: IndexPath) -> [AspectRatio] {
+		return self.estimateAspectRatios (startingAt: indexPath, using: self.rowItemIndices (forRowAfter:in:delegate:));
+	}
+	
+	private func estimateAspectRatios (startingAt startIndexPath: IndexPath, using rowIndicesGetter: (IndexPath, UICollectionView, CPCCalendarViewLayoutDelegate) -> Range <Int>) -> [AspectRatio] {
 		guard let collectionView = self.collectionView, let delegate = self.delegate else {
 			return [];
 		}
-		return (index * self.columnCount ..< (index + 1) * self.columnCount).offset (by: self.referenceIndexPath.item).map {
-			delegate.collectionView (collectionView, estimatedAspectRatioComponentsForItemAt: IndexPath (item: $0, section: 0))
+		return rowIndicesGetter (startIndexPath, collectionView, delegate).map {
+			delegate.collectionView (collectionView, estimatedAspectRatioComponentsForItemAt: IndexPath (item: $0, section: 0));
 		};
+	}
+	
+	private func rowItemIndices (forRowBefore indexPath: IndexPath, in collectionView: UICollectionView, delegate: CPCCalendarViewLayoutDelegate) -> Range <Int> {
+		let indexPath = IndexPath (item: indexPath.item - 1, section: indexPath.section);
+		let sectionStart = delegate.collectionView (collectionView, startOfSectionFor: indexPath);
+		return sectionStart.item + (indexPath.item - sectionStart.item) / self.columnCount * self.columnCount ..< indexPath.item + 1;
+	}
+	
+	private func rowItemIndices (forRowAfter indexPath: IndexPath, in collectionView: UICollectionView, delegate: CPCCalendarViewLayoutDelegate) -> Range <Int> {
+		let indexPath = IndexPath (item: indexPath.item, section: indexPath.section);
+		let sectionEnd = delegate.collectionView (collectionView, endOfSectionFor: indexPath);
+		return indexPath.item ..< min (sectionEnd.item, indexPath.item + self.columnCount);
+	}
+	
+	private func makeInvalidationContext () -> InvalidationContext {
+		if let context = self.invalidationContext {
+			return context;
+		}
+		let context = InvalidationContext (bounds: self.visibleContentBounds);
+		self.invalidationContext = context;
+		return context;
+	}
+	
+	private func contentGuideDidChange () {
+		guard let collectionView = self.collectionView else {
+			return;
+		}
+		if (self.shouldInvalidateLayout (forBoundsChange: collectionView.bounds)) {
+			self.invalidateLayout (with: self.invalidationContext (forBoundsChange: collectionView.bounds));
+		}
+	}
+
+	private func columnCountDidChange () {
+		if !(self.storage?.isStorageValid (forColumnCount: self.columnCount) ?? true) {
+			let context = self.makeInvalidationContext ();
+			context.updatedColumnCount = true;
+			self.invalidateLayout (with: context);
+		}
+	}
+}
+
+fileprivate extension UICollectionView {
+	fileprivate var visibleContentBounds: CGRect {
+		let bounds = self.bounds, insets: UIEdgeInsets;
+		if #available (iOS 11.0, *) {
+			insets = self.adjustedContentInset;
+		} else {
+			insets = self.contentInset;
+		}
+		return bounds.inset (by: insets);
 	}
 }
 

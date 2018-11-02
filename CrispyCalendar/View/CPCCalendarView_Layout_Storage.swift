@@ -30,97 +30,102 @@ internal extension CPCCalendarView.Layout {
 		internal struct LayoutInfo {
 			internal var columnCount = 1;
 			internal var contentGuide: Range <CGFloat>;
+			internal var columnSpacing = 0.0 as CGFloat;
 			internal var contentScale = 1.0 / UIScreen.main.nativeScale;
 			internal var middleRowOrigin: CGFloat;
 		}
 		
-		internal let columnCount: Int;
+		internal struct AttributesPosition: Hashable {
+			internal let row: Int;
+			internal let item: Int;
+		}
 		
-		fileprivate var contentGuideLeading: CGFloat {
+		internal var contentGuideLeading: CGFloat {
 			return self.contentGuide.lowerBound;
 		}
 		
-		fileprivate var contentGuideWidth: CGFloat {
+		internal var contentGuideWidth: CGFloat {
 			return self.contentGuide.upperBound - self.contentGuide.lowerBound;
 		}
+
+		internal private (set) var columnSpacing: CGFloat;
+
+		fileprivate let columnCount: Int;
 		
 		fileprivate var columnWidth: CGFloat {
-			return self.contentGuideWidth / CGFloat (self.columnCount);
+			return self.contentGuideWidth / CGFloat (self.columnCount) - self.columnSpacing / 2;
 		}
 		
-		fileprivate var contentScale: CGFloat;
+		fileprivate var columnStride: CGFloat {
+			return self.columnWidth + self.columnSpacing;
+		}
+		
+		fileprivate private (set) var contentScale: CGFloat;
 		
 		private var contentGuide: Range <CGFloat>;
 		private var rawAttributes: FloatingBaseArray <Attributes>;
 		private var incompleteRowLengths = [Int: Int] ();
+		private var middleRowOrigin: CGFloat;
 		
-		internal init <C> (middleRowData: C, layoutInfo: LayoutInfo) where C: Collection, C.Element == (IndexPath, AspectRatio) {
+		internal init <C> (middleRowData: C, layoutInfo: LayoutInfo) where C: Collection, C.Element == (indexPath: IndexPath, aspectRatio: AspectRatio) {
 			self.columnCount = layoutInfo.columnCount;
 			self.contentGuide = layoutInfo.contentGuide;
+			self.columnSpacing = layoutInfo.columnSpacing;
 			self.contentScale = layoutInfo.contentScale;
+			self.middleRowOrigin = layoutInfo.middleRowOrigin;
 			
 			self.rawAttributes = FloatingBaseArray ();
 			self.rawAttributes.reserveCapacity (self.columnCount);
+			let drawCellSeparators = (self.columnCount > 1), firstItem = middleRowData [middleRowData.startIndex].indexPath.item;
 			for (indexPath, aspectRatio) in middleRowData {
 				let attributes = Attributes (forCellWith: indexPath);
 				attributes.aspectRatio = aspectRatio;
+				attributes.position = AttributesPosition (row: 0, item: indexPath.item - firstItem);
+				(attributes.drawsLeadingSeparator, attributes.drawsTrailingSeparator) = (drawCellSeparators, drawCellSeparators);
 				self.rawAttributes.append (attributes);
 			}
 			if (middleRowData.count < self.columnCount) {
 				self.incompleteRowLengths [0] = middleRowData.count;
-				self.rawAttributes.append (contentsOf: ((middleRowData.count % self.columnCount) ..< self.columnCount).map { _ in .invalid });
+				self.rawAttributes.append (contentsOf: (middleRowData.count ..< self.columnCount).map { _ in .invalid });
 			}
 			
-			let row = Row (self, rawAttributes: self.rawAttributes [...]);
-			row.recalculateFrames { (layoutInfo.middleRowOrigin - $0 / 2).rounded (scale: layoutInfo.contentScale) };
+			self.layoutRow (at: 0);
 		}
 		
-		internal func prependRow <C> (_ aspectRatioData: C) where C: Collection, C.Element == AspectRatio {
-			self.prependRows (CollectionOfOne (aspectRatioData));
+		private init (copying storage: Storage) {
+			self.columnCount = storage.columnCount;
+			self.contentGuide = storage.contentGuide;
+			self.columnSpacing = storage.columnSpacing;
+			self.contentScale = storage.contentScale;
+			self.middleRowOrigin = storage.middleRowOrigin;
+			self.rawAttributes = FloatingBaseArray (storage.rawAttributes, copyItems: true);
+			self.incompleteRowLengths = storage.incompleteRowLengths;
+		}
+		
+		internal func prependRow <C> (_ rowData: C) where C: Collection, C.Element == AspectRatio {
+			self.rawAttributes.reserveAdditionalCapacity (rowData.count.nextDividable (by: self.columnCount));
+			let newRowIndex = self.firstRowIndex - 1;
+			if (rowData.count < self.columnCount) {
+				self.rawAttributes.prepend (contentsOf: (rowData.count ..< self.columnCount).map { _ in .invalid });
+				self.incompleteRowLengths [newRowIndex] = rowData.count;
+			}
+			self.rawAttributes.prepend (contentsOf: rowData.makeAttributes (startingAt: self.firstIndexPath.offset (by: -rowData.count), row: newRowIndex, drawCellSeparators: self.columnCount > 1));
+			self.layoutRow (at: newRowIndex);
 		}
 
-		internal func appendRow <C> (_ aspectRatioData: C) where C: Collection, C.Element == AspectRatio {
-			self.appendRows (CollectionOfOne (aspectRatioData));
-		}
-		
-		internal func prependRows <C> (_ rowsData: C) where C: Collection, C.Element: Collection, C.Element.Element == AspectRatio {
-			self.reserveStorageCapacity (for: rowsData);
-			var indexPath: IndexPath = [0, self.firstIndexPath.item - 1];
-			for rowData in rowsData {
-				if (rowData.count < self.columnCount) {
-					self.rawAttributes.prepend (contentsOf: (rowData.count ..< self.columnCount).map { _ in .invalid });
-					self.incompleteRowLengths [indexPath.item] = rowData.count;
-				}
-				self.rawAttributes.prepend (contentsOf: rowData.map {
-					let result = Attributes (forCellWith: indexPath);
-					indexPath.item -= 1;
-					result.aspectRatio = $0;
-					return result;
-				});
-				self.firstRow.recalculateFrames { self.rowAt (index: self.firstRowIndex + 1).frame.minY - $0 };
+		internal func appendRow <C> (_ rowData: C) where C: Collection, C.Element == AspectRatio {
+			self.rawAttributes.reserveAdditionalCapacity (rowData.count.nextDividable (by: self.columnCount));
+			let newRowIndex = self.lastRowIndex;
+			self.rawAttributes.append (contentsOf: rowData.makeAttributes (startingAt: self.lastIndexPath, row: newRowIndex, drawCellSeparators: self.columnCount > 1));
+			if (rowData.count < self.columnCount) {
+				self.rawAttributes.append (contentsOf: (rowData.count ..< self.columnCount).map { _ in .invalid });
+				self.incompleteRowLengths [newRowIndex] = rowData.count;
 			}
+			self.layoutRow (at: newRowIndex);
 		}
 		
-		internal func appendRows <C> (_ rowsData: C) where C: Collection, C.Element: Collection, C.Element.Element == AspectRatio {
-			self.reserveStorageCapacity (for: rowsData);
-			var indexPath: IndexPath = [0, self.lastIndexPath.item + 1];
-			for rowData in rowsData {
-				self.rawAttributes.append (contentsOf: rowData.map {
-					let result = Attributes (forCellWith: indexPath);
-					indexPath.item += 1;
-					result.aspectRatio = $0;
-					return result;
-				});
-				if (rowData.count < self.columnCount) {
-					self.rawAttributes.append (contentsOf: (rowData.count ..< self.columnCount).map { _ in .invalid });
-					self.incompleteRowLengths [indexPath.item] = rowData.count;
-				}
-				self.rowAt (index: self.lastRowIndex - 1).recalculateFrames { _ in self.rowAt (index: self.lastRowIndex - 2).frame.maxY };
-			}
-		}
-		
-		private func reserveStorageCapacity <C> (for rowsData: C) where C: Collection, C.Element: Collection, C.Element.Element == AspectRatio {
-			self.rawAttributes.reserveAdditionalCapacity (rowsData.reduce (into: 0) { $0 += $1.count.nextDividable (by: self.columnCount) });
+		internal func copy () -> Storage {
+			return Storage (copying: self);
 		}
 	}
 	
@@ -136,6 +141,10 @@ internal extension CPCCalendarView.Layout {
 		fileprivate var frame: CGRect {
 			let baseAttrs = self.rawAttributes [self.rawAttributes.startIndex];
 			return CGRect (origin: baseAttrs.frame.origin, size: CGSize (width:self.storage.contentGuideWidth, height: baseAttrs.rowHeight));
+		}
+		
+		private var contentScale: CGFloat {
+			return self.storage.contentScale;
 		}
 		
 		private let storage: Storage;
@@ -156,9 +165,15 @@ internal extension CPCCalendarView.Layout {
 			};
 			
 			rowHeight = rowHeight.rounded (.up, scale: scale);
-			let rowOrigin = layoutBlock (rowHeight);
+			let rowOrigin = layoutBlock (rowHeight), columnStride = self.storage.columnStride;
 			for (height, attrs) in zip (itemHeights, self.rawAttributes) {
-				attrs.frame = CGRect (x: columnsStart, y: rowOrigin, width: columnWidth.rounded (scale: scale), height: height.rounded (.up, scale: scale))
+				let columnStart = fma (CGFloat (attrs.position.item), columnStride, columnsStart).rounded (scale: self.contentScale);
+				attrs.frame = CGRect (
+					x: columnStart,
+					y: rowOrigin,
+					width: columnWidth.rounded (scale: scale),
+					height: height.rounded (.up, scale: scale)
+				);
 				attrs.rowHeight = rowHeight;
 			}
 		}
@@ -182,57 +197,129 @@ internal extension CPCCalendarView.Layout.Storage {
 		return self.rawAttributes.endIndex / self.columnCount;
 	}
 	
+	internal var firstIndexPath: IndexPath {
+		return self.firstAttributes.indexPath;
+	}
+	
+	internal var lastIndexPath: IndexPath {
+		return self.lastAttributes.indexPath.next;
+	}
+	
 	internal subscript (indexPath: IndexPath) -> CPCCalendarView.Layout.Attributes? {
-		guard (self.firstIndexPath ... self.lastIndexPath) ~= indexPath else {
+		guard let rowStartIndex = self.rawAttributes.binarySearch (withGranularity: self.columnCount, using: {
+			if ($0.indexPath.item > indexPath.item) {
+				return .orderedAscending;
+			} else if ($0.indexPath.item + self.rowLength (at: $0.position.row) <= indexPath.item) {
+				return .orderedDescending;
+			} else {
+				return .orderedSame;
+			}
+		}) else {
 			return nil;
 		}
-		return self.rawAttributes [indexPath.item - self.rawAttributes [0].indexPath.item];
+		let rowStartIndexPath = self.rawAttributes [rowStartIndex].indexPath;
+		return self.rawAttributes [rowStartIndex + indexPath.item - rowStartIndexPath.item];
 	}
 
 	internal subscript (rect: CGRect) -> [CPCCalendarView.Layout.Attributes] {
 		guard let topRow = self.row (containing: rect.minY, allowBeforeFirst: true), let bottomRow = self.row (containing: rect.maxY, allowAfterLast: true) else {
 			return [];
 		}
-		return Array (self.rawAttributes [topRow.index * self.columnCount ..< (bottomRow.index + 1) * self.columnCount]);
-	}	
+	
+		let leadingColumn = max (((rect.minX - self.contentGuideLeading) / self.contentGuideWidth).integerRounded (.down), 0);
+		let trailingColumn = min (((rect.maxX - self.contentGuideLeading) / self.contentGuideWidth).integerRounded (.up), self.columnCount - 1);
+		if ((leadingColumn == 0) && (trailingColumn == (self.columnCount - 1))) {
+			return self.rawAttributes [topRow.index * self.columnCount ..< (bottomRow.index + 1) * self.columnCount].filter { $0 !== Attributes.invalid };
+		} else {
+			var result = [Attributes] ();
+			result.reserveCapacity ((bottomRow.index - topRow.index + 1) * (trailingColumn - leadingColumn + 1));
+			for row in topRow.index ... bottomRow.index {
+				let rowLength = self.incompleteRowLengths [row] ?? self.columnCount;
+				if (leadingColumn >= rowLength) {
+					continue;
+				}
+				let startIndex = row * self.columnCount + leadingColumn, endIndex = row * self.columnCount + min (trailingColumn, rowLength - 1);
+				result.append (contentsOf: self.rawAttributes [startIndex ... endIndex]);
+			}
+			return result;
+		}
+	}
+	
+	internal func updateStoredAttributes (using newAspectRatios: [AttributesPosition: CPCMonthView.AspectRatio]) {
+		var firstTopRowToUpdate = self.firstRowIndex, firstBottomRowToUpdate = self.lastRowIndex;
+		for (position, aspectRatio) in newAspectRatios {
+			self.rawAttributes [position.row * self.columnCount + position.item].aspectRatio = aspectRatio;
+			firstBottomRowToUpdate = max (position.row, firstBottomRowToUpdate);
+			firstTopRowToUpdate = min (position.row, firstTopRowToUpdate);
+		}
+		
+		for row in stride (from: firstTopRowToUpdate, through: self.firstRowIndex, by: -1) {
+			self.layoutRow (at: row);
+		}
+		for row in stride (from: firstBottomRowToUpdate, to: self.lastRowIndex, by: 1) {
+			self.layoutRow (at: row);
+		}
+	}
+	
+	internal func isStorageValid (forContentGuide contentGuide: Range <CGFloat>, columnSpacing: CGFloat) -> Bool {
+		return (
+			((self.contentGuide.lowerBound - contentGuide.lowerBound).magnitude < 1e-3) &&
+			((self.contentGuide.upperBound - contentGuide.upperBound).magnitude < 1e-3) &&
+			((self.columnSpacing - columnSpacing).magnitude < 1e-3)
+		);
+	}
+
+	internal func isStorageValid (forColumnCount columnCount: Int) -> Bool {
+		return self.columnCount == columnCount;
+	}
+	
+	internal func updateContentGuide (_ newContentGuide: Range <CGFloat>) {
+		let oldWidth = self.contentGuideWidth, oldLeading = self.contentGuideLeading;
+		self.contentGuide = newContentGuide;
+		
+		if ((self.contentGuideWidth - oldWidth).magnitude > 1e-3) {
+			self.layoutRow (at: 0);
+			for row in stride (from: -1, through: self.firstRowIndex, by: -1) {
+				self.layoutRow (at: row);
+			}
+			for row in stride (from: 1, to: self.lastRowIndex, by: 1) {
+				self.layoutRow (at: row);
+			}
+		} else if ((self.contentGuideLeading - oldLeading).magnitude > 1e-3) {
+			let offset = self.contentGuideLeading - oldLeading;
+			for attrs in self.rawAttributes {
+				attrs.frame = attrs.frame.offsetBy (dx: offset, dy: 0.0);
+			}
+		}
+	}
 }
 
 fileprivate extension CPCCalendarView.Layout.Storage {
 	fileprivate typealias Attributes = CPCCalendarView.Layout.Attributes;
 	private typealias Row = CPCCalendarView.Layout.Row;
 	
-	private var firstIndexPath: IndexPath {
-		return self.firstAttributes.indexPath;
-	}
-
-	private var lastIndexPath: IndexPath {
-		return self.lastAttributes.indexPath;
-	}
-	
 	private var firstAttributes: Attributes {
 		return self.rawAttributes [self.rawAttributes.startIndex];
 	}
 	
 	private var lastAttributes: Attributes {
-		let lastIndex = self.rawAttributes.endIndex - 1;
-		if let lastRowLength = self.incompleteRowLengths [lastIndex] {
-			return self.rawAttributes [lastIndex - (self.columnCount - lastRowLength)];
-		} else {
-			return self.rawAttributes [lastIndex];
-		}
+		return self.rawAttributes [(self.lastRowIndex - 1) * self.columnCount + self.rowLength (at: self.lastRowIndex - 1) - 1];
 	}
 	
 	private var firstRow: Row {
-		return self.rowAt (index: self.firstRowIndex);
+		return self.row (at: self.firstRowIndex);
 	}
 	
 	private var lastRow: Row {
-		return self.rowAt (index: self.lastRowIndex);
+		return self.row (at: self.lastRowIndex - 1);
 	}
 	
-	private func rowAt (index: Int) -> Row {
-		let rowLength = self.incompleteRowLengths [index] ?? self.columnCount;
-		return Row (self, rawAttributes: self.rawAttributes [(index * self.columnCount) ..< (index * self.columnCount + rowLength)]);
+	private func row (at index: Int) -> Row {
+		return Row (self, rawAttributes: self.rawAttributes [(index * self.columnCount) ..< (index * self.columnCount + self.rowLength (at: index))]);
+	}
+	
+	private func rowLength (at index: Int) -> Int {
+		return self.incompleteRowLengths [index] ?? self.columnCount;
 	}
 
 	private func row (containing verticalOffset: CGFloat, allowBeforeFirst: Bool = false, allowAfterLast: Bool = false) -> Row? {
@@ -240,7 +327,7 @@ fileprivate extension CPCCalendarView.Layout.Storage {
 			return self.firstRow;
 		}
 		if (allowAfterLast && (verticalOffset >= self.lastAttributes.frame.maxY)) {
-			return self.rowAt (index: self.lastRowIndex - 1);
+			return self.row (at: self.lastRowIndex - 1);
 		}
 
 		return self.rawAttributes.binarySearch (withGranularity: self.columnCount) {
@@ -251,7 +338,18 @@ fileprivate extension CPCCalendarView.Layout.Storage {
 			} else {
 				return .orderedSame;
 			}
-		}.map (self.rowAt);
+		}.map { self.row (at: $0 / self.columnCount) };
+	}
+	
+	private func layoutRow (at index: Int) {
+		let row = self.row (at: index);
+		if (index > 0) {
+			row.recalculateFrames { _ in self.row (at: index - 1).frame.maxY };
+		} else if (index < 0) {
+			row.recalculateFrames { self.row (at: index + 1).frame.minY - $0 };
+		} else {
+			row.recalculateFrames { (self.middleRowOrigin - $0 / 2).rounded (scale: self.contentScale) };
+		}
 	}
 }
 
@@ -308,6 +406,35 @@ fileprivate extension Comparable {
 	
 	fileprivate func comparator (other: Self) -> ComparisonResult {
 		return Self.comparator (lhs: self, rhs: other);
+	}
+}
+
+fileprivate extension Collection where Element == CPCMonthView.AspectRatio {
+	fileprivate typealias Attributes = CPCCalendarView.Layout.Attributes;
+	private typealias AttributesPosition = CPCCalendarView.Layout.Storage.AttributesPosition;
+	
+	fileprivate func makeAttributes (startingAt indexPath: IndexPath, row: Int, drawCellSeparators: Bool) -> [Attributes] {
+		return self.enumerated ().map {
+			let result = Attributes (forCellWith: indexPath.offset (by: $0.offset));
+			result.position = AttributesPosition (row: row, item: $0.offset);
+			result.aspectRatio = $0.element;
+			(result.drawsLeadingSeparator, result.drawsTrailingSeparator) = (drawCellSeparators, drawCellSeparators);
+			return result;
+		};
+	}
+}
+
+fileprivate extension IndexPath {
+	fileprivate var next: IndexPath {
+		return self.offset (by: 1);
+	}
+	
+	fileprivate var prev: IndexPath {
+		return self.offset (by: -1);
+	}
+	
+	fileprivate func offset (by amount: Int) -> IndexPath {
+		return IndexPath (item: self.item + amount, section: self.section);
 	}
 }
 

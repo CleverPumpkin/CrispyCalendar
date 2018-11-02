@@ -117,11 +117,12 @@ extension CPCCalendarView {
 		
 		internal override func preferredLayoutAttributesFitting (_ layoutAttributes: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutAttributes {
 			let fittingAttributes = super.preferredLayoutAttributesFitting (layoutAttributes);
-			if let viewAttributes =  self.monthView.layoutAttributes {
-				let fittingHeight = CPCMonthView.heightThatFits (width: fittingAttributes.size.width, with: viewAttributes);
-				fittingAttributes.size.height = fittingHeight;
-				if let layoutAttributes = fittingAttributes as? Attributes, let aspectRatio = self.monthView.aspectRatioComponents {
-					layoutAttributes.aspectRatio = aspectRatio;
+			if let viewAttributes = self.monthView.layoutAttributes {
+				if let layoutAttributes = layoutAttributes as? Attributes {
+					layoutAttributes.aspectRatio = self.monthView.aspectRatioComponents ?? (multiplier: 0.0, constant: 0.0);
+				} else {
+					let fittingHeight = CPCMonthView.heightThatFits (width: fittingAttributes.size.width, with: viewAttributes);
+					fittingAttributes.size.height = fittingHeight;
 				}
 			}
 			return fittingAttributes;
