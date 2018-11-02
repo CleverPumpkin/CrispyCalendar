@@ -23,7 +23,14 @@
 
 import UIKit
 
-extension CPCCalendarView {
+internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
+	func referenceIndexPathForCollectionView (_ collectionView: UICollectionView) -> IndexPath;
+	func collectionView (_ collectionView: UICollectionView, startOfSectionFor indexPath: IndexPath) -> IndexPath;
+	func collectionView (_ collectionView: UICollectionView, endOfSectionFor indexPath: IndexPath) -> IndexPath;
+	func collectionView (_ collectionView: UICollectionView, estimatedAspectRatioComponentsForItemAt indexPath: IndexPath) -> CPCMonthView.AspectRatio;
+}
+
+internal extension CPCCalendarView {
 	internal final class Layout: UICollectionViewLayout {
 		internal typealias ColumnContentInsetReference = CPCCalendarView.ColumnContentInsetReference;
 		
@@ -59,102 +66,95 @@ extension CPCCalendarView {
 			}
 		}
 		
-		internal let calendar: CPCCalendarWrapper;
-		internal let monthViewsManager = CPCMonthViewsManager ();
+		internal override var collectionViewContentSize: CGSize {
+			return CGSize (width: guarantee (self.collectionView).bounds.width, height: .virtualContentHeight);
+		}
 		
-		internal var minimumDate: Date? {
-			didSet {
-				guard self.minimumDate != oldValue else {
-					return;
-				}
-				self.allowedDatesRangeDidChange ();
+		internal override func invalidateLayout (with context: UICollectionViewLayoutInvalidationContext) {
+			let collectionView = guarantee (self.collectionView);
+			if (context.invalidateDataSourceCounts) {
+				self.referenceIndexPath = self.delegate?.referenceIndexPathForCollectionView (collectionView) ?? IndexPath ();
 			}
-		}
-		
-		internal var maximumDate: Date? {
-			didSet {
-				guard self.maximumDate != oldValue else {
-					return;
-				}
-				self.allowedDatesRangeDidChange ();
+			if (context.invalidateEverything) {
+				self.storage = nil;
+				collectionView.contentOffset = CGPoint (x: 0.0, y: .virtualOriginHeight - collectionView.bounds.height / 2.0);
 			}
+			super.invalidateLayout (with: context);
 		}
 		
-		internal var ignoreFirstBoundsChange = false;
-		internal var layoutInitialDate: Date?;
-		
-		private var storage = makeEmptyStorage ();
-		private var currentInvalidationContext: InvalidationContext?;
-		
-		internal init (calendar: CPCCalendarWrapper) {
-			self.calendar = calendar;
-			super.init ();
+		internal override func prepare () {
+			super.prepare ();
 		}
 		
-		internal required init? (coder aDecoder: NSCoder) {
-			self.calendar = Calendar.currentUsed.wrapped ();
-			super.init (coder: aDecoder);
+		private var delegate: CPCCalendarViewLayoutDelegate? {
+			guard let delegate = self.collectionView?.delegate else {
+				return nil;
+			}
+			guard let layoutDelegate = delegate as? CPCCalendarViewLayoutDelegate else {
+				fatalError ("[CrispyCalendar]: invalid delegate type (\(delegate), \(CPCCalendarViewLayoutDelegate.self) is expected)");
+			}
+			return layoutDelegate;
+		}
+		
+		internal var storage: Storage?;
+		internal var referenceIndexPath = IndexPath ();
+		
+		private weak var invalidationContext: InvalidationContext?;
+		
+		internal override func layoutAttributesForItem (at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+			guard let storage = self.storage ?? self.makeInitialStorage () else {
+				return nil;
+			}
+			let requestedRow = (indexPath.item - self.referenceIndexPath.item) / self.columnCount;
+			if (storage.lastRowIndex <= requestedRow) {
+				storage.appendRows ((storage.lastRowIndex ... requestedRow).map { self.estimateAspectRatios (forRowAt: $0) });
+			}
+			if (storage.firstRowIndex > requestedRow) {
+				storage.prependRows (stride (from: storage.firstRowIndex - 1, through: requestedRow, by: -1).map { self.estimateAspectRatios (forRowAt: $0) });
+			}
+			return storage [indexPath];
+		}
+		
+		internal override func layoutAttributesForElements (in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
+			guard let storage = self.storage ?? self.makeInitialStorage () else {
+				return nil;
+			}
+			while rect.minY < storage.minY {
+				storage.prependRow (self.estimateAspectRatios (forRowAt: storage.firstRowIndex - 1));
+			}
+			while rect.maxY > storage.maxY {
+				storage.appendRow (self.estimateAspectRatios (forRowAt: storage.lastRowIndex));
+			}
+			return storage [rect];
 		}
 	}
 }
 
-extension CPCCalendarView.Layout: UICollectionViewDataSource {
-	internal func prepare (collectionView: UICollectionView) {
-		collectionView.register (CPCCalendarView.Cell.self, forCellWithReuseIdentifier: .cellIdentifier);
-		collectionView.dataSource = self;
-		collectionView.delegate = self;
-	}
-	
-	internal func numberOfSections (in collectionView: UICollectionView) -> Int {
-		return self.storage.sectionCount;
-	}
-	
-	internal func collectionView (_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-		return self.storage.numberOfItems (in: section);
-	}
-	
-	internal func collectionView (_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-		let cell = collectionView.dequeueReusableCell (withReuseIdentifier: .cellIdentifier, for: indexPath) as! CPCCalendarView.Cell;
-		cell.monthViewsManager = self.monthViewsManager;
+internal extension CPCCalendarView.Layout {
+	internal final class Attributes: UICollectionViewLayoutAttributes {
+		internal var drawsLeadingSeparator = false;
+		internal var drawsTrailingSeparator = false;
+		internal var rowHeight = 0.0 as CGFloat;
+		internal var aspectRatio: CPCMonthView.AspectRatio = (0.0, 0.0);
 		
-		let minimumDay: CPCDay?, maximumDay: CPCDay?;
-		if let month = self.storage [indexPath]?.month {
-			if let minimumDate = self.minimumDate, month.start < minimumDate {
-				minimumDay = CPCDay (containing: minimumDate, calendar: self.calendar);
-			} else {
-				minimumDay = nil;
+		internal override func copy (with zone: NSZone? = nil) -> Any {
+			let copiedValue = super.copy (with: zone);
+			if let copiedAttributes = copiedValue as? Attributes {
+				copiedAttributes.drawsLeadingSeparator = self.drawsLeadingSeparator;
+				copiedAttributes.drawsTrailingSeparator = self.drawsTrailingSeparator;
+				copiedAttributes.rowHeight = self.rowHeight;
+				copiedAttributes.aspectRatio = self.aspectRatio;
 			}
-			if let maximumDate = self.maximumDate, month.end > maximumDate {
-				maximumDay = CPCDay (containing: maximumDate, calendar: self.calendar);
-			} else {
-				maximumDay = nil;
-			}
-		} else {
-			(minimumDay, maximumDay) = (nil, nil);
+			return copiedValue;
 		}
-		switch (minimumDay, maximumDay) {
-		case (nil, nil):
-			cell.enabledRegion = nil;
-		case (.some (let minimumDay), nil):
-			cell.enabledRegion = minimumDay ..< CPCDay (containing: .distantFuture, calendar: self.calendar);
-		case (nil, .some (let maximumDay)):
-			cell.enabledRegion = CPCDay (containing: .distantPast, calendar: self.calendar) ..< maximumDay;
-		case (.some (let minimumDay), .some (let maximumDay)):
-			cell.enabledRegion = minimumDay ..< maximumDay;
+		
+		internal override var description: String {
+			return "<Attributes \(UnsafePointer (to: self)); frame: \(self.frame.offsetBy (dx: 0.0, dy: -.virtualOriginHeight)); height = \(self.aspectRatio.multiplier) x width + \(self.aspectRatio.constant); indexPath = \(self.indexPath))>"
 		}
-		return cell;
 	}
-}
-
-extension CPCCalendarView.Layout: UICollectionViewDelegate {
-	private var scrollToTodayDate: Date {
-		if let minimumDate = self.minimumDate, minimumDate.timeIntervalSinceNow > 0.0 {
-			return minimumDate;
-		} else if let maximumDate = self.maximumDate, maximumDate.timeIntervalSinceNow < 0.0 {
-			return maximumDate;
-		} else {
-			return Date ();
-		}
+	
+	private final class InvalidationContext: UICollectionViewLayoutInvalidationContext {
+		
 	}
 	
 	internal func layoutMarginsDidChange () {
@@ -168,229 +168,55 @@ extension CPCCalendarView.Layout: UICollectionViewDelegate {
 			self.invalidateLayout ();
 		}
 	}
-
-	internal func scrollViewShouldScrollToTop (_ scrollView: UIScrollView) -> Bool {
-		return (scrollView !== self.collectionView) || !self.scrollToToday ();
-	}
-	
-	@discardableResult
-	internal func scrollToToday (animated: Bool = true) -> Bool {
-		return self.scrollToDay (CPCDay (containing: self.scrollToTodayDate, calendar: self.calendar), animated: animated);
-	}
-
-	@discardableResult
-	internal func scrollToDay (_ day: CPCDay, animated: Bool = true) -> Bool {
-		guard !self.storage.isEmpty else {
-			self.invalidateLayout ();
-			if let minimumDate = self.minimumDate, minimumDate > day.end {
-				self.layoutInitialDate = minimumDate;
-				return false;
-			} else if let maximumDate = self.maximumDate, maximumDate < day.start {
-				self.layoutInitialDate = maximumDate;
-				return false;
-			} else {
-				self.layoutInitialDate = day.start;
-				return true;
-			}
-		}
-		
-		let targetMonth = day.containingMonth;
-		guard let indexPath = self.storage.indexPath (for: targetMonth) else {
-			self.storage = self.tryCalculatingLayoutUntil (month: targetMonth, for: self.storage);
-			guard self.storage.indexPath (for: targetMonth) != nil else {
-				return false;
-			}
-			self.invalidateLayout ();
-			self.layoutInitialDate = day.start;
-			self.collectionView?.reloadData ();
-			return true;
-		}
-		
-		guard let cellFrame = self.layoutAttributesForItem (at: indexPath)?.frame else {
-			return false;
-		}
-		let viewsMgr = self.monthViewsManager;
-		let titleHeight = viewsMgr.titleFont.lineHeight.rounded (.up) + viewsMgr.titleMargins.top + viewsMgr.titleMargins.bottom;
-		let containingWeek = day.containingWeek;
-		let dayCellHeight = (cellFrame.height - titleHeight) / CGFloat (targetMonth.count);
-		let dayCellY = cellFrame.minY + titleHeight + CGFloat (targetMonth [ordinal: 0].distance (to: containingWeek)) * dayCellHeight;
-		guard let collectionView = self.collectionView else {
-			return false;
-		}
-		let bounds = collectionView.bounds.inset (by: collectionView.effectiveContentInset);
-		let targetRect = bounds.offsetBy (dx: 0.0, dy: dayCellY + dayCellHeight / 2 - bounds.midY);
-		collectionView.scrollRectToVisible (targetRect, animated: animated);
-		return true;
-	}
 }
 
-extension CPCCalendarView.Layout {
-	internal override class var layoutAttributesClass: AnyClass {
-		return Attributes.self;
-	}
-	
-	internal override class var invalidationContextClass: AnyClass {
-		return InvalidationContext.self;
-	}
-	
-	internal override var collectionViewContentSize: CGSize {
-		return self.storage.contentSize;
-	}
-	
-	internal override func layoutAttributesForElements (in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
-		return self.storage [rect];
-	}
-	
-	internal override func layoutAttributesForItem (at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-		return self.storage [indexPath];
-	}
-	
-	internal override func shouldInvalidateLayout (forBoundsChange newBounds: CGRect) -> Bool {
+private extension CPCCalendarView.Layout {
+	private var layoutInfo: Storage.LayoutInfo? {
 		guard let collectionView = self.collectionView else {
-			return false;
-		}
-		
-		if (self.ignoreFirstBoundsChange) {
-			self.ignoreFirstBoundsChange = false;
-			return false;
-		}
-		
-		if
-			let invalidationContext = self.currentInvalidationContext,
-			let verticalOffset = invalidationContext.verticalOffset,
-			((newBounds.minY - collectionView.bounds.minY).magnitude - verticalOffset.magnitude).magnitude < 1e-3 {
-			return false;
-		}
-		
-		let contentBounds = newBounds.inset (by: collectionView.effectiveContentInset);
-		guard let invalidationContext = InvalidationContext.forBoundsChange (contentBounds, currentStorage: self.storage) else {
-			return false;
-		}
-		if (invalidationContext.verticalOffset == nil) {
-			self.saveCurrentPositionIfPossible ();
-		}
-		self.currentInvalidationContext = invalidationContext;
-		return true;
-	}
-	
-	internal override func invalidationContext (forBoundsChange newBounds: CGRect) -> UICollectionViewLayoutInvalidationContext {
-		return self.currentInvalidationContext ?? super.invalidationContext (forBoundsChange: newBounds);
-	}
-	
-	internal override func invalidateLayout (with context: UICollectionViewLayoutInvalidationContext) {
-		self.saveCurrentPositionIfPossible ();
-		super.invalidateLayout (with: context);
-	}
-	
-	internal override func prepare () {
-		super.prepare ();
-		self.storage = self.prepareUpdatedLayout (current: self.storage, invalidationContext: self.currentInvalidationContext);
-		self.currentInvalidationContext = nil;
-		self.performPostUpdateActions (for: self.storage);
-	}
-	
-	internal override var developmentLayoutDirection: UIUserInterfaceLayoutDirection {
-		return .leftToRight;
-	}
-	
-	internal override var flipsHorizontallyInOppositeLayoutDirection: Bool {
-		return true;
-	}
-	
-	private func allowedDatesRangeDidChange () {
-		// TODO: constrain already calculated month views instead of performing full relayout
-		self.invalidateLayout ();
-		self.collectionView?.reloadData ();
-	}
-	
-	private func saveCurrentPositionIfPossible () {
-		guard let collectionView = self.collectionView, self.currentInvalidationContext?.verticalOffset == nil, self.layoutInitialDate == nil else {
-			return;
-		}
-		let contentBounds = collectionView.bounds.inset (by: collectionView.effectiveContentInset);
-		let boundsCenter = CGPoint (x: contentBounds.midX, y: contentBounds.midY);
-		guard let attributesForVisibeMonths = self.storage [CGRect (origin: boundsCenter, size: .zero)], !attributesForVisibeMonths.isEmpty else {
-			return;
-		}
-		guard let savedItemAttributes = attributesForVisibeMonths [..<((attributesForVisibeMonths.count + 1) / 2)].reversed ().first (where: { $0.month != nil }) else {
-			return;
-		}
-		let savedMonth = savedItemAttributes.month!, savedFrame = savedItemAttributes.frame;
-		let viewsMgr = self.monthViewsManager;
-		let titleHeight = viewsMgr.titleMargins.top + viewsMgr.titleFont.lineHeight + viewsMgr.titleMargins.bottom;
-		if (boundsCenter.y < savedFrame.minY + titleHeight) {
-			self.layoutInitialDate = savedMonth.start;
-		} else if (boundsCenter.y > savedFrame.maxY) {
-			self.layoutInitialDate = savedMonth.end;
-		} else {
-			let weekIndex = ((boundsCenter.y - titleHeight - savedFrame.minY) / (savedFrame.height - titleHeight) * CGFloat (savedMonth.count)).integerRounded (.down);
-			let savedWeek = savedMonth [ordinal: weekIndex];
-			self.layoutInitialDate = savedWeek.start + savedWeek.duration / 2;
-		}
-	}
-}
-
-extension CPCCalendarView.Layout {
-	internal final class Attributes: UICollectionViewLayoutAttributes {
-		internal var month: CPCMonth?;
-		internal var rowHeight = 0 as CGFloat;
-		internal var drawLeadingSeparator = true;
-		internal var drawTrailingSeparator = true;
-
-		internal override func copy (with zone: NSZone? = nil) -> Any {
-			let attributes = super.copy (with: zone);
-			guard let result = attributes as? Attributes else {
-				return attributes;
-			}
-			result.month = self.month;
-			result.rowHeight = self.rowHeight;
-			return result;
-		}
-	}
-	
-	internal class InvalidationContext: UICollectionViewLayoutInvalidationContext {
-		internal let verticalOffset: CGFloat?;
-		
-		fileprivate static func forBoundsChange (_ newBounds: CGRect, currentStorage: Storage) -> InvalidationContext? {
-			let contentSize = currentStorage.contentSize;
-			guard currentStorage.sectionCount > 0, (newBounds.width - currentStorage.contentSize.width).magnitude < 1e-3 else {
-				return InvalidationContext ();
-			}
-			
-			guard (newBounds.minY > newBounds.height) || currentStorage.isTopBoundReached else {
-				return InvalidationContext (verticalOffset: 5.0 * newBounds.height);
-			}
-			guard (newBounds.maxY < contentSize.height - newBounds.height) || currentStorage.isBottomBoundReached else {
-				return InvalidationContext (verticalOffset: -5.0 * newBounds.height);
-			}
-			
 			return nil;
 		}
-		
-		fileprivate override init () {
-			self.verticalOffset = nil;
-			super.init ();
-		}
-		
-		private init (verticalOffset: CGFloat) {
-			self.verticalOffset = verticalOffset;
-			super.init ();
-			self.contentSizeAdjustment = CGSize (width: 0.0, height: verticalOffset.magnitude);
-			self.contentOffsetAdjustment = CGPoint (x: 0.0, y: max (verticalOffset, 0.0));
-		}
+		return Storage.LayoutInfo (
+			columnCount: self.columnCount,
+			contentGuide: 0.0 ..< collectionView.bounds.width,
+			contentScale: collectionView.separatorWidth,
+			middleRowOrigin: .virtualOriginHeight
+		);
 	}
-}
-
-internal extension UICollectionView {
-	internal var effectiveContentInset: UIEdgeInsets {
-		if #available (iOS 11.0, *) {
-			return self.adjustedContentInset
-		} else {
-			return self.contentInset;
+	
+	private func makeInitialStorage () -> Storage? {
+		guard let collectionView = self.collectionView, let delegate = self.delegate, let layoutInfo = self.layoutInfo else {
+			return nil;
+		}
+		let sectionStart = delegate.collectionView (collectionView, startOfSectionFor: self.referenceIndexPath);
+		let sectionEnd = delegate.collectionView (collectionView, endOfSectionFor: self.referenceIndexPath);
+		let middleRowStartItem = self.referenceIndexPath.item - (self.referenceIndexPath.item - sectionStart.item) % self.columnCount;
+		let middleRowEndItem = min (sectionEnd.item, middleRowStartItem + self.columnCount);
+		
+		let middleRowData: [(IndexPath, AspectRatio)] = (middleRowStartItem ..< middleRowEndItem).map {
+			let indexPath = IndexPath (item: $0, section: 0);
+			return (indexPath, delegate.collectionView (collectionView, estimatedAspectRatioComponentsForItemAt: indexPath));
+		};
+		self.storage = Storage (middleRowData: middleRowData, layoutInfo: layoutInfo);
+		return self.storage;
+	}
+	
+	private func estimateAspectRatios (forRowAt index: Int) -> [AspectRatio] {
+		guard let collectionView = self.collectionView, let delegate = self.delegate else {
+			return [];
+		}
+		return (index * self.columnCount ..< (index + 1) * self.columnCount).offset (by: self.referenceIndexPath.item).map {
+			delegate.collectionView (collectionView, estimatedAspectRatioComponentsForItemAt: IndexPath (item: $0, section: 0))
 		};
 	}
 }
 
-fileprivate extension String {
-	fileprivate static let cellIdentifier = "cellID";
+internal extension UIEdgeInsets {
+	internal var width: CGFloat {
+		return self.left + self.right;
+	}
+}
+
+fileprivate extension CGFloat {
+	fileprivate static let virtualOriginHeight = CGFloat.virtualContentHeight / 2.0;
+	fileprivate static let virtualContentHeight = CGFloat (1 << 38);
 }

@@ -171,9 +171,33 @@ private class SelectionTrackingCalendarVC: CPCCalendarViewController {
 		self.updateNavigationBarPrompt ();
 		
 		let titleView = UIStackView (arrangedSubviews: [titleLabel, selectionLabel]);
-		titleView.translatesAutoresizingMaskIntoConstraints = false;
 		titleView.axis = .vertical;
-		self.navigationItem.titleView = titleView;
+		titleView.translatesAutoresizingMaskIntoConstraints = false;
+		if #available (iOS 11.0, *) {
+			self.navigationItem.titleView = titleView;
+		} else {
+			final class ContainerView: UIView {
+				override var intrinsicContentSize: CGSize {
+					return self.subviews.first?.intrinsicContentSize ?? .zero;
+				}
+				
+				override func layoutSubviews () {
+					self.invalidateIntrinsicContentSize ();
+					super.layoutSubviews ();
+				}
+			}
+			
+			let titleContainerView = ContainerView (frame: CGRect (origin: .zero, size: titleView.systemLayoutSizeFitting (UIView.layoutFittingCompressedSize)));
+			titleContainerView.clipsToBounds = false;
+			titleContainerView.autoresizingMask = [.flexibleLeftMargin, .flexibleTopMargin, .flexibleRightMargin, .flexibleBottomMargin];
+			titleContainerView.addSubview (titleView);
+			NSLayoutConstraint.activate ([
+				titleView.centerXAnchor.constraint (equalTo: titleContainerView.centerXAnchor),
+				titleView.centerYAnchor.constraint (equalTo: titleContainerView.centerYAnchor),
+			]);
+			
+			self.navigationItem.titleView = titleContainerView;
+		}
 	}
 	
 	fileprivate override var selection: CPCViewSelection {

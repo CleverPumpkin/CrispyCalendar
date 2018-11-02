@@ -24,6 +24,8 @@
 import UIKit
 
 extension CPCCalendarView {
+	internal typealias Attributes = Layout.Attributes;
+	
 	internal class Cell: UICollectionViewCell {
 		internal var monthViewsManager: CPCMonthViewsManager? {
 			get {
@@ -41,6 +43,11 @@ extension CPCCalendarView {
 			set {
 				self.monthView.enabledRegion = newValue;
 			}
+		}
+		
+		internal var month: CPCMonth? {
+			get { return self.monthView.month }
+			set { self.monthView.month = newValue }
 		}
 		
 		private unowned let monthView: CPCMonthView;
@@ -89,8 +96,7 @@ extension CPCCalendarView {
 			super.apply (layoutAttributes);
 			if let attributes = layoutAttributes as? Layout.Attributes {
 				let monthView = self.monthView;
-				monthView.month = attributes.month;
-				(monthView.drawsLeadingSeparator, monthView.drawsTrailingSeparator) = (attributes.drawLeadingSeparator, attributes.drawTrailingSeparator);
+				(monthView.drawsLeadingSeparator, monthView.drawsTrailingSeparator) = (attributes.drawsLeadingSeparator, attributes.drawsTrailingSeparator);
 			}
 			self.updateMonthViewManagingStatus ();
 		}
@@ -107,6 +113,18 @@ extension CPCCalendarView {
 			} else {
 				self.monthView.removeFromMultiMonthViewsManager ();
 			}
+		}
+		
+		internal override func preferredLayoutAttributesFitting (_ layoutAttributes: UICollectionViewLayoutAttributes) -> UICollectionViewLayoutAttributes {
+			let fittingAttributes = super.preferredLayoutAttributesFitting (layoutAttributes);
+			if let viewAttributes =  self.monthView.layoutAttributes {
+				let fittingHeight = CPCMonthView.heightThatFits (width: fittingAttributes.size.width, with: viewAttributes);
+				fittingAttributes.size.height = fittingHeight;
+				if let layoutAttributes = fittingAttributes as? Attributes, let aspectRatio = self.monthView.aspectRatioComponents {
+					layoutAttributes.aspectRatio = aspectRatio;
+				}
+			}
+			return fittingAttributes;
 		}
 	}
 }

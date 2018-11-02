@@ -102,14 +102,14 @@ open class CPCCalendarView: UIView {
 	
 	/// The minimum date that a calendar view should present to user. Defaults to `nil` meaning no lower limit.
 	open var minimumDate: Date? {
-		get { return self.layout.minimumDate }
-		set { self.layout.minimumDate = newValue }
+		get { return self.dataSource.minimumDate }
+		set { self.dataSource.minimumDate = newValue }
 	}
 	
 	/// The maximum date that a calendar view should present to user. Defaults to `nil` meaning no upper limit.
 	open var maximumDate: Date? {
-		get { return self.layout.maximumDate }
-		set { self.layout.maximumDate = newValue }
+		get { return self.dataSource.maximumDate }
+		set { self.dataSource.maximumDate = newValue }
 	}
 
 	/// The number of columns to display in a calendar view.
@@ -137,8 +137,10 @@ open class CPCCalendarView: UIView {
 
 	internal var calendarViewController: CPCCalendarViewController?;
 	internal var monthViewsManager: CPCMonthViewsManager {
-		return self.layout.monthViewsManager;
+		return self.dataSource.monthViewsManager;
 	}
+	
+	private var dataSource = DataSource ();
 	
 	public override init (frame: CGRect) {
 		let collectionView = CPCCalendarView.makeCollectionView (frame);
@@ -159,7 +161,10 @@ open class CPCCalendarView: UIView {
 			self.selectionDidChange ();
 			self.calendarViewController?.selectionDidChange ();
 		};
-		self.layout.prepare (collectionView: collectionView);
+		collectionView.register (Cell.self, forCellWithReuseIdentifier: DataSource.cellReuseIdentifier);
+		collectionView.prefetchDataSource = self.dataSource;
+ 		collectionView.dataSource = self.dataSource;
+		collectionView.delegate = self.dataSource;
 		self.addSubview (collectionView);
 	}
 	
@@ -204,17 +209,17 @@ extension CPCCalendarView {
 	}
 	
 	private var calendarWrapper: CPCCalendarWrapper {
-		get { return self.layout.calendar }
+		get { return self.dataSource.calendar }
 		set {
-			let layout = Layout (calendar: newValue);
-			layout.monthViewsManager.selectionDidChangeBlock = self.layout.monthViewsManager.selectionDidChangeBlock;
-			layout.prepare (collectionView: self.collectionView);
-			self.collectionView.collectionViewLayout = layout;
+			let dataSource = DataSource (replacing: self.dataSource, calendar: calendarWrapper);
+			self.collectionView.dataSource = dataSource;
+			self.collectionView.delegate = dataSource;
+			self.dataSource = dataSource;
 		}
 	}
 	
 	private static func makeCollectionView (_ frame: CGRect, calendar: Calendar = .currentUsed) -> UICollectionView {
-		let collectionView = UICollectionView (frame: frame.bounds, collectionViewLayout: Layout (calendar: calendar.wrapped ()));
+		let collectionView = UICollectionView (frame: frame.bounds, collectionViewLayout: Layout ());
 		collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight];
 		collectionView.allowsSelection = false;
 		collectionView.isDirectionalLockEnabled = true;
@@ -452,7 +457,7 @@ extension CPCCalendarView /* UIScrollViewProtocol */ {
 		} else {
 			scrollDestination = day;
 		}
-		self.layout.scrollToDay (scrollDestination, animated: animated);
+		self.dataSource.scrollToDay (scrollDestination, animated: animated);
 	}
 	
 	/// Scrolls a specific area of the content so that it is visible in the receiver.

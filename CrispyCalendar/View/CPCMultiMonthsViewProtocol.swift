@@ -112,6 +112,10 @@ internal extension CPCMonthViewsManager {
 }
 
 extension CPCMonthViewsManager: CPCViewProtocol {
+	internal func monthViewPartialLayoutAttributes (separatorWidth: CGFloat) -> CPCMonthView.PartialLayoutAttributes {
+		return CPCMonthView.PartialLayoutAttributes (separatorWidth: separatorWidth, titleFont: self.titleFont, titleMargins: self.titleMargins);
+	}
+	
 	internal var titleFont: UIFont {
 		get { return self.appearanceStorage.titleFont }
 		set {

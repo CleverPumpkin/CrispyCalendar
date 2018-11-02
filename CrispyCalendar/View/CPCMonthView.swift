@@ -549,6 +549,10 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 		return LayoutAttributes (self);
 	}
 	
+	open var aspectRatioComponents: AspectRatio? {
+		return self.layoutAttributes.flatMap { CPCMonthView.aspectRatioComponents (for: $0) };
+	}
+	
 	open class func aspectRatioComponents (for attributes: LayoutAttributes) -> AspectRatio? {
 		/// | gridH = rowN * cellSize + (rowN + 1) * sepW      | gridH = rowN * (cellSize + sepW) + sepW      | gridH - sepW = rowN * (cellSize + sepW)
 		/// {                                              <=> {                                          <=> {                                          <=>
