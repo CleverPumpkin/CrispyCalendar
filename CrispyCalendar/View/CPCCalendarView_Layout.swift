@@ -68,7 +68,7 @@ internal extension CPCCalendarView {
 		}
 		
 		internal override var collectionViewContentSize: CGSize {
-			return CGSize (width: self.visibleContentBounds.width, height: .virtualContentHeight);
+			return CGSize (width: self.collectionView?.visibleContentBounds.width ?? 0.0, height: .virtualContentHeight);
 		}
 		
 		private var delegate: CPCCalendarViewLayoutDelegate? {
@@ -285,14 +285,34 @@ private extension CPCCalendarView.Layout {
 	}
 	
 	private var visibleContentBounds: CGRect {
-		return self.collectionView.map { $0.visibleContentBounds } ?? .null;
+		guard let collectionView = self.collectionView else {
+			return .null;
+		}
+		
+		let bounds = collectionView.bounds, visibleBounds = collectionView.visibleContentBounds;
+		let insetBounds: CGRect;
+		switch (self.columnContentInsetReference) {
+		case .fromContentInset:
+			insetBounds = visibleBounds;
+			break;
+		case .fromLayoutMargins:
+			insetBounds = collectionView.bounds.inset (by: collectionView.layoutMargins).intersection (visibleBounds);
+		case .fromSafeAreaInsets:
+			if #available (iOS 11.0, *) {
+				insetBounds = collectionView.bounds.inset (by: collectionView.safeAreaInsets).intersection (visibleBounds);
+			} else {
+				insetBounds = visibleBounds;
+			}
+		}
+		return insetBounds.offsetBy (dx: bounds.minX - visibleBounds.minX, dy: bounds.minY - visibleBounds.minY);
 	}
 	
 	private var contentGuide: Range <CGFloat> {
-		guard let contentBounds = self.collectionView?.visibleContentBounds else {
+		let contentBounds = self.visibleContentBounds;
+		guard !contentBounds.isInfinite else {
 			return .nan ..< .nan;
 		}
-		return self.columnContentInset.left ..< contentBounds.maxX - self.columnContentInset.right;
+		return (contentBounds.minX + self.columnContentInset.left) ..< contentBounds.maxX - self.columnContentInset.right;
 	}
 	
 	private var columnSpacing: CGFloat {
