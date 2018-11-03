@@ -25,6 +25,8 @@ import UIKit
 
 internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 	func referenceIndexPathForCollectionView (_ collectionView: UICollectionView) -> IndexPath;
+	func minimumIndexPathForCollectionView (_ collectionView: UICollectionView) -> IndexPath?;
+	func maximumIndexPathForCollectionView (_ collectionView: UICollectionView) -> IndexPath?;
 	func collectionView (_ collectionView: UICollectionView, startOfSectionFor indexPath: IndexPath) -> IndexPath;
 	func collectionView (_ collectionView: UICollectionView, endOfSectionFor indexPath: IndexPath) -> IndexPath;
 	func collectionView (_ collectionView: UICollectionView, estimatedAspectRatioComponentsForItemAt indexPath: IndexPath) -> CPCMonthView.AspectRatio;
@@ -97,6 +99,7 @@ internal extension CPCCalendarView {
 			while storage.firstIndexPath > indexPath {
 				storage.appendRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath));
 			}
+			self.updateScrollableBoundsIfNeeded ();
 			return storage [indexPath];
 		}
 		
@@ -110,6 +113,7 @@ internal extension CPCCalendarView {
 			while rect.maxY > storage.maxY {
 				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath));
 			}
+			self.updateScrollableBoundsIfNeeded ();
 			return storage [rect];
 		}
 		
@@ -169,10 +173,18 @@ internal extension CPCCalendarView {
 		internal override func prepare () {
 			super.prepare ();
 			
-			if let context = self.invalidationContext, let storage = self.storage, let collectionView = self.collectionView {
+			defer {
+				self.invalidationContext = nil;
+			}
+			guard let collectionView = self.collectionView as? CollectionView else {
+				return;
+			}
+			let bounds = collectionView.visibleContentBounds;
+			
+			if let context = self.invalidationContext, let storage = self.storage {
 				storage.updateStoredAttributes (using: context.updatedAspectRatios);
 				if context.updatedColumnCount {
-					let prevBounds = context.prevBounds, bounds = collectionView.visibleContentBounds;
+					let prevBounds = context.prevBounds;
 					let visibleIndexPaths = storage [CGRect (x: prevBounds.midX - 1.0, y: prevBounds.midY - 1.0, width: 2.0, height: 2.0)];
 					let middleIndexPath	= (visibleIndexPaths.isEmpty ? self.referenceIndexPath : visibleIndexPaths [visibleIndexPaths.count / 2].indexPath);
 					let additionalOffset = ((storage [middleIndexPath]?.frame.midY).map { $0 - prevBounds.midY } ?? 0.0) / prevBounds.height * bounds.height;
@@ -192,7 +204,7 @@ internal extension CPCCalendarView {
 				}
 			}
 			
-			self.invalidationContext = nil;
+			self.updateScrollableBoundsIfNeeded ();
 		}
 		
 		internal override func prepare (forAnimatedBoundsChange oldBounds: CGRect) {
@@ -253,7 +265,7 @@ internal extension CPCCalendarView.Layout {
 		}
 		
 		internal override var description: String {
-			return "<Attributes \(UnsafePointer (to: self)); frame: \(self.frame.offsetBy (dx: 0.0, dy: -.virtualOriginHeight)); height = \(self.aspectRatio.multiplier) x width + \(self.aspectRatio.constant); indexPath = \(self.indexPath)); position = [\(self.position.row, self.position.item)]>"
+			return "<Attributes \(UnsafePointer (to: self)); frame: \(self.frame); height = \(self.aspectRatio.multiplier) x width + \(self.aspectRatio.constant); indexPath = \(self.indexPath)); position = [\(self.position.row, self.position.item)]>"
 		}
 	}
 	
@@ -369,13 +381,12 @@ private extension CPCCalendarView.Layout {
 	}
 	
 	private func rowItemIndices (forRowBefore indexPath: IndexPath, in collectionView: UICollectionView, delegate: CPCCalendarViewLayoutDelegate) -> Range <Int> {
-		let indexPath = IndexPath (item: indexPath.item - 1, section: indexPath.section);
+		let indexPath =  indexPath.offset (by: -1);
 		let sectionStart = delegate.collectionView (collectionView, startOfSectionFor: indexPath);
 		return sectionStart.item + (indexPath.item - sectionStart.item) / self.columnCount * self.columnCount ..< indexPath.item + 1;
 	}
 	
 	private func rowItemIndices (forRowAfter indexPath: IndexPath, in collectionView: UICollectionView, delegate: CPCCalendarViewLayoutDelegate) -> Range <Int> {
-		let indexPath = IndexPath (item: indexPath.item, section: indexPath.section);
 		let sectionEnd = delegate.collectionView (collectionView, endOfSectionFor: indexPath);
 		return indexPath.item ..< min (sectionEnd.item, indexPath.item + self.columnCount);
 	}
@@ -405,17 +416,35 @@ private extension CPCCalendarView.Layout {
 			self.invalidateLayout (with: context);
 		}
 	}
+	
+	private func updateScrollableBoundsIfNeeded () {
+		guard let collectionView = self.collectionView as? CPCCalendarView.CollectionView, let delegate = self.delegate else {
+			return;
+		}
+		if let minIndexPath = delegate.minimumIndexPathForCollectionView (collectionView), let minFrame = self.storage? [minIndexPath]?.frame {
+			collectionView.minimumContentOffset = CGPoint (x: 0.0, y: minFrame.minY - collectionView.effectiveContentInset.top - self.columnContentInset.top);
+		} else {
+			collectionView.minimumContentOffset = nil;
+		}
+		if let maxIndexPath = delegate.maximumIndexPathForCollectionView (collectionView), let maxFrame = self.storage? [maxIndexPath]?.frame {
+			collectionView.maximumContentOffset = CGPoint (x: 0.0, y: maxFrame.maxY - collectionView.visibleContentBounds.height - collectionView.effectiveContentInset.top + self.columnContentInset.height);
+		} else {
+			collectionView.maximumContentOffset = nil;
+		}
+	}
 }
 
 fileprivate extension UICollectionView {
 	fileprivate var visibleContentBounds: CGRect {
-		let bounds = self.bounds, insets: UIEdgeInsets;
+		return self.bounds.inset (by: self.effectiveContentInset);
+	}
+	
+	fileprivate var effectiveContentInset: UIEdgeInsets {
 		if #available (iOS 11.0, *) {
-			insets = self.adjustedContentInset;
+			return self.adjustedContentInset;
 		} else {
-			insets = self.contentInset;
+			return self.contentInset;
 		}
-		return bounds.inset (by: insets);
 	}
 }
 
@@ -423,9 +452,17 @@ internal extension UIEdgeInsets {
 	internal var width: CGFloat {
 		return self.left + self.right;
 	}
+
+	internal var height: CGFloat {
+		return self.top + self.bottom;
+	}
 }
 
 fileprivate extension CGFloat {
 	fileprivate static let virtualOriginHeight = CGFloat.virtualContentHeight / 2.0;
+#if DEBUG
+	fileprivate static let virtualContentHeight = 20000.0 as CGFloat;
+#else
 	fileprivate static let virtualContentHeight = CGFloat (1 << 38);
+#endif
 }

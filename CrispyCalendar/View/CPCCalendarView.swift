@@ -133,7 +133,7 @@ open class CPCCalendarView: UIView {
 		set { self.layout.columnContentInsetReference = newValue }
 	}
 	
-	internal unowned let collectionView: UICollectionView;
+	internal unowned let collectionView: CollectionView;
 
 	internal var calendarViewController: CPCCalendarViewController?;
 	internal var monthViewsManager: CPCMonthViewsManager {
@@ -156,7 +156,7 @@ open class CPCCalendarView: UIView {
 		self.commonInit (collectionView);
 	}
 	
-	private func commonInit (_ collectionView: UICollectionView) {
+	private func commonInit (_ collectionView: CollectionView) {
 		self.monthViewsManager.selectionDidChangeBlock = { [unowned self] in
 			self.selectionDidChange ();
 			self.calendarViewController?.selectionDidChange ();
@@ -218,8 +218,8 @@ extension CPCCalendarView {
 		}
 	}
 	
-	private static func makeCollectionView (_ frame: CGRect, calendar: Calendar = .currentUsed) -> UICollectionView {
-		let collectionView = UICollectionView (frame: frame.bounds, collectionViewLayout: Layout ());
+	private static func makeCollectionView (_ frame: CGRect, calendar: Calendar = .currentUsed) -> CollectionView {
+		let collectionView = CollectionView (frame: frame.bounds, collectionViewLayout: Layout ());
 		collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight];
 		collectionView.allowsSelection = false;
 		collectionView.isDirectionalLockEnabled = true;
@@ -457,7 +457,7 @@ extension CPCCalendarView /* UIScrollViewProtocol */ {
 		} else {
 			scrollDestination = day;
 		}
-		self.dataSource.scrollToDay (scrollDestination, animated: animated);
+		self.dataSource.scroll (collectionView: self.collectionView, to: scrollDestination, animated: animated);
 	}
 	
 	/// Scrolls a specific area of the content so that it is visible in the receiver.

@@ -353,6 +353,20 @@ fileprivate extension CPCCalendarView.Layout.Storage {
 	}
 }
 
+internal extension IndexPath {
+	internal var next: IndexPath {
+		return self.offset (by: 1);
+	}
+	
+	internal var prev: IndexPath {
+		return self.offset (by: -1);
+	}
+	
+	internal func offset (by amount: Int) -> IndexPath {
+		return IndexPath (item: self.item + amount, section: self.section);
+	}
+}
+
 fileprivate extension CPCCalendarView.Layout.Attributes {
 	fileprivate static let invalid = CPCCalendarView.Layout.Attributes ();
 }
@@ -421,20 +435,6 @@ fileprivate extension Collection where Element == CPCMonthView.AspectRatio {
 			(result.drawsLeadingSeparator, result.drawsTrailingSeparator) = (drawCellSeparators, drawCellSeparators);
 			return result;
 		};
-	}
-}
-
-fileprivate extension IndexPath {
-	fileprivate var next: IndexPath {
-		return self.offset (by: 1);
-	}
-	
-	fileprivate var prev: IndexPath {
-		return self.offset (by: -1);
-	}
-	
-	fileprivate func offset (by amount: Int) -> IndexPath {
-		return IndexPath (item: self.item + amount, section: self.section);
 	}
 }
 

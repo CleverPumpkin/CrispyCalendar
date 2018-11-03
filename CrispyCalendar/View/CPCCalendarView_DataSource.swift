@@ -32,22 +32,22 @@ internal extension CPCCalendarView {
 		}
 		
 		internal var minimumDate: Date? {
-			willSet { precondition ((newValue ?? .distantPast) < self.startingDay.start, "Attempted to set minimumDate later than startingDay") }
-			didSet {
-				guard self.minimumDate != oldValue else {
-					return;
+			get { return self.cache.minimumDate }
+			set {
+				precondition ((newValue ?? .distantPast) < self.startingDay.start, "Attempted to set minimumDate later than startingDay");
+				if self.minimumDate != newValue {
+					self.cache.minimumDate = newValue;
 				}
-//				self.allowedDatesRangeDidChange ();
 			}
 		}
 		
 		internal var maximumDate: Date? {
-			willSet { precondition ((newValue ?? .distantFuture) >= self.startingDay.end, "Attempted to set maximumDate eaqrlier than startingDay") }
-			didSet {
-				guard self.maximumDate != oldValue else {
-					return;
+			get { return self.cache.maximumDate }
+			set {
+				precondition ((newValue ?? .distantFuture) >= self.startingDay.end, "Attempted to set maximumDate eaqrlier than startingDay");
+				if self.maximumDate != newValue {
+					self.cache.maximumDate = newValue;
 				}
-//				self.allowedDatesRangeDidChange ();
 			}
 		}
 
@@ -56,7 +56,7 @@ internal extension CPCCalendarView {
 
 		private let cache: Cache;
 		private let referenceIndexPath: IndexPath;
-
+		
 		internal init (statingAt startingDay: CPCDay = .today) {
 			self.startingDay = startingDay;
 			self.monthViewsManager = CPCMonthViewsManager ();
@@ -137,7 +137,7 @@ extension CPCCalendarView.DataSource: UICollectionViewDataSourcePrefetching {
 	}
 }
 
-extension CPCCalendarView.DataSource: UIScrollViewDelegate {
+extension CPCCalendarView.DataSource: UICollectionViewDelegate {
 	private var scrollToTodayDate: Date {
 		if let minimumDate = self.minimumDate, minimumDate.timeIntervalSinceNow > 0.0 {
 			return minimumDate;
@@ -149,24 +149,35 @@ extension CPCCalendarView.DataSource: UIScrollViewDelegate {
 	}
 	
 	internal func scrollViewShouldScrollToTop (_ scrollView: UIScrollView) -> Bool {
-		self.scrollToToday ();
+		guard let collectionView = scrollView as? UICollectionView else {
+			return true;
+		}
+		self.scrollToToday (collectionView);
 		return false;
 	}
-	
-	@discardableResult
-	internal func scrollToToday (animated: Bool = true) -> Bool {
-		return self.scrollToDay (CPCDay (containing: self.scrollToTodayDate, calendar: self.calendar), animated: animated);
+
+	internal func scrollToToday (_ collectionView: UICollectionView, animated: Bool = true) {
+		return self.scroll (collectionView: collectionView,  to: CPCDay (containing: self.scrollToTodayDate, calendar: self.calendar), animated: animated);
 	}
 	
-	@discardableResult
-	internal func scrollToDay (_ day: CPCDay, animated: Bool = true) -> Bool {
-		return false;
+	internal func scroll (collectionView: UICollectionView, to day: CPCDay, animated: Bool = true) {
+		let distance = self.startingMonth.distance (to: day.containingMonth);
+		let indexPath = self.referenceIndexPath.offset (by: distance);
+		collectionView.scrollToItem (at: indexPath, at: .centeredVertically, animated: animated);
 	}
 }
 
 extension CPCCalendarView.DataSource: CPCCalendarViewLayoutDelegate {
 	internal func referenceIndexPathForCollectionView (_ collectionView: UICollectionView) -> IndexPath {
 		return self.referenceIndexPath;
+	}
+	
+	internal func minimumIndexPathForCollectionView (_ collectionView: UICollectionView) -> IndexPath? {
+		return self.cache.minimumIndexPath;
+	}
+	
+	internal func maximumIndexPathForCollectionView (_ collectionView: UICollectionView) -> IndexPath? {
+		return self.cache.maximumIndexPath;
 	}
 	
 	internal func collectionView (_ collectionView: UICollectionView, estimatedAspectRatioComponentsForItemAt indexPath: IndexPath) -> CPCMonthView.AspectRatio {
@@ -232,8 +243,46 @@ extension CPCCalendarView.DataSource: CPCCalendarViewLayoutDelegate {
 
 private extension CPCCalendarView.DataSource {
 	private final class Cache {
+		fileprivate var minimumDate: Date? {
+			didSet {
+				guard let minimumDate = self.minimumDate else {
+					return self.minimumIndexPath = nil;
+				}
+				let startIndex = self.cachedMonths.startIndex, startMonth = self.cachedMonths [startIndex];
+				self.minimumIndexPath = IndexPath (item: startIndex + startMonth.distance (to: CPCMonth (containing: minimumDate, calendarOf: startMonth)), section: 0);
+			}
+		}
+		
+		fileprivate var maximumDate: Date? {
+			didSet {
+				guard let maximumDate = self.maximumDate else {
+					return self.maximumIndexPath = nil;
+				}
+				let endIndex = self.cachedMonths.endIndex - 1, endMonth = self.cachedMonths [endIndex];
+				self.maximumIndexPath = IndexPath (item: endIndex + endMonth.distance (to: CPCMonth (containing: maximumDate, calendarOf: endMonth)), section: 0);
+			}
+		}
+		
+		fileprivate private (set) var minimumIndexPath: IndexPath?, maximumIndexPath: IndexPath?;
+		
+		private var topReached: Bool {
+			guard let minimumDate = self.minimumDate, self.cachedMonths [self.cachedMonths.startIndex].start <= minimumDate else {
+				return false;
+			}
+			return true;
+		}
+
+		private var bottomReached: Bool {
+			guard let maximumDate = self.maximumDate, self.cachedMonths [self.cachedMonths.endIndex - 1].end >= maximumDate else {
+				return false;
+			}
+			return true;
+		}
+		
 		private var cachedMonths: FloatingBaseArray <CPCMonth>;
 		private var updatesLock = DispatchSemaphore (value: 1);
+		private var firstCalculatedIndexPath = UnfairThreadsafeStorage (IndexPath?.none);
+		private var lastCalculatedIndexPath = UnfairThreadsafeStorage (IndexPath?.none);
 
 		private let backgroundQueue = DispatchQueue (label: "CPCCalendarDataSourceCache", qos: .default, attributes: .concurrent);
 		private let priorityQueue = DispatchQueue (label: "CPCCalendarDataSourceCeche", qos: .userInteractive, attributes: .concurrent);
@@ -244,6 +293,12 @@ private extension CPCCalendarView.DataSource {
 		}
 		
 		fileprivate func cachedMonth (for indexPath: IndexPath) -> CPCMonth? {
+			if let minIndexPath = self.minimumIndexPath, minIndexPath > indexPath {
+				return nil;
+			}
+			if let maxIndexPath = self.maximumIndexPath, maxIndexPath < indexPath {
+				return nil
+			}
 			return self.cachedMonths.indices.contains (indexPath.item) ? self.cachedMonths [indexPath.item] : nil;
 		}
 		
@@ -261,7 +316,22 @@ private extension CPCCalendarView.DataSource {
 		}
 		
 		fileprivate func fetchCacheItems (for indexPath: IndexPath, highPriority: Bool, completion: @escaping (_ updated: [IndexPath]) -> ()) {
-			guard !(self.cachedMonths.indices ~= indexPath.item) else {
+			let canCalculateEarlierMonths: Bool = self.firstCalculatedIndexPath.withMutableStoredValue {
+				if let currentFirstIndexPath = $0, (indexPath >= currentFirstIndexPath) {
+					return false;
+				}
+				$0 = indexPath;
+				return true;
+			}
+			let canCalculateLaterMonths: Bool = self.lastCalculatedIndexPath.withMutableStoredValue {
+				if let currentLastIndexPath = $0, (indexPath < currentLastIndexPath) {
+					return false;
+				}
+				$0 = indexPath.offset (by: -1);
+				return true;
+			}
+
+			guard (canCalculateLaterMonths || canCalculateEarlierMonths), !(self.cachedMonths.indices ~= indexPath.item) else {
 				return;
 			}
 			(highPriority ? self.priorityQueue : self.backgroundQueue).async { self.calculateAndStoreYears (untilReaching: indexPath, completion: completion) };
@@ -269,11 +339,11 @@ private extension CPCCalendarView.DataSource {
 		
 		private func calculateAndStoreYears (untilReaching indexPath: IndexPath, completion: @escaping (_ updated: [IndexPath]) -> ()) {
 			let targetCount: Int, start: CPCMonth, advance: Int;
-			if (indexPath.item < self.cachedMonths.startIndex) {
+			if (!self.topReached && (indexPath.item < self.cachedMonths.startIndex)) {
 				start = self.cachedMonths [self.cachedMonths.startIndex];
 				targetCount = self.cachedMonths.startIndex - indexPath.item;
 				advance = -1;
-			} else if (indexPath.item >= self.cachedMonths.endIndex) {
+			} else if (!self.bottomReached && (indexPath.item >= self.cachedMonths.endIndex)) {
 				start = self.cachedMonths [self.cachedMonths.endIndex - 1];
 				targetCount = indexPath.item - self.cachedMonths.endIndex + 1;
 				advance = 1;
@@ -281,27 +351,44 @@ private extension CPCCalendarView.DataSource {
 				return;
 			}
 			
-			var months = [CPCMonth] ();
+			var months = [CPCMonth] (), minimumIndexPath: IndexPath?, maximumIndexPath: IndexPath?;
 			months.reserveCapacity (targetCount);
 			for _ in 0 ..< targetCount {
-				months.append ((months.last ?? start).advanced (by: advance));
+				let currentMonth = months.last ?? start;
+				if let minimumDate = self.minimumDate, (currentMonth.start < minimumDate) {
+					let
+					minimumIndexPath = indexPath.offset (by: targetCount - months.count);
+					break;
+				}
+				if let maximumDate = self.maximumDate, (currentMonth.end >= maximumDate) {
+					maximumIndexPath = indexPath.offset (by: months.count - targetCount);
+					break;
+				}
+				months.append (currentMonth.advanced (by: advance));
 			}
+			
+			let endIndexPath: IndexPath;
 			let lastMonth = months.last ?? start, lastYear = lastMonth.containingYear;
 			if (advance > 0) {
 				months.append (contentsOf: lastYear [(lastMonth.month + 1)...]);
+				endIndexPath = indexPath.offset (by: lastMonth.distance (to: lastYear.last!) + 1);
 			} else {
 				months.append (contentsOf: lastYear [..<lastMonth.month]);
+				endIndexPath = indexPath.offset (by: lastMonth.distance (to: lastYear.first!));
 			}
 			
 			self.updatesLock.wait ();
 			defer { self.updatesLock.signal () }
 			
+			self.minimumIndexPath = minimumIndexPath;
+			self.maximumIndexPath = maximumIndexPath;
+			
 			let indexPaths: [IndexPath];
-			if (indexPath.item < self.cachedMonths.startIndex) {
-				indexPaths = (indexPath.item ..< self.cachedMonths.startIndex).map { IndexPath (item: $0, section: 0) };
+			if (endIndexPath.item < self.cachedMonths.startIndex) {
+				indexPaths = (endIndexPath.item - (months.count - targetCount) ..< self.cachedMonths.startIndex).map { IndexPath (item: $0, section: 0) };
 				self.cachedMonths.prepend (contentsOf: months.suffix (indexPaths.count).reversed ());
-			} else if (indexPath.item >= self.cachedMonths.endIndex) {
-				indexPaths = (self.cachedMonths.endIndex ... indexPath.item).map { IndexPath (item: $0, section: 0) };
+			} else if (endIndexPath.item >= self.cachedMonths.endIndex) {
+				indexPaths = (self.cachedMonths.endIndex ... endIndexPath.item).map { IndexPath (item: $0, section: 0) };
 				self.cachedMonths.append (contentsOf: months.suffix (indexPaths.count));
 			} else {
 				return;
