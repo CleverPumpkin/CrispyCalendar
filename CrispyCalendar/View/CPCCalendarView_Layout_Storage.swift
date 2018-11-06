@@ -21,7 +21,7 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
+import UIKit
 
 internal extension CPCCalendarView.Layout {
 	internal typealias AspectRatio = CPCMonthView.AspectRatio;
@@ -157,7 +157,7 @@ internal extension CPCCalendarView.Layout {
 		}
 		
 		fileprivate var next: Row? {
-			guard self.index <= self.storage.lastRowIndex else {
+			guard self.index < self.storage.lastRowIndex - 1 else {
 				return nil;
 			}
 			return self.storage.row (at: self.index + 1);
@@ -282,9 +282,14 @@ internal extension CPCCalendarView.Layout.Storage {
 		guard let topRow = self.row (containing: rect.minY, allowBeforeFirst: true), let bottomRow = self.row (containing: rect.maxY, allowAfterLast: true) else {
 			return [];
 		}
-	
-		let leadingColumn = max (((rect.minX - self.contentGuideLeading) / self.contentGuideWidth).integerRounded (.down), 0);
-		let trailingColumn = min (((rect.maxX - self.contentGuideLeading) / self.contentGuideWidth).integerRounded (.up), self.columnCount - 1);
+		
+		let leadingColumn: Int, trailingColumn: Int;
+		if (self.contentGuideWidth > 0.0) {
+			leadingColumn = max (((rect.minX - self.contentGuideLeading) / self.contentGuideWidth).integerRounded (.down), 0);
+			trailingColumn = min (((rect.maxX - self.contentGuideLeading) / self.contentGuideWidth).integerRounded (.up), self.columnCount - 1);
+		} else {
+			(leadingColumn, trailingColumn) = (0, self.columnCount - 1);
+		}
 		if ((leadingColumn == 0) && (trailingColumn == (self.columnCount - 1))) {
 			return self.rawAttributes [topRow.index * self.columnCount ..< (bottomRow.index + 1) * self.columnCount].filter { $0 !== Attributes.invalid };
 		} else {
@@ -306,8 +311,8 @@ internal extension CPCCalendarView.Layout.Storage {
 		var firstTopRowToInvalidate = self.firstRowIndex, firstBottomRowToInvalidate = self.lastRowIndex;
 		for (position, aspectRatio) in newAspectRatios {
 			self.rawAttributes [position.row * self.columnCount + position.item].aspectRatio = aspectRatio;
-			firstTopRowToInvalidate = min (position.row - 1, firstTopRowToInvalidate);
-			firstBottomRowToInvalidate = max (position.row + 1, firstBottomRowToInvalidate);
+			firstTopRowToInvalidate = max (position.row - 1, firstTopRowToInvalidate);
+			firstBottomRowToInvalidate = min (position.row + 1, firstBottomRowToInvalidate);
 		}
 		
 		for row in stride (from: firstTopRowToInvalidate, through: self.firstRowIndex, by: -1) {

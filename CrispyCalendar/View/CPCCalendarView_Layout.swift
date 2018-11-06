@@ -454,7 +454,7 @@ internal extension UIEdgeInsets {
 fileprivate extension CGFloat {
 	fileprivate static let virtualOriginHeight = CGFloat.virtualContentHeight / 2.0;
 #if DEBUG
-	fileprivate static let virtualContentHeight = 20000.0 as CGFloat;
+	fileprivate static let virtualContentHeight = 100000.0 as CGFloat;
 #else
 	fileprivate static let virtualContentHeight = CGFloat (1 << 38);
 #endif

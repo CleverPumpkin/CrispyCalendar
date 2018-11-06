@@ -31,13 +31,9 @@ internal extension CPCCalendarView {
 			return self.startingDay.calendarWrapper;
 		}
 		
-		internal var minimumDate: Date? {
-			willSet { precondition ((newValue ?? .distantPast) < self.startingDay.start, "Attempted to set minimumDate later than startingDay") }
-		}
+		internal var minimumDate: Date?;
 		
-		internal var maximumDate: Date? {
-			willSet { precondition ((newValue ?? .distantFuture) >= self.startingDay.end, "Attempted to set maximumDate eaqrlier than startingDay") }
-		}
+		internal var maximumDate: Date?;
 
 		internal let startingDay: CPCDay;		
 		internal let monthViewsManager: CPCMonthViewsManager;
@@ -86,6 +82,7 @@ extension CPCCalendarView.DataSource: UICollectionViewDataSource {
 
 	internal func collectionView (_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
 		let cell = guarantee (collectionView.dequeueReusableCell (withReuseIdentifier: CPCCalendarView.DataSource.cellReuseIdentifier, for: indexPath) as? CPCCalendarView.Cell);
+		cell.monthViewsManager = self.monthViewsManager;
 		if let month = self.cachedMonth (for: indexPath) {
 			cell.month = month;
 		} else {
@@ -116,7 +113,7 @@ internal extension CPCCalendarView.DataSource {
 	
 	internal func scroll (collectionView: UICollectionView, to day: CPCDay, animated: Bool = true) {
 		let distance = self.startingMonth.distance (to: day.containingMonth);
-		let indexPath = self.referenceIndexPath.offset (by: -distance);
+		let indexPath = self.referenceIndexPath.offset (by: distance);
 		collectionView.scrollToItem (at: indexPath, at: .centeredVertically, animated: animated);
 	}
 }
@@ -268,22 +265,26 @@ private extension CPCCalendarView.DataSource {
 			for _ in 0 ..< targetCount {
 				months.append ((months.last ?? start).advanced (by: advance));
 			}
-			let lastMonth = months.last ?? start, lastYear = lastMonth.containingYear;
+			let lastMonth = months.last ?? start, lastYear = lastMonth.containingYear, endIndexPath: IndexPath;
 			if (advance > 0) {
-				months.append (contentsOf: lastYear [(lastMonth.month + 1)...]);
+				let additionalMonths = lastYear [(lastMonth.month + 1)...];
+				months.append (contentsOf: additionalMonths);
+				endIndexPath = indexPath.offset (by: additionalMonths.count)
 			} else {
-				months.append (contentsOf: lastYear [..<lastMonth.month]);
+				let additionalMonths = lastYear [..<lastMonth.month];
+				months.append (contentsOf: additionalMonths);
+				endIndexPath = indexPath.offset (by: -additionalMonths.count);
 			}
 			
 			self.updatesLock.wait ();
 			defer { self.updatesLock.signal () }
 			
 			let indexPaths: [IndexPath];
-			if (indexPath.item < self.cachedMonths.startIndex) {
-				indexPaths = (indexPath.item ..< self.cachedMonths.startIndex).map { IndexPath (item: $0, section: 0) };
+			if (endIndexPath.item < self.cachedMonths.startIndex) {
+				indexPaths = (endIndexPath.item ..< self.cachedMonths.startIndex).map { IndexPath (item: $0, section: 0) };
 				self.cachedMonths.prepend (contentsOf: months.suffix (indexPaths.count).reversed ());
-			} else if (indexPath.item >= self.cachedMonths.endIndex) {
-				indexPaths = (self.cachedMonths.endIndex ... indexPath.item).map { IndexPath (item: $0, section: 0) };
+			} else if (endIndexPath.item >= self.cachedMonths.endIndex) {
+				indexPaths = (self.cachedMonths.endIndex ... endIndexPath.item).map { IndexPath (item: $0, section: 0) };
 				self.cachedMonths.append (contentsOf: months.suffix (indexPaths.count));
 			} else {
 				return;
