@@ -27,27 +27,26 @@ extension CPCCalendarView {
 	internal typealias Attributes = Layout.Attributes;
 	
 	internal class Cell: UICollectionViewCell {
+		internal override class var requiresConstraintBasedLayout: Bool {
+			return false;
+		}
+		
 		internal var monthViewsManager: CPCMonthViewsManager? {
-			get {
-				return self.monthViewsManagerPtr?.pointee;
-			}
-			set {
-				self.monthViewsManagerPtr = UnsafePointer (to: newValue);
-			}
+			get { return self.monthViewsManagerPtr?.pointee }
+			set { self.monthViewsManagerPtr = UnsafePointer (to: newValue) }
 		}
 		
 		internal var enabledRegion: CountableRange <CPCDay>? {
-			get {
-				return self.monthView.enabledRegion;
-			}
-			set {
-				self.monthView.enabledRegion = newValue;
-			}
+			get { return self.monthView.enabledRegion }
+			set { self.monthView.enabledRegion = newValue }
 		}
 		
 		internal var month: CPCMonth? {
 			get { return self.monthView.month }
-			set { self.monthView.month = newValue }
+			set {
+				self.monthView.month = newValue;
+				self.updateMonthViewManagingStatus ();
+			}
 		}
 		
 		private unowned let monthView: CPCMonthView;
@@ -98,7 +97,6 @@ extension CPCCalendarView {
 				let monthView = self.monthView;
 				(monthView.drawsLeadingSeparator, monthView.drawsTrailingSeparator) = (attributes.drawsLeadingSeparator, attributes.drawsTrailingSeparator);
 			}
-			self.updateMonthViewManagingStatus ();
 		}
 		
 		internal override func prepareForReuse () {

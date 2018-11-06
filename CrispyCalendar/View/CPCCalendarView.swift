@@ -133,7 +133,7 @@ open class CPCCalendarView: UIView {
 		set { self.layout.columnContentInsetReference = newValue }
 	}
 	
-	internal unowned let collectionView: CollectionView;
+	internal unowned let collectionView: UICollectionView;
 
 	internal var calendarViewController: CPCCalendarViewController?;
 	internal var monthViewsManager: CPCMonthViewsManager {
@@ -156,7 +156,7 @@ open class CPCCalendarView: UIView {
 		self.commonInit (collectionView);
 	}
 	
-	private func commonInit (_ collectionView: CollectionView) {
+	private func commonInit (_ collectionView: UICollectionView) {
 		self.monthViewsManager.selectionDidChangeBlock = { [unowned self] in
 			self.selectionDidChange ();
 			self.calendarViewController?.selectionDidChange ();
@@ -211,15 +211,15 @@ extension CPCCalendarView {
 	private var calendarWrapper: CPCCalendarWrapper {
 		get { return self.dataSource.calendar }
 		set {
-			let dataSource = DataSource (replacing: self.dataSource, calendar: calendarWrapper);
+			let dataSource = DataSource (replacing: self.dataSource, calendar: newValue);
 			self.collectionView.dataSource = dataSource;
 			self.collectionView.delegate = dataSource;
 			self.dataSource = dataSource;
 		}
 	}
 	
-	private static func makeCollectionView (_ frame: CGRect, calendar: Calendar = .currentUsed) -> CollectionView {
-		let collectionView = CollectionView (frame: frame.bounds, collectionViewLayout: Layout ());
+	private static func makeCollectionView (_ frame: CGRect, calendar: Calendar = .currentUsed) -> UICollectionView {
+		let collectionView = UICollectionView (frame: frame.bounds, collectionViewLayout: Layout ());
 		collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight];
 		collectionView.allowsSelection = false;
 		collectionView.isDirectionalLockEnabled = true;

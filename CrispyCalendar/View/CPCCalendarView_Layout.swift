@@ -25,8 +25,6 @@ import UIKit
 
 internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 	func referenceIndexPathForCollectionView (_ collectionView: UICollectionView) -> IndexPath;
-	func minimumIndexPathForCollectionView (_ collectionView: UICollectionView) -> IndexPath?;
-	func maximumIndexPathForCollectionView (_ collectionView: UICollectionView) -> IndexPath?;
 	func collectionView (_ collectionView: UICollectionView, startOfSectionFor indexPath: IndexPath) -> IndexPath;
 	func collectionView (_ collectionView: UICollectionView, endOfSectionFor indexPath: IndexPath) -> IndexPath;
 	func collectionView (_ collectionView: UICollectionView, estimatedAspectRatioComponentsForItemAt indexPath: IndexPath) -> CPCMonthView.AspectRatio;
@@ -97,9 +95,8 @@ internal extension CPCCalendarView {
 				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath));
 			}
 			while storage.firstIndexPath > indexPath {
-				storage.appendRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath));
+				storage.prependRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath));
 			}
-			self.updateScrollableBoundsIfNeeded ();
 			return storage [indexPath];
 		}
 		
@@ -107,13 +104,15 @@ internal extension CPCCalendarView {
 			guard let storage = self.storage ?? self.makeInitialStorage () else {
 				return nil;
 			}
+			
+			storage.layoutElements (in: rect);
+			
 			while rect.minY < storage.minY {
-				storage.prependRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath));
+				storage.prependRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath), layoutImmediately: true);
 			}
 			while rect.maxY > storage.maxY {
-				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath));
+				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath), layoutImmediately: true);
 			}
-			self.updateScrollableBoundsIfNeeded ();
 			return storage [rect];
 		}
 		
@@ -163,9 +162,7 @@ internal extension CPCCalendarView {
 		}
 		
 		internal override func invalidationContext (forBoundsChange newBounds: CGRect) -> UICollectionViewLayoutInvalidationContext {
-			guard let context = self.invalidationContext else {
-				return super.invalidationContext (forBoundsChange: newBounds);
-			}
+			let context = self.makeInvalidationContext ();
 			context.updatedContentGuide = true;
 			return context;
 		}
@@ -176,7 +173,7 @@ internal extension CPCCalendarView {
 			defer {
 				self.invalidationContext = nil;
 			}
-			guard let collectionView = self.collectionView as? CollectionView else {
+			guard let collectionView = self.collectionView else {
 				return;
 			}
 			let bounds = collectionView.visibleContentBounds;
@@ -203,8 +200,6 @@ internal extension CPCCalendarView {
 					storage.updateContentGuide (self.contentGuide);
 				}
 			}
-			
-			self.updateScrollableBoundsIfNeeded ();
 		}
 		
 		internal override func prepare (forAnimatedBoundsChange oldBounds: CGRect) {
@@ -229,12 +224,26 @@ internal extension CPCCalendarView {
 
 internal extension CPCCalendarView.Layout {
 	internal final class Attributes: UICollectionViewLayoutAttributes {
+		internal override var frame: CGRect {
+			didSet { self.isFrameValid = true }
+		}
 		internal var drawsLeadingSeparator = false;
 		internal var drawsTrailingSeparator = false;
 		internal var position = Storage.AttributesPosition (row: 0, item: 0);
 		internal var rowHeight = 0.0 as CGFloat;
-		internal var aspectRatio: CPCMonthView.AspectRatio = (0.0, 0.0);
+		internal var aspectRatio: CPCMonthView.AspectRatio = (0.0, 0.0) {
+			didSet {
+				if (((self.aspectRatio.constant - oldValue.constant).magnitude > 1e-3) || ((self.aspectRatio.multiplier - oldValue.multiplier).magnitude > 1e-3)) {
+					self.isFrameValid = false;
+				}
+			}
+		}
+		internal private (set) var isFrameValid = false;
 		
+		internal func invalidateFrame () {
+			self.isFrameValid = false;
+		}
+
 		internal override func isEqual (_ object: Any?) -> Bool {
 			guard super.isEqual (object), let object = object as? Attributes else {
 				return false;
@@ -414,22 +423,6 @@ private extension CPCCalendarView.Layout {
 			let context = self.makeInvalidationContext ();
 			context.updatedColumnCount = true;
 			self.invalidateLayout (with: context);
-		}
-	}
-	
-	private func updateScrollableBoundsIfNeeded () {
-		guard let collectionView = self.collectionView as? CPCCalendarView.CollectionView, let delegate = self.delegate else {
-			return;
-		}
-		if let minIndexPath = delegate.minimumIndexPathForCollectionView (collectionView), let minFrame = self.storage? [minIndexPath]?.frame {
-			collectionView.minimumContentOffset = CGPoint (x: 0.0, y: minFrame.minY - collectionView.effectiveContentInset.top - self.columnContentInset.top);
-		} else {
-			collectionView.minimumContentOffset = nil;
-		}
-		if let maxIndexPath = delegate.maximumIndexPathForCollectionView (collectionView), let maxFrame = self.storage? [maxIndexPath]?.frame {
-			collectionView.maximumContentOffset = CGPoint (x: 0.0, y: maxFrame.maxY - collectionView.visibleContentBounds.height - collectionView.effectiveContentInset.top + self.columnContentInset.height);
-		} else {
-			collectionView.maximumContentOffset = nil;
 		}
 	}
 }

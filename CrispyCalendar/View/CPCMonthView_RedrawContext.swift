@@ -126,6 +126,7 @@ internal extension CPCMonthView {
 			fileprivate let highlighted: CellIndex?;
 			fileprivate let selected: CellIndices?;
 			fileprivate let enabled: CellIndices?;
+			fileprivate let allCellsDisabled: Bool;
 		};
 		
 		fileprivate let month: CPCMonth;
@@ -338,14 +339,16 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		let selection = view.selection;
 		let selected = (selection.clamped (to: month).isEmpty ? nil : affected.indices { selection.isDaySelected (month [ordinal: $0.row] [ordinal: $0.column]) });
 		
-		let enabled: CellIndices?;
+		let enabled: CellIndices?, allCellsDisabled: Bool;
 		if let enabledRegion = view.enabledRegion {
 			enabled = affected.indices { enabledRegion.contains (month [ordinal: $0.row] [ordinal: $0.column]) };
+			allCellsDisabled = (enabled == nil);
 		} else {
 			enabled = nil;
+			allCellsDisabled = false;
 		}
 
-		return AffectedIndices (affected: affected, highlighted: highlighted, selected: selected, enabled: enabled);
+		return AffectedIndices (affected: affected, highlighted: highlighted, selected: selected, enabled: enabled, allCellsDisabled: allCellsDisabled);
 	}
 	
 	fileprivate var reusableFormatters: [DateFormatter] {
@@ -427,6 +430,10 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 	}
 	
 	private func dayCellState (for day: CPCDay, at index: CellIndex) -> DayCellState {
+		guard !self.cellIndices.allCellsDisabled else {
+			return .disabled;
+		}
+		
 		var result: DayCellState = [];
 		if (day == .today) {
 			result.formUnion (.isToday);
