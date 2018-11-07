@@ -159,7 +159,11 @@ internal extension CPCCalendarWrapper {
 				}
 				
 				let threshold = (Double (maxUsageCount) * factor).integerRounded (.down);
-				self.values = self.values.filter { $0.value.usageCount >= threshold };
+				let filteredValues = self.values.filter { $0.value.usageCount >= threshold };
+				self.values.removeAll (keepingCapacity: true);
+				for (key, value) in filteredValues {
+					self.values [key] = value;
+				}
 			}
 		}
 		
@@ -186,12 +190,8 @@ internal extension CPCCalendarWrapper {
 			private var storage = UnfairThreadsafeStorage (UnusedItemsPurgingCache <Key, Value> ());
 			
 			fileprivate subscript (key: Key) -> Value? {
-				mutating get {
-					return self.storage.withMutableStoredValue { $0 [key] };
-				}
-				set {
-					self.storage.withMutableStoredValue { $0 [key] = newValue };
-				}
+				get { return self.storage.withStoredValue { $0 [key] } }
+				set { self.storage.withMutableStoredValue { $0 [key] = newValue } }
 			}
 			
 			fileprivate mutating func purge (factor: Double) {

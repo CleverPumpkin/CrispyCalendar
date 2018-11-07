@@ -165,10 +165,8 @@ internal struct GridIndices <Idx> where Idx: FixedWidthInteger {
 		
 #if swift(>=4.2)
 		fileprivate func hash (into hasher: inout Hasher) {
-			hasher.combine (self.rows.lowerBound);
-			hasher.combine (self.rows.upperBound);
-			hasher.combine (self.columns.lowerBound);
-			hasher.combine (self.columns.upperBound);
+			hasher.combine (self.rows);
+			hasher.combine (self.columns);
 		}
 #else
 		fileprivate var hashValue: Int {

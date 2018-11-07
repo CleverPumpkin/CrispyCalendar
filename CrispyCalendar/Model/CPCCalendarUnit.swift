@@ -173,13 +173,18 @@ extension CPCCalendarUnit {
 		return guarantee (self.calendar.date (byAdding: Self.representedUnit, value: 1, to: self.start));
 	}
 	
+	public static func == (lhs: Self, rhs: Self) -> Bool {
+		return (lhs.calendarWrapper === rhs.calendarWrapper) && (lhs.backingValue == rhs.backingValue);
+	}
+	
 #if swift(>=4.2)
 	public func hash (into hasher: inout Hasher) {
-		self.backingValue.hash (into: &hasher);
+		hasher.combine (self.calendarWrapper);
+		hasher.combine (self.backingValue);
 	}
 #else
 	public var hashValue: Int {
-		return self.backingValue.hashValue;
+		return self.backingValue.hashValue * 7 &+ self.calendarWrapper.hashValue * 11;
 	}
 #endif
 	
@@ -222,10 +227,6 @@ internal func resultingCalendarForOperation <T, U> (for first: T, _ second: U) -
 // MARK: - Parent protocol conformances.
 
 extension CPCCalendarUnit {
-	public static func == (lhs: Self, rhs: Self) -> Bool {
-		return lhs.backingValue == rhs.backingValue;
-	}
-	
 	public func distance (to other: Self) -> Int {
 		if let cachedResult = self.cachedDistance (to: other) {
 			return cachedResult;
@@ -270,8 +271,8 @@ fileprivate extension DateIntervalFormatter {
 		
 #if swift(>=4.2)
 		public func hash (into hasher: inout Hasher) {
-			self.unitType.hash (into: &hasher);
-			self.calendar.hash (into: &hasher);
+			hasher.combine (self.unitType);
+			hasher.combine (self.calendar);
 		}
 #else
 		public var hashValue: Int {
@@ -280,7 +281,7 @@ fileprivate extension DateIntervalFormatter {
 #endif
 		
 		fileprivate static func == (lhs: CacheKey, rhs: CacheKey) -> Bool {
-			return (lhs.unitType == rhs.unitType) && (lhs.calendar == rhs.calendar);
+			return (lhs.unitType == rhs.unitType) && (lhs.calendar === rhs.calendar);
 		}
 		
 		fileprivate init <Unit> (for unitType: Unit.Type, calendar: CPCCalendarWrapper) where Unit: CPCCalendarUnit {

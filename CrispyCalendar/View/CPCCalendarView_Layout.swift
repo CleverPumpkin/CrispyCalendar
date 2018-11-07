@@ -145,7 +145,7 @@ internal extension CPCCalendarView {
 			
 			let indexPath = original.indexPath;
 			let context = self.makeInvalidationContext ();
-			context.updatedAspectRatios = [original.position: preferred.aspectRatio];
+			context.updatedAspectRatios [original.position] = preferred.aspectRatio;
 			if (indexPath.item < self.referenceIndexPath.item) {
 				context.invalidateItems (at: stride (from: indexPath.item, through: storage.firstIndexPath.item, by: -1).map { IndexPath (item: $0, section: 0) });
 			} else {
@@ -205,14 +205,6 @@ internal extension CPCCalendarView {
 		internal override func prepare (forAnimatedBoundsChange oldBounds: CGRect) {
 			super.prepare (forAnimatedBoundsChange: oldBounds);
 			self.prevStorage = self.storage?.copy ();
-		}
-		
-		internal override func initialLayoutAttributesForAppearingItem (at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-			return self.prevStorage? [itemIndexPath];
-		}
-		
-		override func finalLayoutAttributesForDisappearingItem (at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-			return self.storage? [itemIndexPath];
 		}
 		
 		internal override func finalizeAnimatedBoundsChange () {
@@ -453,9 +445,5 @@ internal extension UIEdgeInsets {
 
 fileprivate extension CGFloat {
 	fileprivate static let virtualOriginHeight = CGFloat.virtualContentHeight / 2.0;
-#if DEBUG
-	fileprivate static let virtualContentHeight = 100000.0 as CGFloat;
-#else
 	fileprivate static let virtualContentHeight = CGFloat (1 << 38);
-#endif
 }

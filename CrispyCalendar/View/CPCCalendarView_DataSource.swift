@@ -272,7 +272,7 @@ private extension CPCCalendarView.DataSource {
 				endIndexPath = indexPath.offset (by: additionalMonths.count)
 			} else {
 				let additionalMonths = lastYear [..<lastMonth.month];
-				months.append (contentsOf: additionalMonths);
+				months.append (contentsOf: additionalMonths.reversed ());
 				endIndexPath = indexPath.offset (by: -additionalMonths.count);
 			}
 			

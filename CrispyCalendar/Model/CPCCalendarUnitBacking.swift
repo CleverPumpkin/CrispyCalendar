@@ -303,10 +303,16 @@ extension RawValueConvertible {
 	public static func == (lhs: Self, rhs: Self) -> Bool {
 		return lhs.rawValue == rhs.rawValue;
 	}
-	
+
+#if swift(>=4.2)
 	public func hash (into hasher: inout Hasher) {
 		hasher.combine (self.rawValue);
 	}
+#else
+	public var hashValue: Int {
+		return self.rawValue.hashValue;
+	}
+#endif
 }
 
 fileprivate extension FixedWidthInteger {

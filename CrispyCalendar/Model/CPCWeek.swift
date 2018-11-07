@@ -56,7 +56,7 @@ extension CPCWeek: CPCCompoundCalendarUnit {
 	internal typealias UnitBackingType = BackingStorage;
 	
 	internal static let representedUnit = Calendar.Component.weekOfYear;
-	internal static let descriptionDateFormatTemplate = "wddMM";
+	internal static let descriptionDateFormatTemplate = "wddMMyyyy";
 	
 	internal static func indices (for value: BackingStorage, using calendar: Calendar) -> CountableRange <Int> {
 		return guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value.date));

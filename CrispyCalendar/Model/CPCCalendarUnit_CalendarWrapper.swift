@@ -31,15 +31,9 @@ internal final class CPCCalendarWrapper: NSObject {
 	internal let calendar: Calendar;
 	private let calendarHashValue: Int;
 	
-#if swift(>=4.2)
-//	internal func hash (into hasher: inout Hasher) {
-//		hasher.combine (self.calendarHashValue);
-//	}
-#else
-	internal var hashValue: Int {
+	internal override var hash: Int {
 		return self.calendarHashValue;
 	}
-#endif
 
 	internal var unitSpecificCaches = UnfairThreadsafeStorage ([ObjectIdentifier: UnitSpecificCacheProtocol] ());
 
@@ -84,6 +78,10 @@ internal final class CPCCalendarWrapper: NSObject {
 		CPCCalendarWrapper.instances.withMutableStoredValue {
 			$0 [self.calendar] = nil;
 		};
+	}
+	
+	internal override func isEqual (_ object: Any?) -> Bool {
+		return self === object as? CPCCalendarWrapper;
 	}
 	
 	internal func mainRunLoopWillStartWaiting () {

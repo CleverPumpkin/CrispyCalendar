@@ -35,9 +35,15 @@ public protocol CaseIterable {
 #endif
 
 extension CPCDayCellState: Hashable {
+#if swift(>=4.2)
 	public func hash (into hasher: inout Hasher) {
 		hasher.combine (self.rawValue);
 	}
+#else
+	public var hashValue: Int {
+		return self.rawValue;
+	}
+#endif
 }
 
 extension CPCDayCellState: CaseIterable {

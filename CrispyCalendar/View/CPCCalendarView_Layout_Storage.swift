@@ -150,7 +150,7 @@ internal extension CPCCalendarView.Layout {
 		}
 		
 		fileprivate var prev: Row? {
-			guard self.index > self.storage.lastRowIndex else {
+			guard self.index > self.storage.firstRowIndex else {
 				return nil;
 			}
 			return self.storage.row (at: self.index - 1);
@@ -253,28 +253,15 @@ internal extension CPCCalendarView.Layout.Storage {
 	}
 	
 	internal func layoutElements (in rect: CGRect) {
-		let middleRow = self.middleRow;
-		if (!middleRow.isFrameValid) {
-			self.layoutRow (at: 0);
+		if var firstInvalidTopRow = self.makeIterator (enumeratingRowsFrom: 0, through: self.firstRowIndex).first (where: { !$0.isFrameValid }) {
+			while (self.layoutRow (firstInvalidTopRow).frame.minY > rect.minY), let nextInvalidRow = firstInvalidTopRow.prev {
+				firstInvalidTopRow = nextInvalidRow;
+			}
 		}
-		
-		if (self.minY > rect.minY), var invalidTopRow = self.makeIterator (enumeratingRowsFrom: 0, through: self.firstRowIndex).first (where: { !$0.isFrameValid }) {
-			repeat {
-				self.layoutRow (invalidTopRow);
-				guard let topRow = invalidTopRow.prev else {
-					break;
-				}
-				invalidTopRow = topRow;
-			} while (self.minY > rect.minY);
-		}
-		if (self.maxY < rect.maxY), var invalidBottomRow = self.makeIterator (enumeratingRowsFrom: 0, to: self.lastRowIndex).first (where: { !$0.isFrameValid }) {
-			repeat {
-				self.layoutRow (invalidBottomRow);
-				guard let bottomRow = invalidBottomRow.next else {
-					break;
-				}
-				invalidBottomRow = bottomRow;
-			} while (self.maxY < rect.maxY);
+		if var firstInvalidBottomRow = self.makeIterator (enumeratingRowsFrom: 0, to: self.lastRowIndex).first (where: { !$0.isFrameValid }) {
+			while (self.layoutRow (firstInvalidBottomRow).frame.maxY < rect.maxY), let nextInvalidRow = firstInvalidBottomRow.next {
+				firstInvalidBottomRow = nextInvalidRow;
+			}
 		}
 	}
 
@@ -308,11 +295,16 @@ internal extension CPCCalendarView.Layout.Storage {
 	}
 	
 	internal func updateStoredAttributes (using newAspectRatios: [AttributesPosition: CPCMonthView.AspectRatio]) {
-		var firstTopRowToInvalidate = self.firstRowIndex, firstBottomRowToInvalidate = self.lastRowIndex;
+		var firstTopRowToInvalidate = self.firstRowIndex - 1, firstBottomRowToInvalidate = self.lastRowIndex;
 		for (position, aspectRatio) in newAspectRatios {
 			self.rawAttributes [position.row * self.columnCount + position.item].aspectRatio = aspectRatio;
-			firstTopRowToInvalidate = max (position.row - 1, firstTopRowToInvalidate);
-			firstBottomRowToInvalidate = min (position.row + 1, firstBottomRowToInvalidate);
+			if (position.row < 0) {
+				firstTopRowToInvalidate = max (firstTopRowToInvalidate, position.row);
+			} else if (position.row > 0) {
+				firstBottomRowToInvalidate = min (firstBottomRowToInvalidate, position.row);
+			} else {
+				(firstTopRowToInvalidate, firstBottomRowToInvalidate) = (0, 0);
+			}
 		}
 		
 		for row in stride (from: firstTopRowToInvalidate, through: self.firstRowIndex, by: -1) {
