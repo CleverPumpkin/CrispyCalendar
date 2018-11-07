@@ -1,3 +1,4 @@
+
 {
 	"abstract": "docs/sections/*.md",
 	"documentation": "docs/guides/*.md",
@@ -84,7 +85,7 @@
 	],
 
 	"sdk": "iphonesimulator",
-	"swift_version": "4.2",
+	"swift_version": "4.2.1",
 	"module_version": "1.0.0",
 	"module": "CrispyCalendar",
 	"source_directory": ".",
