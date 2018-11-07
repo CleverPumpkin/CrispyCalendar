@@ -59,7 +59,7 @@ internal extension CPCCalendarView {
 		internal init (replacing oldSource: DataSource, calendar: CPCCalendarWrapper) {
 			self.startingDay = CPCDay (containing: oldSource.startingDay.start, calendar: calendar);
 			self.monthViewsManager = oldSource.monthViewsManager;
-			self.referenceIndexPath = IndexPath (referenceForDay: startingDay);
+			self.referenceIndexPath = IndexPath (referenceForDay: self.startingDay);
 			self.cache = Cache (startingYear: self.startingDay.containingYear);
 		}
 	}

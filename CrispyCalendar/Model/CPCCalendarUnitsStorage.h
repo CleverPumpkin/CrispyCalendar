@@ -74,7 +74,7 @@ CPCYearBackingStorage CPCMonthBackingStorageGetYearStorage (CPCMonthBackingStora
 
 #else
 
-typedef CF_ENUM (intptr_t, CPCYearMonthStorageLayout) {
+typedef CF_ENUM (uintptr_t, CPCYearMonthStorageLayout) {
 	CPCYearMonthStorageLayoutDefault = 0,
 	CPCYearMonthStorageLayoutJapanese = 2,
 	CPCYearMonthStorageLayoutChinese = 3,
