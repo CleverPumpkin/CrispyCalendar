@@ -207,6 +207,14 @@ internal extension CPCCalendarView {
 			self.prevStorage = self.storage?.copy ();
 		}
 		
+		internal override func initialLayoutAttributesForAppearingItem (at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+			return self.prevStorage? [itemIndexPath];
+		}
+		
+		override func finalLayoutAttributesForDisappearingItem (at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+			return self.storage? [itemIndexPath];
+		}
+		
 		internal override func finalizeAnimatedBoundsChange () {
 			self.prevStorage = nil;
 			super.finalizeAnimatedBoundsChange ();
