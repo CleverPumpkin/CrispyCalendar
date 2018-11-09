@@ -48,31 +48,17 @@ extension CPCDay: CPCCalendarUnit {
 public extension CPCDay {
 	/// Value that represents a current day.
 	public static var today: CPCDay {
-		if let cachedToday = self.cachedToday {
-			return cachedToday;
-		}
-		let today = CPCDay (containing: Date (), calendar: .current);
-		self.cachedToday = today;
-		return today;
+		return self.today (using: CalendarWrapper.currentUsed);
 	}
-	
-	private static var cachedToday: CPCDay? {
-		didSet {
-			_ = self.dateChangeObserver;
-		}
-	}
-	private static let dateChangeObserver = NotificationCenter.default.addObserver (forName: .NSCalendarDayChanged, object: nil, queue: nil) { _ in
-		CPCDay.cachedToday = nil;
-	};
-	
+
 	/// Value that represents yesterday.
 	public static var yesterday: CPCDay {
-		return self.today.next;
+		return self.yesterday (using: CalendarWrapper.currentUsed);
 	}
 	
 	/// Value that represents tomorrow.
 	public static var tomorrow: CPCDay {
-		return self.today.prev;
+		return self.tomorrow (using: CalendarWrapper.currentUsed);
 	}
 	
 	/// Era of the represented month's year.
@@ -115,10 +101,55 @@ public extension CPCDay {
 		return CPCWeek (containing: self.start, calendarOf: self);
 	}
 	
+	/// Value that represents a current day in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	public static func today (using calendar: Calendar) -> CPCDay {
+		return self.today (using: calendar.wrapped ());
+	}
+	
+	/// Value that represents yesterday in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	public static func yesterday (using calendar: Calendar) -> CPCDay {
+		return self.yesterday (using: calendar.wrapped ());
+	}
+	
+	/// Value that represents tomorrow in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	public static func tomorrow (using calendar: Calendar) -> CPCDay {
+		return self.tomorrow (using: calendar.wrapped ());
+	}
+
 	/// Create a new value, corresponding to a day in the future or past.
 	///
 	/// - Parameter daysSinceNow: Distance from today in days.
 	public init (daysSinceNow: Int) {
 		self = CPCDay.today.advanced (by: daysSinceNow);
 	}
+}
+
+internal extension CPCDay {
+	/// Value that represents a current day in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	internal static func today (using calendar: CalendarWrapper) -> CPCDay {
+		return self.cachedCommonUnit (for: .current, calendar: calendar);
+	}
+	
+	/// Value that represents yesterday in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	internal static func yesterday (using calendar: CalendarWrapper) -> CPCDay {
+		return self.cachedCommonUnit (for: .previous, calendar: calendar);
+	}
+	
+	/// Value that represents tomorrow in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	internal static func tomorrow (using calendar: CalendarWrapper) -> CPCDay {
+		return self.cachedCommonUnit (for: .following, calendar: calendar);
+	}
+
 }

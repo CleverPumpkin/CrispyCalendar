@@ -135,12 +135,16 @@ open class CPCCalendarView: UIView {
 	
 	internal unowned let collectionView: UICollectionView;
 
-	internal var calendarViewController: CPCCalendarViewController?;
+	internal var calendarViewController: CPCCalendarViewController? {
+		get { return self.calendarViewControllerPtr?.pointee }
+		set { self.calendarViewControllerPtr = UnsafePointer (to: newValue) }
+	}
 	internal var monthViewsManager: CPCMonthViewsManager {
 		return self.dataSource.monthViewsManager;
 	}
 	
 	private var dataSource = DataSource ();
+	private var calendarViewControllerPtr: UnsafePointer <CPCCalendarViewController>?;
 	
 	public override init (frame: CGRect) {
 		let collectionView = CPCCalendarView.makeCollectionView (frame);
@@ -162,14 +166,18 @@ open class CPCCalendarView: UIView {
 			self.calendarViewController?.selectionDidChange ();
 		};
 		collectionView.register (Cell.self, forCellWithReuseIdentifier: DataSource.cellReuseIdentifier);
-		collectionView.prefetchDataSource = self.dataSource;
- 		collectionView.dataSource = self.dataSource;
-		collectionView.delegate = self.dataSource;
+		self.prepareCollectionView (collectionView, using: self.dataSource);
 		self.addSubview (collectionView);
 	}
 	
 	deinit {
 		self.monthViewsManager.prepareForContainerDeallocation ();
+	}
+	
+	private func prepareCollectionView (_ collectionView: UICollectionView, using dataSource: DataSource) {
+		collectionView.prefetchDataSource = dataSource;
+		collectionView.dataSource = dataSource;
+		collectionView.delegate = dataSource;
 	}
 
 	open override func layoutSubviews () {
@@ -179,13 +187,27 @@ open class CPCCalendarView: UIView {
 	
 	open override func layoutMarginsDidChange () {
 		super.layoutMarginsDidChange ();
-		self.layout.layoutMarginsDidChange ();
+		self.layout.contentGuideDidChange ();
 	}
 	
 	@available (iOS 11.0, *)
 	open override func safeAreaInsetsDidChange () {
 		super.safeAreaInsetsDidChange ();
-		self.layout.safeAreaInsetsDidChange ();
+		self.layout.contentGuideDidChange ();
+	}
+	
+	open override func willMove (toWindow newWindow: UIWindow?) {
+		super.willMove (toWindow: newWindow);
+		if (newWindow != nil) {
+			self.calendarWrapper.retainGarbageCollector ();
+		}
+	}
+	
+	open override func didMoveToWindow () {
+		super.didMoveToWindow ();
+		if (self.window == nil) {
+			self.calendarWrapper.releaseGarbageCollector ();
+		}
 	}
 	
 	open override func didAddSubview (_ subview: UIView) {
@@ -211,9 +233,11 @@ extension CPCCalendarView {
 	private var calendarWrapper: CPCCalendarWrapper {
 		get { return self.dataSource.calendar }
 		set {
+			self.calendarWrapper.releaseGarbageCollector ();
+			
+			newValue.retainGarbageCollector ();
 			let dataSource = DataSource (replacing: self.dataSource, calendar: newValue);
-			self.collectionView.dataSource = dataSource;
-			self.collectionView.delegate = dataSource;
+			self.prepareCollectionView (self.collectionView, using: dataSource);
 			self.dataSource = dataSource;
 		}
 	}

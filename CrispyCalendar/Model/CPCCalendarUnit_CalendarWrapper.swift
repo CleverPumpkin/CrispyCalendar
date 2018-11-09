@@ -27,6 +27,10 @@ import Swift
 internal final class CPCCalendarWrapper: NSObject {
 	private static var instances = UnfairThreadsafeStorage (UnownedDictionary <Calendar, CPCCalendarWrapper> ());
 	
+	internal static var currentUsed: CPCCalendarWrapper {
+		return Calendar.currentUsed.wrapped ();
+	}
+	
 	/// Wrapped Calendar instance
 	internal let calendar: Calendar;
 	private let calendarHashValue: Int;
@@ -35,10 +39,12 @@ internal final class CPCCalendarWrapper: NSObject {
 		return self.calendarHashValue;
 	}
 
-	internal var unitSpecificCaches = UnfairThreadsafeStorage ([ObjectIdentifier: UnitSpecificCacheProtocol] ());
-
+	internal var unitSpecificCaches = UnfairThreadsafeStorage ([ObjectIdentifier: AnyObject & UnitSpecificCacheProtocol] ());
+	internal var commonUnitCaches = UnfairThreadsafeStorage ([ObjectIdentifier: AnyObject & CommonUnitValuesCacheProtocol] ());
+	
 	private var lastCachesPurgeTimestamp = Date.timeIntervalSinceReferenceDate;
 	private var mainRunLoopObserver: CFRunLoopObserver?;
+	private var mainRunLoopObserverRefCount = 0;
 	
 	internal static func == (lhs: CPCCalendarWrapper, rhs: CPCCalendarWrapper) -> Bool {
 		return (lhs === rhs);
@@ -63,21 +69,53 @@ internal final class CPCCalendarWrapper: NSObject {
 		self.calendar = calendar;
 		self.calendarHashValue = calendar.hashValue;
 		super.init ();
-
-		var context = CFRunLoopObserverContext (version: 0, info: Unmanaged.passUnretained (self).toOpaque (), retain: nil, release: nil, copyDescription: nil);
+	}
+	
+	deinit {
+		self.unscheduleGarbageCollector ();
+		CPCCalendarWrapper.instances.withMutableStoredValue { [unowned self] caches in
+			caches [self.calendar] = nil;
+		};
+	}
+	
+	internal func retainGarbageCollector () {
+		guard Thread.isMainThread else {
+			return DispatchQueue.main.sync (execute: self.retainGarbageCollector);
+		}
+		if (self.mainRunLoopObserverRefCount == 0) {
+			self.scheduleGarbageCollector ();
+		}
+		self.mainRunLoopObserverRefCount += 1;
+	}
+	
+	internal func releaseGarbageCollector () {
+		guard Thread.isMainThread else {
+			return DispatchQueue.main.sync (execute: self.releaseGarbageCollector);
+		}
+		guard self.mainRunLoopObserverRefCount > 0 else {
+			return;
+		}
+		self.mainRunLoopObserverRefCount -= 1;
+		if (self.mainRunLoopObserverRefCount == 0) {
+			self.unscheduleGarbageCollector ();
+		}
+	}
+	
+	private func scheduleGarbageCollector () {
+		var context = Unmanaged <CPCCalendarWrapper>.makeRunLoopObserverContext (observer: self);
 		let observer = CFRunLoopObserverCreate (kCFAllocatorDefault, CFRunLoopActivity.beforeWaiting.rawValue, true, 0, CPCCalendarViewMainRunLoopObserver, &context);
 		self.mainRunLoopObserver = observer;
 		CFRunLoopAddObserver (CFRunLoopGetMain (), observer, CFRunLoopMode.commonModes);
 	}
 	
-	deinit {
-		self.mainRunLoopObserver.map {
-			CFRunLoopRemoveObserver (CFRunLoopGetMain (), $0, CFRunLoopMode.commonModes);
-		}
-		
-		CPCCalendarWrapper.instances.withMutableStoredValue {
-			$0 [self.calendar] = nil;
+	private func unscheduleGarbageCollector () {
+		if let mainRunLoopObserver = self.mainRunLoopObserver {
+			CFRunLoopRemoveObserver (CFRunLoopGetMain (), mainRunLoopObserver, CFRunLoopMode.commonModes);
+			self.mainRunLoopObserver = nil;
 		};
+		self.purgeCacheIfNeeded ();
+		self.invalidateCommonUnitsCaches ();
+		DateFormatter.eraseCachedFormatters (calendar: self);
 	}
 	
 	internal override func isEqual (_ object: Any?) -> Bool {
@@ -104,5 +142,34 @@ private func CPCCalendarViewMainRunLoopObserver (observer: CFRunLoopObserver!, a
 public extension Calendar {
 	internal func wrapped () -> CPCCalendarWrapper {
 		return CPCCalendarWrapper.wrap (self);
+	}
+}
+
+fileprivate extension Unmanaged {
+	fileprivate static func makeRunLoopObserverContext (observer: Instance) -> CFRunLoopObserverContext {
+		return CFRunLoopObserverContext (
+			version: 0,
+			info: self.passUnretained (observer).toOpaque (),
+			retain: { Unmanaged <AnyObject>.retain ($0) },
+			release: { Unmanaged <AnyObject>.release ($0) },
+			copyDescription: { Unmanaged <AnyObject>.copyDescription ($0) }
+		);
+	}
+}
+
+private extension Unmanaged {
+	private static func retain (_ opaque: UnsafeRawPointer?) -> UnsafeRawPointer? {
+		return UnsafeRawPointer (opaque.map { Unmanaged.fromOpaque ($0).retain ().toOpaque () });
+	}
+	
+	private static func release (_ opaque: UnsafeRawPointer?) {
+		opaque.map { Unmanaged.fromOpaque ($0).release () };
+	}
+
+	private static func copyDescription (_ opaque: UnsafeRawPointer?) -> Unmanaged <CFString>? {
+		guard let opaque = opaque, let object = Unmanaged.fromOpaque (opaque).takeUnretainedValue () as? CustomStringConvertible else {
+			return nil;
+		}
+		return Unmanaged <CFString>.passRetained (object.description as CFString);
 	}
 }

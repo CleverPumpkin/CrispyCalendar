@@ -46,7 +46,7 @@ internal extension CPCCalendarView {
 			}
 		}
 		
-		internal var columnCount = 1 {
+		internal var columnCount = UIDevice.current.userInterfaceIdiom.defaultLayoutColumnsCount {
 			didSet {
 				guard self.columnCount > 0 else {
 					return self.columnCount = 1;
@@ -70,6 +70,8 @@ internal extension CPCCalendarView {
 		internal override var collectionViewContentSize: CGSize {
 			return CGSize (width: self.collectionView?.visibleContentBounds.width ?? 0.0, height: .virtualContentHeight);
 		}
+		
+		internal let invalidLayoutAttributes = Attributes (forCellWith: IndexPath ());
 		
 		private var delegate: CPCCalendarViewLayoutDelegate? {
 			guard let delegate = self.collectionView?.delegate else {
@@ -97,6 +99,7 @@ internal extension CPCCalendarView {
 			while storage.firstIndexPath > indexPath {
 				storage.prependRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath));
 			}
+			self.validateAttributes (storage [indexPath]);
 			return storage [indexPath];
 		}
 		
@@ -113,17 +116,28 @@ internal extension CPCCalendarView {
 			while rect.maxY > storage.maxY {
 				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath), layoutImmediately: true);
 			}
+			
+			self.validateAttributes (storage [rect]);
 			return storage [rect];
 		}
 		
 		internal override func invalidateLayout (with context: UICollectionViewLayoutInvalidationContext) {
+			let context = self.makeInvalidationContext (with: context);
 			let collectionView = guarantee (self.collectionView);
 			if (context.invalidateDataSourceCounts) {
 				self.referenceIndexPath = self.delegate?.referenceIndexPathForCollectionView (collectionView) ?? [];
 			}
 			if (context.invalidateEverything) {
 				self.storage = nil;
-				collectionView.contentOffset = CGPoint (x: 0.0, y: .virtualOriginHeight - collectionView.visibleContentBounds.height / 2.0);
+				collectionView.contentCenterOffset.y = .virtualOriginHeight;
+			}
+			
+			if let storage = self.storage {
+				if (context.invalidateAllRows) {
+					storage.invalidate ();
+				} else if let invalidatedRows = context.invalidatedRows {
+					storage.invalidate (rowsIn: invalidatedRows);
+				}
 			}
 			super.invalidateLayout (with: context);
 		}
@@ -145,7 +159,9 @@ internal extension CPCCalendarView {
 			
 			let indexPath = original.indexPath;
 			let context = self.makeInvalidationContext ();
-			context.updatedAspectRatios [original.position] = preferred.aspectRatio;
+			var updatedAspectRatios = context.updatedAspectRatios ?? [:];
+			updatedAspectRatios [original.position] = preferred.aspectRatio;
+			context.updatedAspectRatios = updatedAspectRatios;
 			if (indexPath.item < self.referenceIndexPath.item) {
 				context.invalidateItems (at: stride (from: indexPath.item, through: storage.firstIndexPath.item, by: -1).map { IndexPath (item: $0, section: 0) });
 			} else {
@@ -155,7 +171,7 @@ internal extension CPCCalendarView {
 		}
 
 		internal override func shouldInvalidateLayout (forBoundsChange newBounds: CGRect) -> Bool {
-			guard let storage = self.storage, !storage.isStorageValid (forContentGuide: self.contentGuide, columnSpacing: self.columnSpacing) else {
+			guard let storage = self.storage, !storage.isStorageValid (forContentGuide: self.contentGuide (for: newBounds), columnSpacing: self.columnSpacing) else {
 				return self.storage == nil;
 			}
 			return true;
@@ -164,6 +180,7 @@ internal extension CPCCalendarView {
 		internal override func invalidationContext (forBoundsChange newBounds: CGRect) -> UICollectionViewLayoutInvalidationContext {
 			let context = self.makeInvalidationContext ();
 			context.updatedContentGuide = true;
+			self.storage?.invalidate ();
 			return context;
 		}
 		
@@ -176,35 +193,40 @@ internal extension CPCCalendarView {
 			guard let collectionView = self.collectionView else {
 				return;
 			}
+			
 			let bounds = collectionView.visibleContentBounds;
 			
-			if let context = self.invalidationContext, let storage = self.storage {
-				storage.updateStoredAttributes (using: context.updatedAspectRatios);
+			if let context = self.invalidationContext, let storage = self.storage, let prevBounds = context.prevBounds {
+				if let updatedAspectRatios = context.updatedAspectRatios {
+					storage.updateStoredAttributes (using: updatedAspectRatios);
+					storage.layoutElements (in: collectionView.visibleContentBounds);
+				}
+				
+				let prevStorage = storage.copy ();
+				self.prevStorage = prevStorage;
+				
+				let centerRectHeight = max (self.columnContentInset.height, 1.0);
+				let centerRect = CGRect (x: prevStorage.contentGuideLeading, y: prevBounds.midY - centerRectHeight, width: prevStorage.contentGuideWidth, height: 2.0 * centerRectHeight);
+				let visibleIndexPaths = prevStorage [centerRect];
+				let middleIndexPath	= visibleIndexPaths.min { ($0.frame.midX - centerRect.midX).magnitude < ($1.frame.midX - centerRect.midX).magnitude }?.indexPath ?? self.referenceIndexPath;
+				let additionalOffset = ((prevStorage [middleIndexPath]?.frame.midY).map { $0 - prevBounds.midY } ?? 0.0) / prevBounds.height * bounds.height;
+
 				if context.updatedColumnCount {
-					let prevBounds = context.prevBounds;
-					let visibleIndexPaths = storage [CGRect (x: prevBounds.midX - 1.0, y: prevBounds.midY - 1.0, width: 2.0, height: 2.0)];
-					let middleIndexPath	= (visibleIndexPaths.isEmpty ? self.referenceIndexPath : visibleIndexPaths [visibleIndexPaths.count / 2].indexPath);
-					let additionalOffset = ((storage [middleIndexPath]?.frame.midY).map { $0 - prevBounds.midY } ?? 0.0) / prevBounds.height * bounds.height;
-					
-					let layoutInfo = Storage.LayoutInfo (
+					self.makeStorage (middleIndexPath: middleIndexPath, layoutInfo: Storage.LayoutInfo (
 						columnCount: self.columnCount,
 						contentGuide: self.contentGuide,
 						columnSpacing: self.columnSpacing,
 						contentScale: collectionView.separatorWidth,
-						middleRowOrigin: bounds.midY + additionalOffset
-					);
-					
-					self.prevStorage = self.storage;
-					self.makeStorage (middleIndexPath: middleIndexPath, layoutInfo: layoutInfo);
+						middleRowOrigin: bounds.midY + additionalOffset,
+						invalidAttributes: self.invalidLayoutAttributes
+					));
 				} else if context.updatedContentGuide {
 					storage.updateContentGuide (self.contentGuide);
+					if let middleCellFrame = self.layoutAttributesForItem (at: middleIndexPath)?.frame {
+						collectionView.contentCenterOffset.y = middleCellFrame.midY + additionalOffset;
+					}
 				}
 			}
-		}
-		
-		internal override func prepare (forAnimatedBoundsChange oldBounds: CGRect) {
-			super.prepare (forAnimatedBoundsChange: oldBounds);
-			self.prevStorage = self.storage?.copy ();
 		}
 		
 		internal override func initialLayoutAttributesForAppearingItem (at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
@@ -212,6 +234,7 @@ internal extension CPCCalendarView {
 		}
 		
 		override func finalLayoutAttributesForDisappearingItem (at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
+			self.validateAttributes (self.storage? [itemIndexPath]);
 			return self.storage? [itemIndexPath];
 		}
 		
@@ -224,31 +247,17 @@ internal extension CPCCalendarView {
 
 internal extension CPCCalendarView.Layout {
 	internal final class Attributes: UICollectionViewLayoutAttributes {
-		internal override var frame: CGRect {
-			didSet { self.isFrameValid = true }
-		}
 		internal var drawsLeadingSeparator = false;
 		internal var drawsTrailingSeparator = false;
 		internal var position = Storage.AttributesPosition (row: 0, item: 0);
 		internal var rowHeight = 0.0 as CGFloat;
-		internal var aspectRatio: CPCMonthView.AspectRatio = (0.0, 0.0) {
-			didSet {
-				if (((self.aspectRatio.constant - oldValue.constant).magnitude > 1e-3) || ((self.aspectRatio.multiplier - oldValue.multiplier).magnitude > 1e-3)) {
-					self.isFrameValid = false;
-				}
-			}
-		}
-		internal private (set) var isFrameValid = false;
+		internal var aspectRatio: CPCMonthView.AspectRatio = (0.0, 0.0);
 		
-		internal func invalidateFrame () {
-			self.isFrameValid = false;
-		}
-
 		internal override func isEqual (_ object: Any?) -> Bool {
 			guard super.isEqual (object), let object = object as? Attributes else {
 				return false;
 			}
-			if self === object {
+			guard self !== object else {
 				return true;
 			}
 			return (
@@ -274,84 +283,113 @@ internal extension CPCCalendarView.Layout {
 		}
 		
 		internal override var description: String {
-			return "<Attributes \(UnsafePointer (to: self)); frame: \(self.frame); height = \(self.aspectRatio.multiplier) x width + \(self.aspectRatio.constant); indexPath = \(self.indexPath)); position = [\(self.position.row, self.position.item)]>"
+			return """
+				<Attributes \(UnsafePointer (to: self));
+				frame: \(self.frame);
+				indexPath: \(self.indexPath));
+				position: [\(self.position.row, self.position.item)];
+				height = \(self.aspectRatio.multiplier) x width + \(self.aspectRatio.constant)>
+			""".replacingOccurrences (of: "\n\t", with: " ");
 		}
 	}
 	
-	internal func layoutMarginsDidChange () {
-		self.contentGuideDidChange ();
-	}
-	
-	internal func safeAreaInsetsDidChange () {
-		self.contentGuideDidChange ();
+	internal func contentGuideDidChange () {
+		guard let storage = self.storage, !storage.isStorageValid (forContentGuide: self.contentGuide, columnSpacing: self.columnSpacing) else {
+			return;
+		}
+		
+		let context = self.makeInvalidationContext ();
+		context.updatedContentGuide = true;
+		self.invalidateLayout (with: context);
 	}
 }
 
 private extension CPCCalendarView.Layout {
 	private final class InvalidationContext: UICollectionViewLayoutInvalidationContext {
-		fileprivate let prevBounds: CGRect;
+		fileprivate var prevBounds: CGRect?;
 
-		fileprivate var updatedAspectRatios = [Storage.AttributesPosition: AspectRatio] ();
+		fileprivate var updatedAspectRatios: [Storage.AttributesPosition: AspectRatio]?;
+		fileprivate var invalidatedRows: IndexSet?;
 		fileprivate var updatedContentGuide = false;
 		fileprivate var updatedColumnCount = false;
-		
-		fileprivate convenience override init () {
-			self.init (bounds: .null);
+		fileprivate var invalidateAllRows: Bool {
+			return self.updatedContentGuide || self.updatedColumnCount;
+		}
+
+		fileprivate func invalidateRows <S> (_ rows: S) where S: Sequence, S.Element == Int {
+			let invalidatedRows = IndexSet (rows);
+			self.invalidatedRows = self.invalidatedRows.map { invalidatedRows.union ($0) } ?? invalidatedRows;
 		}
 		
-		fileprivate init (bounds: CGRect) {
-			self.prevBounds = bounds;
-			super.init ();
+		internal override var description: String {
+			return """
+				<InvalidationContext \(UnsafePointer (to: self));
+				invalidatedItemIndexPaths: \(self.invalidatedItemIndexPaths?.description ?? "nil");
+				invalidatedSupplementaryIndexPaths: \(self.invalidatedSupplementaryIndexPaths?.description ?? "nil");
+				invalidatedDecorationIndexPaths: \(self.invalidatedDecorationIndexPaths?.description ?? "nil");
+				invalidatedRows: \(self.invalidateAllRows ? "all" : self.invalidatedRows?.description ?? "nil");
+				updatedAspectRatios: \(self.updatedAspectRatios?.map { "\($0.key) -> \($0.value)" }.joined (separator: ", ") ?? "nil");
+				updatedContentGuide: \(self.updatedContentGuide);
+				updatedColumnCount: \(self.updatedColumnCount))>
+			""".replacingOccurrences (of: "\n\t", with: " ");
 		}
 	}
 	
 	private var visibleContentBounds: CGRect {
-		guard let collectionView = self.collectionView else {
-			return .null;
-		}
-		
-		let bounds = collectionView.bounds, visibleBounds = collectionView.visibleContentBounds;
-		let insetBounds: CGRect;
-		switch (self.columnContentInsetReference) {
-		case .fromContentInset:
-			insetBounds = visibleBounds;
-			break;
-		case .fromLayoutMargins:
-			insetBounds = collectionView.bounds.inset (by: collectionView.layoutMargins).intersection (visibleBounds);
-		case .fromSafeAreaInsets:
-			if #available (iOS 11.0, *) {
-				insetBounds = collectionView.bounds.inset (by: collectionView.safeAreaInsets).intersection (visibleBounds);
-			} else {
-				insetBounds = visibleBounds;
-			}
-		}
-		return insetBounds.offsetBy (dx: bounds.minX - visibleBounds.minX, dy: bounds.minY - visibleBounds.minY);
+		return (self.collectionView?.bounds).map { self.contentBounds (for: $0) } ?? .null;
 	}
 	
 	private var contentGuide: Range <CGFloat> {
-		let contentBounds = self.visibleContentBounds;
-		guard !contentBounds.isInfinite else {
-			return .nan ..< .nan;
-		}
-		return (contentBounds.minX + self.columnContentInset.left) ..< contentBounds.maxX - self.columnContentInset.right;
+		return (self.collectionView?.bounds).map { self.contentGuide (for: $0) } ?? (.nan ..< .nan);
 	}
 	
 	private var columnSpacing: CGFloat {
 		return (self.columnContentInset.left + self.columnContentInset.right) / 2.0;
 	}
 	
+	private func contentGuide (for bounds: CGRect) -> Range <CGFloat> {
+		let contentBounds = self.contentBounds (for: bounds);
+		guard !contentBounds.isInfinite else {
+			return .nan ..< .nan;
+		}
+		return (contentBounds.minX + self.columnContentInset.left) ..< contentBounds.maxX - self.columnContentInset.right;
+	}
+	
+	private func contentBounds (for bounds: CGRect) -> CGRect {
+		guard let collectionView = self.collectionView else {
+			return .null;
+		}
+
+		let contentBounds = collectionView.contentBounds (for: bounds);
+		let insetBounds: CGRect;
+		switch (self.columnContentInsetReference) {
+		case .fromContentInset:
+			insetBounds = contentBounds;
+			break;
+		case .fromLayoutMargins:
+			insetBounds = bounds.inset (by: collectionView.layoutMargins).intersection (contentBounds);
+		case .fromSafeAreaInsets:
+			if #available (iOS 11.0, *) {
+				insetBounds = bounds.inset (by: collectionView.safeAreaInsets).intersection (contentBounds);
+			} else {
+				insetBounds = contentBounds;
+			}
+		}
+		return insetBounds.offsetBy (dx: bounds.minX - contentBounds.minX, dy: bounds.minY - contentBounds.minY);
+	}
+	
 	private func makeInitialStorage () -> Storage? {
 		guard let collectionView = self.collectionView else {
 			return nil;
 		}
-		let layoutInfo = Storage.LayoutInfo (
+		return self.makeStorage (middleIndexPath: self.referenceIndexPath, layoutInfo: Storage.LayoutInfo (
 			columnCount: self.columnCount,
 			contentGuide: self.contentGuide,
 			columnSpacing: self.columnSpacing,
 			contentScale: collectionView.separatorWidth,
-			middleRowOrigin: .virtualOriginHeight
-		);
-		return self.makeStorage (middleIndexPath: self.referenceIndexPath, layoutInfo: layoutInfo);
+			middleRowOrigin: .virtualOriginHeight,
+			invalidAttributes: self.invalidLayoutAttributes
+		));
 	}
 	
 	@discardableResult
@@ -390,9 +428,8 @@ private extension CPCCalendarView.Layout {
 	}
 	
 	private func rowItemIndices (forRowBefore indexPath: IndexPath, in collectionView: UICollectionView, delegate: CPCCalendarViewLayoutDelegate) -> Range <Int> {
-		let indexPath =  indexPath.offset (by: -1);
-		let sectionStart = delegate.collectionView (collectionView, startOfSectionFor: indexPath);
-		return sectionStart.item + (indexPath.item - sectionStart.item) / self.columnCount * self.columnCount ..< indexPath.item + 1;
+		let sectionStart = delegate.collectionView (collectionView, startOfSectionFor: indexPath.offset (by: -1));
+		return (sectionStart.item + (indexPath.item - sectionStart.item - self.columnCount).nextDividable (by: self.columnCount)) ..< indexPath.item;
 	}
 	
 	private func rowItemIndices (forRowAfter indexPath: IndexPath, in collectionView: UICollectionView, delegate: CPCCalendarViewLayoutDelegate) -> Range <Int> {
@@ -400,36 +437,57 @@ private extension CPCCalendarView.Layout {
 		return indexPath.item ..< min (sectionEnd.item, indexPath.item + self.columnCount);
 	}
 	
-	private func makeInvalidationContext () -> InvalidationContext {
-		if let context = self.invalidationContext {
-			return context;
+	private func makeInvalidationContext (with otherContext: UICollectionViewLayoutInvalidationContext? = nil) -> InvalidationContext {
+		let context: InvalidationContext;
+		if let currentContext = self.invalidationContext {
+			context = currentContext;
+		} else {
+			switch (otherContext) {
+			case nil:
+				context = InvalidationContext ();
+			case let otherContext as InvalidationContext:
+				context = otherContext;
+			case .some (let otherContext):
+				fatalError ("Cannot use invalidation context \(otherContext), \(InvalidationContext.self) expected");
+			}
+			self.invalidationContext = context;
 		}
-		let context = InvalidationContext (bounds: self.visibleContentBounds);
-		self.invalidationContext = context;
+		if (context.prevBounds == nil) {
+			context.prevBounds = self.visibleContentBounds;
+		}
 		return context;
-	}
-	
-	private func contentGuideDidChange () {
-		guard let collectionView = self.collectionView else {
-			return;
-		}
-		if (self.shouldInvalidateLayout (forBoundsChange: collectionView.bounds)) {
-			self.invalidateLayout (with: self.invalidationContext (forBoundsChange: collectionView.bounds));
-		}
 	}
 
 	private func columnCountDidChange () {
-		if !(self.storage?.isStorageValid (forColumnCount: self.columnCount) ?? true) {
-			let context = self.makeInvalidationContext ();
-			context.updatedColumnCount = true;
-			self.invalidateLayout (with: context);
+		guard let storage = self.storage, !storage.isStorageValid (forColumnCount: self.columnCount) else {
+			return;
 		}
+		let context = self.makeInvalidationContext ();
+		context.updatedColumnCount = true;
+		self.invalidateLayout (with: context);
 	}
 }
 
 fileprivate extension UICollectionView {
 	fileprivate var visibleContentBounds: CGRect {
-		return self.bounds.inset (by: self.effectiveContentInset);
+		return self.contentBounds (for: self.bounds);
+	}
+	
+	fileprivate var contentCenterOffset: CGPoint {
+		get {
+			let value = self.contentOffset, bounds = self.visibleContentBounds, insets = self.effectiveContentInset;
+			return CGPoint (
+				x: value.x + insets.left + bounds.width / 2,
+				y: value.y + insets.top + bounds.height / 2
+			);
+		}
+		set {
+			let bounds = self.visibleContentBounds, insets = self.effectiveContentInset;
+			self.contentOffset = CGPoint (
+				x: newValue.x - bounds.width / 2 - insets.left,
+				y: newValue.y - bounds.height / 2 - insets.top
+			);
+		}
 	}
 	
 	fileprivate var effectiveContentInset: UIEdgeInsets {
@@ -438,6 +496,10 @@ fileprivate extension UICollectionView {
 		} else {
 			return self.contentInset;
 		}
+	}
+	
+	fileprivate func contentBounds (for bounds: CGRect) -> CGRect {
+		return bounds.inset (by: self.effectiveContentInset);
 	}
 }
 
@@ -458,4 +520,22 @@ fileprivate extension CGFloat {
 #else
 	fileprivate static let virtualContentHeight = CGFloat (1 << 19);
 #endif
+}
+
+fileprivate extension UIUserInterfaceIdiom {
+	fileprivate var defaultLayoutColumnsCount: Int {
+		switch (self) {
+		case .unspecified, .phone, .carPlay:
+			return 1;
+		case .pad, .tv:
+			return 3;
+		}
+	}
+}
+
+fileprivate extension BinaryInteger {
+	fileprivate func nextDividable (by divisor: Self) -> Self {
+		let remainder = self % divisor;
+		return ((remainder > 0) ? self + divisor - remainder : self);
+	}
 }

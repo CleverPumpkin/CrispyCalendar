@@ -25,7 +25,21 @@ import Foundation
 
 // MARK: - Caching interface
 
+/// This enumeration serves as cache key for frequently used (current, previous & next) units.
+///
+/// - current: Cache key for calendar unit that is actual right now.
+/// - following: Cache key for calendar unit that is immediately before current.
+/// - previous: Cache key for calendar unit that is immediately after current.
+internal enum CPCCommonCalendarUnitCacheKey: CaseIterable {
+	case current;
+	case following;
+	case previous;
+}
+
 internal extension CPCCalendarUnit {
+	/// See CPCCommonCalendarUnitCackeKey.
+	internal typealias CommonCacheKey = CPCCommonCalendarUnitCacheKey;
+	
 	/// Query calendar units cache for distance between two units.
 	///
 	/// - Parameter other: Calendar unit to fetch distance to.
@@ -56,6 +70,13 @@ internal extension CPCCalendarUnit {
 	/// - Parameter distance: Distance to the unit that is being cached.
 	internal func cacheUnitValue (_ value: Self, advancedBy distance: Stride) {
 		return self.calendarWrapper.unitSpecificCacheInstance ().calendarUnit (self, cacheUnit: value, asAdvancedBy: distance);
+	}
+	
+	/// Cache a caclendar unit as a frequently used one for the specified key.
+	///
+	/// - Parameter key: Type of the unit cached.
+	internal static func cachedCommonUnit (for key: CommonCacheKey, calendar: CPCCalendarWrapper) -> Self {
+		return calendar.unitSpecificCommonCache () [key];
 	}
 }
 
@@ -101,6 +122,12 @@ internal protocol CPCCalendarUnitSpecificCacheProtocol {
 	mutating func purge (factor: Double);
 }
 
+internal protocol CPCCalendarCommonUnitValuesCacheProtocol {
+	typealias CommonCacheKey = CPCCommonCalendarUnitCacheKey;
+	
+	mutating func invalidate ();
+}
+
 private protocol CPCUnusedItemsPurgingCacheProtocol {
 	associatedtype KeyType where KeyType: Hashable;
 	associatedtype ValueType;
@@ -112,6 +139,7 @@ private protocol CPCUnusedItemsPurgingCacheProtocol {
 
 internal extension CPCCalendarWrapper {
 	internal typealias UnitSpecificCacheProtocol = CPCCalendarUnitSpecificCacheProtocol;
+	internal typealias CommonUnitValuesCacheProtocol = CPCCalendarCommonUnitValuesCacheProtocol;
 	
 	fileprivate class UnitSpecificCacheBase <Unit>: UnitSpecificCacheProtocol where Unit: CPCCalendarUnit {
 		private final class UnusedItemsPurgingCache <Key, Value>: CPCUnusedItemsPurgingCacheProtocol where Key: Hashable {
@@ -309,6 +337,38 @@ internal extension CPCCalendarWrapper {
 			currentCache = self.smallerUnitIndexesCache; block (&currentCache); self.smallerUnitIndexesCache = currentCache as! UnitIndexesStorage;
 		}
 	}
+	
+	fileprivate final class CommonUnitsCache <Unit>: CommonUnitValuesCacheProtocol where Unit: CPCCalendarUnit {
+		private var storage = UnfairThreadsafeStorage ([CommonCacheKey: Unit] (minimumCapacity: CommonCacheKey.allCases.count));
+		
+		private let currentDateChangesObserver: NSObjectProtocol;
+		private unowned let calendar: CPCCalendarWrapper;
+		
+		fileprivate subscript (key: CommonCacheKey) -> Unit {
+			return self.storage.withMutableStoredValue { storage in
+				if storage.isEmpty {
+					let currentUnit = Unit (containing: Date (), calendar: self.calendar);
+					storage [.current] = currentUnit;
+					storage [.previous] = currentUnit.advanced (by: -1);
+					storage [.following] = currentUnit.advanced (by: 1);
+				}
+				return storage [key]!;
+			};
+		}
+		
+		fileprivate init (for calendar: CPCCalendarWrapper) {
+			self.currentDateChangesObserver = calendar.observeCurrentDateChanges (unitType: Unit.self);
+			self.calendar = calendar;
+		}
+		
+		deinit {
+			self.calendar.invalidateCurrentDateChangesObserver (self.currentDateChangesObserver);
+		}
+
+		fileprivate func invalidate () {
+			self.storage.withMutableStoredValue { $0.removeAll (keepingCapacity: true) };
+		}
+	}
 
 	private static let cacheSizeThreshold = 20480;
 	private static let cachePurgeFactor = 0.5;
@@ -326,6 +386,10 @@ internal extension CPCCalendarWrapper {
 			};
 		}
 	}
+	
+	internal func invalidateCommonUnitsCaches () {
+		self.commonUnitCaches.withMutableStoredValue { $0.removeAll (keepingCapacity: true) };
+	}
 
 	fileprivate func unitSpecificCacheInstance <Unit, Cache> () -> Cache where Cache: CompoundUnitSpecificCache <Unit> {
 		return self.unitSpecificCacheInstanceImpl ();
@@ -333,6 +397,29 @@ internal extension CPCCalendarWrapper {
 	
 	fileprivate func unitSpecificCacheInstance <Unit, Cache> () -> Cache where Cache: UnitSpecificCache <Unit> {
 		return self.unitSpecificCacheInstanceImpl ();
+	}
+	
+	fileprivate func unitSpecificCommonCache <Unit> () -> CommonUnitsCache <Unit> {
+		return self.commonUnitCaches.withMutableStoredValue { [unowned self] caches in
+			let typeID = ObjectIdentifier (Unit.self);
+			if let existingCache = caches [typeID] as? CommonUnitsCache <Unit> {
+				return existingCache;
+			}
+			let instance = CommonUnitsCache <Unit> (for: self);
+			caches [typeID] = instance;
+			return instance;
+		};
+	}
+	
+	fileprivate func observeCurrentDateChanges <Unit> (unitType: Unit.Type) -> NSObjectProtocol where Unit: CPCCalendarUnit {
+		return NotificationCenter.default.addObserver (forName: .NSCalendarDayChanged, object: nil, queue: nil) { [unowned self] _ in
+			let cache: CommonUnitsCache <Unit> = self.unitSpecificCommonCache ();
+			cache.invalidate ();
+		};
+	}
+	
+	fileprivate func invalidateCurrentDateChangesObserver (_ observer: NSObjectProtocol) {
+		NotificationCenter.default.removeObserver (observer);
 	}
 	
 	private func unitSpecificCacheInstanceImpl <Unit, Cache> () -> Cache where Cache: UnitSpecificCacheBase <Unit> {

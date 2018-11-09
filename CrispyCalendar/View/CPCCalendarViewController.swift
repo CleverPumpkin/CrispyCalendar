@@ -209,6 +209,10 @@ open class CPCCalendarViewController: UIViewController {
 		self.selectionStorage = SelectionStorage.make (for: self);
 	}
 	
+	deinit {
+		self.calendarView.calendarViewController = nil;
+	}
+	
 	open override func loadView () {
 		let view = CPCCalendarView (frame: UIScreen.main.bounds);
 		view.backgroundColor = .white;

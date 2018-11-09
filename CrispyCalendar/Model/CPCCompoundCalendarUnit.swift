@@ -23,50 +23,101 @@
 
 import Foundation
 
+internal struct CPCCompoundCalendarUnitIndex: Comparable, Hashable {
+	internal typealias Index = Int;
+	internal typealias Element = Int;
+	
+	fileprivate let ordinalValue: Int;
+	
+	internal static func < (lhs: CPCCompoundCalendarUnitIndex, rhs: CPCCompoundCalendarUnitIndex) -> Bool {
+		return lhs.ordinalValue < rhs.ordinalValue;
+	}
+	
+	fileprivate init (ordinal ordinalValue: Int) {
+		self.ordinalValue = ordinalValue;
+	}
+}
+
 /// Protocol, implementing a collection of smaller units that are contained in this calendar unit.
-internal protocol CPCCompoundCalendarUnit: CPCCalendarUnit, RandomAccessCollection where Element: CPCCalendarUnit, Indices == CountableRange <Int> {
+internal protocol CPCCompoundCalendarUnit: CPCCalendarUnit, BidirectionalCollection where Element: CPCCalendarUnit, Index == CPCCompoundCalendarUnitIndex {
 	/// Calculate all possible indices for a given compound unit.
 	///
 	/// - Parameters:
 	///   - value: Backing value of a compound unit to perform calculations for.
 	///   - calendar: Calendar to perform calculations with.
 	/// - Returns: All indices that are valid for compound unit that contains a date represented by given `value`.
-	static func indices (for value: BackingType, using calendar: Calendar) -> CountableRange <Int>;
+	static func indices (for value: BackingType, using calendar: Calendar) -> ContiguousArray <Int>;
+	
+	var indicesCache: ContiguousArray <Int> { get }
+	
+	func index (of element: Element) -> Index?;
+	func componentValue (of element: Element) -> Int;
 }
 
 extension CPCCompoundCalendarUnit {
-	public var startIndex: Int {
-		return self.indices.lowerBound;
+	@inlinable
+	public var count: Int {
+		return self.indicesCache.count;
 	}
 	
-	public var endIndex: Int {
-		return self.indices.upperBound;
+	@inlinable
+	public var startIndex: Index {
+		return Index (ordinal: self.indicesCache.startIndex);
 	}
 	
-	public func index (of element: Element) -> Index? {
-		if let cachedResult = self.cachedIndex (of: element) {
-			return cachedResult;
-		}
-
-		let calendarWrapper = resultingCalendarForOperation (for: self, element), calendar = calendarWrapper.calendar;
-		let startDate = self.start, elementStartDate = element.start;
-		guard calendar.isDate (startDate, equalTo: elementStartDate, toGranularity: Self.representedUnit) else {
-			return nil;
-		}
-
-		let distanceFromStart = guarantee (calendar.dateComponents ([Element.representedUnit], from: startDate, to: elementStartDate).value (for: Element.representedUnit));
-		let result = self.startIndex + distanceFromStart;
-		self.cacheIndex (result, for: element);
-		return result;
+	@inlinable
+	public var endIndex: Index {
+		return Index (ordinal: self.indicesCache.endIndex);
+	}
+	
+	@inlinable
+	public func index (after i: Index) -> Index {
+		return Index (ordinal: i.ordinalValue + 1);
+	}
+	
+	@inlinable
+	public func index (before i: Index) -> Index {
+		return Index (ordinal: i.ordinalValue - 1);
+	}
+	
+	@inlinable
+	public func firstIndex (of element: Element) -> Index? {
+		return self.index (of: element);
+	}
+	
+	@inlinable
+	public func lastIndex (of element: Element) -> Index? {
+		return self.index (of: element);
 	}
 
-	public subscript (position: Int) -> Element {
+	@inlinable
+	public func distance (from start: Index, to end: Index) -> Int {
+		return end.ordinalValue - start.ordinalValue;
+	}
+	
+	@inlinable
+	public func index (_ i: Index, offsetBy distance: Int) -> Index {
+		return Index (ordinal: i.ordinalValue + distance);
+	}
+
+	@inlinable
+	public func index (ordinal ordinalValue: Int) -> Index {
+		return Index (ordinal: ordinalValue);
+	}
+	
+	@usableFromInline
+	internal func index (of element: Element) -> Index? {
+		return self.indicesCache.ordinalValue (forCompoundCalendarUnitComponentValue: self.componentValue (of: element)).map (self.index);
+	}
+
+	@inlinable
+	public subscript (position: Index) -> Element {
 		if let cachedResult = self.cachedElement (at: position) {
 			return cachedResult;
 		}
 		
 		let calendar = self.calendar, firstElementBacking = Element.BackingType (containing: self.start, calendar: calendar);
-		let result = Element (backedBy: firstElementBacking.advanced (by: position - self.indices.lowerBound, using: calendar), calendar: self.calendarWrapper);
+		let result = Element (backedBy: firstElementBacking.advanced (by: position.ordinalValue, using: calendar), calendar: self.calendarWrapper);
 		self.cacheElement (result, for: position)
 		return result;
 	}
@@ -74,7 +125,25 @@ extension CPCCompoundCalendarUnit {
 	/// Returns a subunit at nth place using zero-based indexes.
 	///
 	/// - Parameter position: Zero-based index of subunit.
+	@inlinable
 	public subscript (ordinal position: Int) -> Element {
-		return self [position + self.indices.lowerBound];
+		return self [Index (ordinal: position)];
+	}
+}
+
+internal extension ContiguousArray where Element == Int {
+	@usableFromInline
+	internal func ordinalValue (forCompoundCalendarUnitComponentValue componentValue: Int) -> Int? {
+		let expected = componentValue - self [0];
+		if ((self.indices ~= expected) && (self [expected] == componentValue)) {
+			return expected;
+		}
+		if let result = stride (from: expected + 1, to: self.endIndex, by: 1).first (where: { self [$0] == componentValue }) {
+			return result;
+		}
+		if let result = stride (from: expected - 1, through: self.startIndex, by: -11).first (where: { self [$0] == componentValue }) {
+			return result;
+		}
+		return nil;
 	}
 }

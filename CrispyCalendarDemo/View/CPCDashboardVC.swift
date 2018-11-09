@@ -111,7 +111,7 @@ extension ConfigItemPushingViewController {
 private protocol ConfigItemPushingCalendarController: ConfigItemPushingViewController {
 	var calendarViewControllerClass: SelectionTrackingCalendarVC.Type { get };
 	var calendarTitle: String { get };
-	var initialSelection: CPCViewSelection { get };
+	var initialSelectionGetter: () -> CPCViewSelection { get };
 	var enabledDates: Range <Date>? { get };
 }
 
@@ -122,7 +122,7 @@ extension ConfigItemPushingCalendarController {
 	
 	fileprivate var targetViewController: UIViewController {
 		let result = self.calendarViewControllerClass.init (title: self.calendarTitle);
-		result.selection = self.initialSelection;
+		result.selection = self.initialSelectionGetter ();
 		result.minimumDate = self.enabledDates?.lowerBound;
 		result.maximumDate = self.enabledDates?.upperBound;
 		return result;
@@ -321,32 +321,33 @@ private class ColumnedCalendarVC: SelectionTrackingCalendarVC {
 		self.updateLayout (for: self.view.bounds.size);
 	}
 	
+	fileprivate override func traitCollectionDidChange (_ previousTraitCollection: UITraitCollection?) {
+		super.traitCollectionDidChange (previousTraitCollection);
+		self.updateLayout (for: self.view.bounds.size);
+	}
+	
 	fileprivate override func viewWillTransition (to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
 		super.viewWillTransition (to: size, with: coordinator);
 		self.updateLayout (for: size);
 	}
 	
 	private func updateLayout (for size: CGSize) {
-		if (size.width > size.height) {
-			self.columnCount = 2;
-			self.columnContentInset = UIEdgeInsets (top: 8.0, left: 8.0, bottom: 8.0, right: 8.0);
-		} else {
-			self.columnCount = 1;
-			self.columnContentInset = .zero;
-		}
+		let hasLargeScreen = self.traitCollection.userInterfaceIdiom.hasLargeScreen, landscape = size.width > size.height;
+		self.columnCount = (hasLargeScreen ? (landscape ? 4 : 3) : (landscape ? 2 : 1));
+		self.columnContentInset = UIEdgeInsets (largeScreen: hasLargeScreen, landscape: landscape);
 	}
 }
 
 private struct DefaultConfigItem: ConfigItemPushingCalendarController {
 	fileprivate let localizedTitle: String;
 	fileprivate let calendarTitle: String;
-	fileprivate let initialSelection: CPCViewSelection;
+	fileprivate let initialSelectionGetter: () -> CPCViewSelection;
 	fileprivate let enabledDates: Range <Date>?;
 	
-	fileprivate init (localizedTitle: String, calendarTitle: String, initialSelection: CPCViewSelection, enabledDates: Range <Date>? = nil) {
+	fileprivate init (localizedTitle: String, calendarTitle: String, initialSelection: @escaping @autoclosure () -> CPCViewSelection, enabledDates: Range <Date>? = nil) {
 		self.localizedTitle = localizedTitle;
 		self.calendarTitle = calendarTitle;
-		self.initialSelection = initialSelection;
+		self.initialSelectionGetter = initialSelection;
 		self.enabledDates = enabledDates;
 	}
 }
@@ -359,8 +360,8 @@ private struct CustomSelectionHandlingItem: ConfigItemPushingCalendarController 
 		return CustomSelectionHandlingVC.self;
 	}
 
-	fileprivate var initialSelection: CPCViewSelection {
-		return .unordered ([]);
+	fileprivate var initialSelectionGetter: () -> CPCViewSelection {
+		return { .unordered ([]) };
 	}
 }
 
@@ -372,8 +373,8 @@ private struct CustomDrawingItem: ConfigItemPushingCalendarController {
 		return CustomDrawingVC.self;
 	}
 	
-	fileprivate var initialSelection: CPCViewSelection {
-		return .none;
+	fileprivate var initialSelectionGetter: () -> CPCViewSelection {
+		return { .none };
 	}
 }
 
@@ -400,7 +401,30 @@ private struct ColumnedCalendarItem: ConfigItemPushingCalendarController {
 		return ColumnedCalendarVC.self;
 	}
 	
-	fileprivate var initialSelection: CPCViewSelection {
-		return .none;
+	fileprivate var initialSelectionGetter: () -> CPCViewSelection {
+		return { .none };
+	}
+}
+
+fileprivate extension UIUserInterfaceIdiom {
+	fileprivate var hasLargeScreen: Bool {
+		switch (self) {
+		case .unspecified, .phone, .carPlay:
+			return false;
+		case .pad, .tv:
+			return true;
+		}
+	}
+}
+
+fileprivate extension UIEdgeInsets {
+	fileprivate init (largeScreen: Bool, landscape: Bool) {
+		if (largeScreen) {
+			self.init (top: 20.0, left: 20.0, bottom: 20.0, right: 20.0);
+		} else if (landscape) {
+			self.init (top: 8.0, left: 8.0, bottom: 8.0, right: 8.0);
+		} else {
+			self = .zero;
+		}
 	}
 }

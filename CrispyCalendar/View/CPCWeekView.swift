@@ -197,7 +197,7 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	
 	private func drawSingleWeek (in rect: CGRect) {
 		let isContentsFlipped = self.effectiveUserInterfaceLayoutDirection == .rightToLeft;
-		let style = self.style, week = CPCWeek (containing: Date (), calendar: self.calendar), font = self.effectiveFont, lineHeight = font.lineHeight, scale = self.separatorWidth;
+		let style = self.style, week = CPCWeek.current (using: self.calendar), font = self.effectiveFont, lineHeight = font.lineHeight, scale = self.separatorWidth;
 		let cellOriginY = (rect.midY - lineHeight / 2).rounded (.down, scale: scale);
 		let cellWidth = rect.width / CGFloat (week.count) * (isContentsFlipped ? -1.0 : 1.0), cellHeight = lineHeight.rounded (.up, scale: scale);
 		let weekdayAttributes: [NSAttributedString.Key: Any] = [

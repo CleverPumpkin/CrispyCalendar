@@ -535,7 +535,7 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 		///   - month: Month to be rendered by the measured view.
 		///   - partialAttributes: Non-ccalendric layout attributes.
 		public init (month: CPCMonth, partialAttributes: PartialLayoutAttributes) {
-			self.init (weekLength: month [0].count, weekCount: month.count, partialAttributes: partialAttributes);
+			self.init (weekLength: month [ordinal: 0].count, weekCount: month.count, partialAttributes: partialAttributes);
 		}
 		
 		fileprivate init (weekLength: Int, weekCount: Int, partialAttributes: PartialLayoutAttributes) {
@@ -630,7 +630,7 @@ internal extension CPCMonthView {
 			return self.gridAppearanceDidUpdate ();
 		}
 		
-		let today = CPCDay.today;
+		let today = CPCDay.today (using: month.calendarWrapper);
 		if state.contains (.isToday), month.contains (today), let todayCellIndex = layout.cellIndex (for: today) {
 			self.setNeedsDisplay (layout.cellFrames [todayCellIndex]);
 		}

@@ -28,7 +28,7 @@ internal struct UnownedArray <Element> where Element: AnyObject {
 }
 
 internal struct UnownedDictionary <Key, Value> where Key: Hashable, Value: AnyObject {
-	private var storage: [Key: UnsafePointer <Value>];
+	private var storage: [Key: UnsafeRawPointer];
 }
 
 extension UnownedArray: MutableCollection, RangeReplaceableCollection {
@@ -69,7 +69,7 @@ extension UnownedArray: MutableCollection, RangeReplaceableCollection {
 }
 
 extension UnownedDictionary: Collection, ExpressibleByDictionaryLiteral {
-	internal typealias Index = Dictionary <Key, UnsafePointer <Value>>.Index;
+	internal typealias Index = Dictionary <Key, UnsafeRawPointer>.Index;
 	internal typealias Element = (key: Key, value: Value);
 	
 	internal var startIndex: Index {
@@ -85,21 +85,17 @@ extension UnownedDictionary: Collection, ExpressibleByDictionaryLiteral {
 	}
 	
 	internal init (dictionaryLiteral elements: (Key, Value)...) {
-		self.storage = Dictionary (uniqueKeysWithValues: elements.map { (key: $0.0, value: UnsafePointer (to: $0.1)) });
+		self.storage = Dictionary (uniqueKeysWithValues: elements.map { (key: $0.0, value: UnsafeRawPointer (Unmanaged <Value>.passUnretained ($0.1).toOpaque ())) });
 	}
 	
 	internal subscript (key: Key) -> Value? {
-		get {
-			return self.storage [key]?.pointee;
-		}
-		set {
-			self.storage [key] = UnsafePointer (to: newValue);
-		}
+		get { return self.storage [key].map { Unmanaged <Value>.fromOpaque ($0).takeUnretainedValue () } }
+		set { self.storage [key] = newValue.map { UnsafeRawPointer (Unmanaged.passUnretained ($0).toOpaque ()) } }
 	}
 	
 	internal subscript (position: Index) -> (key: Key, value: Value) {
 		let (key, value) = self.storage [position];
-		return (key: key, value: value.pointee);
+		return (key: key, value: Unmanaged <Value>.fromOpaque (value).takeUnretainedValue ());
 	}
 	
 	internal func index (after i: Index) -> Index {

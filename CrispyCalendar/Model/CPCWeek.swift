@@ -33,15 +33,17 @@ public struct CPCWeek {
 		}
 	}
 
-	public let indices: CountableRange <Int>;
-
+	@usableFromInline
 	internal let backingValue: UnitBackingType;
+	@usableFromInline
 	internal let calendarWrapper: CalendarWrapper;
-	
+	@usableFromInline
+	internal let indicesCache: ContiguousArray <Int>;
+
 	internal init (backedBy value: UnitBackingType, calendar: CalendarWrapper) {
 		self.calendarWrapper = calendar;
 		self.backingValue = value;
-		self.indices = CPCWeek.indices (for: value, using: calendar.calendar);
+		self.indicesCache = CPCWeek.indices (for: value, using: calendar.calendar);
 	}
 }
 
@@ -58,8 +60,12 @@ extension CPCWeek: CPCCompoundCalendarUnit {
 	internal static let representedUnit = Calendar.Component.weekOfYear;
 	internal static let descriptionDateFormatTemplate = "wddMMyyyy";
 	
-	internal static func indices (for value: BackingStorage, using calendar: Calendar) -> CountableRange <Int> {
-		return guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value.date));
+	internal static func indices (for value: BackingStorage, using calendar: Calendar) -> ContiguousArray <Int> {
+		return ContiguousArray (guarantee (calendar.range (of: .weekday, in: self.representedUnit, for: value.date)));
+	}
+
+	internal func componentValue (of element: Element) -> Int {
+		return element.weekday.weekday;
 	}
 }
 
@@ -90,17 +96,43 @@ extension CPCWeek.BackingStorage: CPCCalendarUnitBackingType {
 public extension CPCWeek {
 	/// Value that represents a current week.
 	public static var current: CPCWeek {
-		return self.init (containing: Date (), calendar: .currentUsed);
+		return self.current (using: CalendarWrapper.currentUsed);
 	}
 	
 	/// Value that represents next week.
 	public static var next: CPCWeek {
-		return self.current.next;
+		return self.next (using: CalendarWrapper.currentUsed);
 	}
 	
 	/// Value that represents previous week.
 	public static var prev: CPCWeek {
-		return self.current.prev;
+		return self.prev (using: CalendarWrapper.currentUsed);
+	}
+	
+	/// Week number in the year.
+	public var weekNumber: Int {
+		return self.calendar.component (.weekOfYear, from: self.backingValue.date);
+	}
+	
+	/// Value that represents a current week in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	public static func current (using calendar: Calendar) -> CPCWeek {
+		return self.current (using: calendar.wrapped ());
+	}
+	
+	/// Value that represents next week in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	public static func next (using calendar: Calendar) -> CPCWeek {
+		return self.next (using: calendar.wrapped ());
+	}
+	
+	/// Value that represents previous week in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	public static func prev (using calendar: Calendar) -> CPCWeek {
+		return self.prev (using: calendar.wrapped ());
 	}
 	
 	/// Create a new value, corresponding to a week in the future or past.
@@ -108,5 +140,28 @@ public extension CPCWeek {
 	/// - Parameter weeksSinceNow: Distance from current week in weeks.
 	public init (weeksSinceNow: Int) {
 		self = CPCWeek.current.advanced (by: weeksSinceNow);
+	}
+}
+
+internal extension CPCWeek {
+	/// Value that represents a current week in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	internal static func current (using calendar: CalendarWrapper) -> CPCWeek {
+		return self.cachedCommonUnit (for: .current, calendar: calendar);
+	}
+	
+	/// Value that represents next week in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	internal static func next (using calendar: CalendarWrapper) -> CPCWeek {
+		return self.cachedCommonUnit (for: .following, calendar: calendar);
+	}
+	
+	/// Value that represents previous week in the specified calendar.
+	///
+	/// - Parameter calendar: Calendar to use.
+	internal static func prev (using calendar: CalendarWrapper) -> CPCWeek {
+		return self.cachedCommonUnit (for: .previous, calendar: calendar);
 	}
 }

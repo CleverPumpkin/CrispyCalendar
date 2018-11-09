@@ -41,11 +41,16 @@ internal extension CPCCalendarView {
 		private let cache: Cache;
 		private let referenceIndexPath: IndexPath;
 
-		internal init (statingAt startingDay: CPCDay = .today) {
+		internal override convenience init () {
+			self.init (statingAt: .today);
+		}
+		
+		internal init (statingAt startingDay: CPCDay) {
 			self.startingDay = startingDay;
 			self.monthViewsManager = CPCMonthViewsManager ();
 			self.referenceIndexPath = IndexPath (referenceForDay: startingDay);
 			self.cache = Cache (startingYear: startingDay.containingYear);
+			super.init ();
 		}
 		
 		internal convenience init (statingAt startingMonth: CPCMonth) {
@@ -137,17 +142,13 @@ extension CPCCalendarView.DataSource: CPCCalendarViewLayoutDelegate {
 	}
 	
 	internal func collectionView (_ collectionView: UICollectionView, startOfSectionFor indexPath: IndexPath) -> IndexPath {
-		let month = self.cache.month (for: indexPath);
-		var indexPath = indexPath;
-		indexPath.item -= month.containingYear [ordinal: 0].distance (to: month);
-		return indexPath;
+		let month = self.cache.month (for: indexPath), year = month.containingYear, monthIndex = year.index (of: month)!;
+		return indexPath.offset (by: year.distance (from: monthIndex, to: year.startIndex));
 	}
 	
 	internal func collectionView (_ collectionView: UICollectionView, endOfSectionFor indexPath: IndexPath) -> IndexPath {
-		let month = self.cache.month (for: indexPath);
-		var indexPath = indexPath;
-		indexPath.item += month.distance (to: month.containingYear.last!) + 1;
-		return indexPath;
+		let month = self.cache.month (for: indexPath), year = month.containingYear, monthIndex = year.index (of: month)!;
+		return indexPath.offset (by: year.distance (from: monthIndex, to: year.endIndex));
 	}
 	
 	internal func collectionView (_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
@@ -265,13 +266,13 @@ private extension CPCCalendarView.DataSource {
 			for _ in 0 ..< targetCount {
 				months.append ((months.last ?? start).advanced (by: advance));
 			}
-			let lastMonth = months.last ?? start, lastYear = lastMonth.containingYear, endIndexPath: IndexPath;
+			let lastMonth = months.last ?? start, lastYear = lastMonth.containingYear, monthIndex = lastYear.index (of: lastMonth)!, endIndexPath: IndexPath;
 			if (advance > 0) {
-				let additionalMonths = lastYear [(lastMonth.month + 1)...];
+				let additionalMonths = lastYear [lastYear.index (after: monthIndex)...];
 				months.append (contentsOf: additionalMonths);
 				endIndexPath = indexPath.offset (by: additionalMonths.count)
 			} else {
-				let additionalMonths = lastYear [..<lastMonth.month];
+				let additionalMonths = lastYear [..<monthIndex];
 				months.append (contentsOf: additionalMonths.reversed ());
 				endIndexPath = indexPath.offset (by: -additionalMonths.count);
 			}

@@ -36,15 +36,36 @@ fileprivate extension UIRectCorner {
 	fileprivate static let anyTop: UIRectCorner = [.topLeft, .topRight];
 }
 
+internal extension DateFormatter {
+	internal static func eraseCachedFormatters (calendar: CPCCalendarWrapper) {
+		self.availableFormatters.withMutableStoredValue { $0 = $0.filter { $0.key.calendarWrapper !== calendar } };
+	}
+}
+
 fileprivate extension DateFormatter {
 	private struct CacheKey: Hashable {
-		private let calendarWrapper: CPCCalendarWrapper;
+		fileprivate unowned let calendarWrapper: CPCCalendarWrapper;
 		private let dateFormat: String;
+		
+		fileprivate static func == (lhs: CacheKey, rhs: CacheKey) -> Bool {
+			return (lhs.calendarWrapper === rhs.calendarWrapper) && (lhs.dateFormat == rhs.dateFormat);
+		}
 		
 		fileprivate init (_ calendarWrapper: CPCCalendarWrapper, _ dateFormat: String) {
 			self.calendarWrapper = calendarWrapper;
 			self.dateFormat = dateFormat;
 		}
+		
+#if swift(>=4.2)
+		fileprivate func hash (into hasher: inout Hasher) {
+			hasher.combine (self.calendarWrapper);
+			hasher.combine (self.dateFormat);
+		}
+#else
+		fileprivate var hashValue: Int {
+			return self.calendarWrapper.hashValue &* 13 &+ self.dateFormat.hashValue &* 19;
+		}
+#endif
 	}
 	
 	private static var availableFormatters = UnfairThreadsafeStorage ([CacheKey: [DateFormatter]] ());
@@ -435,7 +456,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		}
 		
 		var result: DayCellState = [];
-		if (day == .today) {
+		if (day == .today (using: day.calendarWrapper)) {
 			result.formUnion (.isToday);
 		}
 		if let enabledIndices = self.cellIndices.enabled, !enabledIndices.contains (index) {
