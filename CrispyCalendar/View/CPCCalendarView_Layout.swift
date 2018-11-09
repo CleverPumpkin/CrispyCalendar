@@ -99,7 +99,6 @@ internal extension CPCCalendarView {
 			while storage.firstIndexPath > indexPath {
 				storage.prependRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath));
 			}
-			self.validateAttributes (storage [indexPath]);
 			return storage [indexPath];
 		}
 		
@@ -116,8 +115,6 @@ internal extension CPCCalendarView {
 			while rect.maxY > storage.maxY {
 				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath), layoutImmediately: true);
 			}
-			
-			self.validateAttributes (storage [rect]);
 			return storage [rect];
 		}
 		
@@ -234,7 +231,6 @@ internal extension CPCCalendarView {
 		}
 		
 		override func finalLayoutAttributesForDisappearingItem (at itemIndexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
-			self.validateAttributes (self.storage? [itemIndexPath]);
 			return self.storage? [itemIndexPath];
 		}
 		

@@ -21,7 +21,7 @@
 //  THE SOFTWARE.
 //
 
-import Swift
+import Foundation
 
 /// Wraps a Calendar instance into a reference type to enable short-circuit equality evaluation using identity operator.
 internal final class CPCCalendarWrapper: NSObject {
