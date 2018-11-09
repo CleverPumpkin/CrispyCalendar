@@ -1,5 +1,8 @@
 {
+	"abstract": "docs/sections/*.md",
+	"documentation": "docs/guides/*.md",
 	"output": "docs/internal/",
+	"clean": true,
 	"min_acl": "internal",
 
 	"theme": "fullwidth",
@@ -7,12 +10,88 @@
 	"hide_documentation_coverage": false,
 	"custom_categories": [
 		{
-			"name": "Model",
+			"name": "Guides",
+			"children": [
+				"Getting Started",
+				"Appearance Customization",
+				"Responding to Selection Events",
+				"Custom Days Rendering",
+				"Tips"
+			]
+		}, {
+			"name": "Threading support",
+			"children": [
+				"ThreadsafeStorage",
+				"UnfairThreadsafeStorage",
+				"DispatchSemaphoreStorage",
+				"PThreadRWLockStorage",
+				"LockWrapperProtocol",
+				"UnfairLockWrapper",
+				"PThreadRWLockWrapper"
+			]
+		}, {
+			"name": "Internal collections",
+			"children": [
+				"UnownedArray",
+				"UnownedDictionary",
+				"GridIndices",
+				"ComputedCollection",
+				"FloatingBaseArray"
+			]
+		}, {
+			"name": "Data model storage & caching",
+			"children": [
+				"CPCCalendarWrapper",
+				"CPCCalendarUnit",
+				"CPCCompoundCalendarUnit",
+				"CPCCalendarUnitBackingType",
+				"ExpressibleByDateComponents",
+				"DateComponentsConvertible",
+				"CPCDayBackingStorage",
+				"CPCMonthBackingStorage",
+				"CPCYearBackingStorage",
+				"CPCUnusedItemsPurgingCacheProtocol",
+				"CPCCalendarUnitSpecificCacheProtocol",
+				"CPCCalendarCommonUnitValuesCacheProtocol",
+				"CPCCommonCalendarUnitCacheKey"
+			]
+		}, {
+			"name": "CPMonthView internals",
+			"children": [
+				"CPCFontMetricsProtocol",
+				"CPCFontMetrics",
+				"CPCDayCellStateBasedStorage",
+				"CPCViewAppearanceStorage",
+				"CPCViewContentAdjusting",
+				"CPCViewSelectionHandlerProtocol",
+				"CPCViewSelectionHandling",
+				"CPCPrimitiveSelectionHandler",
+				"CPCViewSelectionHandler",
+				"CPCViewDelegatingSelectionHandling",
+				"CPCViewDefaultSelectionHandler",
+				"CPCMonthView.Layout",
+				"CPCMonthViewRedrawContext"
+			]
+		}, {
+			"name": "CPCalendarView internals",
+			"children": [
+				"CPCalendarView.DataSource",
+				"CPCalendarView.Cell",
+				"CPCalendarView.Layout",
+				"CPCCalendarViewLayoutDelegate",
+				"CPCalendarView.Layout.Storage",
+				"CPCalendarView.Layout.Storage.LayoutInfo",
+				"CPCalendarView.Layout.Storage.AttributesPosition",
+				"CPCalendarView.Layout.Attributes",
+				"CPCMultiMonthsViewProtocol",
+				"CPCMonthViewsManager"
+			]
+		}, {
+			"name": "Data Model",
 			"children": [
 				"CPCDateInterval",
 				"CPCDateIntervalInitializable",
 				"CPCCalendarUnitSymbol",
-				"CPCCalendarUnitSymbolStyle",
 				"CPCDay",
 				"CPCWeek",
 				"CPCMonth",
@@ -35,7 +114,13 @@
 				"CPCCalendarView"
 			]
 		}, {
-			"name": "Selection management",
+			"name": "View Controllers",
+			"children": [
+				"CPCCalendarViewController",
+				"CPCCalendarViewControllerSelectionDelegate"
+			]
+		}, {
+			"name": "Selection Management",
 			"children": [
 				"CPCViewSelection",
 				"CPCMonthViewSelectionDelegate",
@@ -53,18 +138,15 @@
 		}
 	],
 
-	"clean": true,
-	"sdk": "iphoneos",
-	"swift_version": "4.2",
+	"sdk": "iphonesimulator",
+	"swift_version": "4.2.1",
 	"module_version": "1.0.0",
-
 	"module": "CrispyCalendar",
-	"podspec": "CrispyCalendar.podspec",
-	"source_directory": "CrispyCalendar/",
+	"source_directory": ".",
 
 	"author": "Cleverpumpkin, Ltd.",
 	"author_url": "http://cleverpumpkin.ru",
-	"root_url": "https://cleverpumpkin.github.io/crispycalendar-docs/internal/",
-	"github_url": "https://github.com/cleverpumpkin/crispycalendar",
-	"github_file_prefix": "https://github.com/cleverpumpkin/crispycalendar/tree/master/CrispyCalendar"
+	"root_url": "https://cleverpumpkin.github.io/CrispyCalendarDocs/internal/",
+	"github_url": "https://github.com/CleverPumpkin/CrispyCalendar",
+	"github_file_prefix": "https://github.com/CleverPumpkin/CrispyCalendar/tree/master/CrispyCalendar"
 }

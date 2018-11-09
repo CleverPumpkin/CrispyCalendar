@@ -92,7 +92,7 @@
 
 	"author": "Cleverpumpkin, Ltd.",
 	"author_url": "http://cleverpumpkin.ru",
-	"root_url": "https://cleverpumpkin.github.io/crispycalendar-docs/public/",
-	"github_url": "https://github.com/cleverpumpkin/crispycalendar",
-	"github_file_prefix": "https://github.com/cleverpumpkin/crispycalendar/tree/master/CrispyCalendar"
+	"root_url": "https://cleverpumpkin.github.io/CrispyCalendarDocs/public/",
+	"github_url": "https://github.com/CleverPumpkin/CrispyCalendar",
+	"github_file_prefix": "https://github.com/CleverPumpkin/CrispyCalendar/tree/master/CrispyCalendar"
 }
