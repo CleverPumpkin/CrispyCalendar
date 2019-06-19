@@ -91,7 +91,7 @@ extension CPCViewContentAdjusting {
 }
 
 #if !swift(>=4.2)
-fileprivate extension UIContentSizeCategory {
+/* fileprivate */ extension UIContentSizeCategory {
 	fileprivate static let didChangeNotification = NSNotification.Name.UIContentSizeCategoryDidChange;
 	fileprivate static let newValueUserInfoKey = UIContentSizeCategoryNewValueKey;
 }

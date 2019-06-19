@@ -34,7 +34,7 @@ public protocol CPCCalendarUnitSymbol {
 	func symbol (style: Style, standalone: Bool) -> String;
 }
 
-public extension CPCCalendarUnitSymbol {
+/* public */ extension CPCCalendarUnitSymbol {
 	/// - SeeAlso: `CPCCalendarUnitSymbolStyle`
 	public typealias Style = CPCCalendarUnitSymbolStyle;
 	
@@ -65,7 +65,7 @@ public extension CPCCalendarUnitSymbol {
 }
 
 /// Represents style of a localized string representing a calendar unit.
-public extension CPCCalendarUnitSymbol.Style {
+/* public */ extension CPCCalendarUnitSymbol.Style {
 	/// Default symbol style that is used when no specific style is requested.
 	public static let `default` = normal;
 }

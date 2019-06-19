@@ -36,7 +36,7 @@ internal protocol CPCPrimitiveSelectionHandler: CPCViewSelectionHandlerProtocol 
 	init ();
 }
 
-internal extension CPCPrimitiveSelectionHandler {
+/* internal */ extension CPCPrimitiveSelectionHandler {
 	internal func clearingSelection () -> Self {
 		return Self ();
 	}

@@ -75,7 +75,7 @@ public protocol CPCDateIntervalInitializable: CPCDateInterval {
 
 // MARK: - Default implementations
 
-public extension CPCDateInterval {
+/* public */ extension CPCDateInterval {
 	public var duration: TimeInterval {
 		return self.end.timeIntervalSince (self.start);
 	}
@@ -97,7 +97,7 @@ public extension CPCDateInterval {
 	}
 }
 
-public extension CPCDateInterval where Self: Strideable {
+/* public */ extension CPCDateInterval where Self: Strideable {
 	/// Previous interval (an interval that has the same `duration` and `end`s when this interval `start`s).
 	public var prev: Self {
 		return self.advanced (by: -1);
@@ -109,7 +109,7 @@ public extension CPCDateInterval where Self: Strideable {
 	}
 }
 
-public extension CPCDateIntervalInitializable {
+/* public */ extension CPCDateIntervalInitializable {
 	public init (_ date: Date) {
 		self.init (date ..< date);
 	}

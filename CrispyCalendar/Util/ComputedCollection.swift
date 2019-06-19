@@ -54,7 +54,7 @@ internal struct ComputedCollection <Index, Element, Indices> where Indices: Coll
 	}
 }
 
-fileprivate extension ComputedCollection.Implementation {
+/* fileprivate */ extension ComputedCollection.Implementation {
 	fileprivate init (indices indicesBlock: @escaping () -> Indices, subscript subscriptBlock: @escaping (Index) -> Element) {
 		self.indicesImplementation = .block (indicesBlock);
 		self.subscriptImplementation = subscriptBlock;
@@ -135,7 +135,7 @@ internal struct ComputedIndices <Element> where Element: Comparable {
 	}
 }
 
-internal extension ComputedIndices {
+/* internal */ extension ComputedIndices {
 	internal init <S> (_ indices: S, end endIndex: S.Element) where S: Sequence, S.Element == Element {
 		self.init (Array (indices), end: endIndex);
 	}
@@ -154,21 +154,21 @@ extension ComputedIndices: RandomAccessCollection {
 	}
 	
 	internal func index (after i: Index) -> Index {
-		guard let indexIndex = self.managedIndices.index (of: i), indexIndex < self.managedIndices.count - 1 else {
+		guard let indexIndex = self.managedIndices.firstIndex (of: i), indexIndex < self.managedIndices.count - 1 else {
 			return self.endIndex;
 		}
 		return self.managedIndices [indexIndex + 1];
 	}
 
 	internal func index (before i: Element) -> Element {
-		guard let indexIndex = self.managedIndices.index (of: i), indexIndex > 0 else {
+		guard let indexIndex = self.managedIndices.firstIndex (of: i), indexIndex > 0 else {
 			return self.startIndex;
 		}
 		return self.managedIndices [indexIndex - 1];
 	}
 }
 
-internal extension ComputedIndices where Element: Strideable {
+/* internal */ extension ComputedIndices where Element: Strideable {
 	fileprivate static var endIndexForEmptyCollection: Element {
 		fatalError ("[CrispyCalendar] Internal error: cannot instantiate \(self) with empty indices because their element \(Element.self) is not trivially initializable");
 	}
@@ -182,49 +182,49 @@ internal extension ComputedIndices where Element: Strideable {
 	}
 }
 
-internal extension ComputedIndices where Element: Strideable, Element: ExpressibleByNilLiteral {
+/* internal */ extension ComputedIndices where Element: Strideable, Element: ExpressibleByNilLiteral {
 	fileprivate static var endIndexForEmptyCollection: Element {
 		return nil;
 	}
 }
 
-internal extension ComputedIndices where Element: Strideable, Element: ExpressibleByBooleanLiteral {
+/* internal */ extension ComputedIndices where Element: Strideable, Element: ExpressibleByBooleanLiteral {
 	fileprivate static var endIndexForEmptyCollection: Element {
 		return false;
 	}
 }
 
-internal extension ComputedIndices where Element: Strideable, Element: ExpressibleByIntegerLiteral {
+/* internal */ extension ComputedIndices where Element: Strideable, Element: ExpressibleByIntegerLiteral {
 	fileprivate static var endIndexForEmptyCollection: Element {
 		return 0;
 	}
 }
 
-internal extension ComputedIndices where Element: Strideable, Element: ExpressibleByFloatLiteral {
+/* internal */ extension ComputedIndices where Element: Strideable, Element: ExpressibleByFloatLiteral {
 	fileprivate static var endIndexForEmptyCollection: Element {
 		return 0.0;
 	}
 }
 
-internal extension ComputedIndices where Element: Strideable, Element: ExpressibleByStringLiteral {
+/* internal */ extension ComputedIndices where Element: Strideable, Element: ExpressibleByStringLiteral {
 	fileprivate static var endIndexForEmptyCollection: Element {
 		return "";
 	}
 }
 
-internal extension ComputedIndices where Element: Strideable, Element: ExpressibleByArrayLiteral {
+/* internal */ extension ComputedIndices where Element: Strideable, Element: ExpressibleByArrayLiteral {
 	fileprivate static var endIndexForEmptyCollection: Element {
 		return [];
 	}
 }
 
-internal extension ComputedIndices where Element: Strideable, Element: ExpressibleByDictionaryLiteral {
+/* internal */ extension ComputedIndices where Element: Strideable, Element: ExpressibleByDictionaryLiteral {
 	fileprivate static var endIndexForEmptyCollection: Element {
 		return [:];
 	}
 }
 
-internal extension ComputedIndices where Element: Strideable, Element: RangeReplaceableCollection {
+/* internal */ extension ComputedIndices where Element: Strideable, Element: RangeReplaceableCollection {
 	fileprivate static var endIndexForEmptyCollection: Element {
 		return Element ();
 	}

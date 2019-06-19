@@ -23,7 +23,7 @@
 
 import UIKit
 
-internal extension CPCCalendarView.Layout {
+/* internal */ extension CPCCalendarView.Layout {
 	internal typealias AspectRatio = CPCMonthView.AspectRatio;
 	
 	internal final class Storage {
@@ -213,7 +213,7 @@ internal extension CPCCalendarView.Layout {
 	}
 }
 
-internal extension CPCCalendarView.Layout.Storage {
+/* internal */ extension CPCCalendarView.Layout.Storage {
 	internal var minY: CGFloat {
 		return self.firstAttributes.frame.minY;
 	}
@@ -357,7 +357,7 @@ internal extension CPCCalendarView.Layout.Storage {
 	}
 }
 
-fileprivate extension CPCCalendarView.Layout.Storage {
+/* fileprivate */ extension CPCCalendarView.Layout.Storage {
 	fileprivate typealias Attributes = CPCCalendarView.Layout.Attributes;
 	fileprivate typealias Row = CPCCalendarView.Layout.Row;
 	
@@ -480,7 +480,7 @@ fileprivate extension CPCCalendarView.Layout.Storage {
 	}
 }
 
-internal extension IndexPath {
+/* internal */ extension IndexPath {
 	internal var next: IndexPath {
 		return self.offset (by: 1);
 	}
@@ -524,13 +524,13 @@ extension UnsafeBufferRepresentable where Index: BinaryInteger, Element: Compara
 	}
 }
 
-fileprivate extension FloatingBaseArray {
+/* fileprivate */ extension FloatingBaseArray {
 	fileprivate mutating func reserveAdditionalCapacity (_ k: Int) {
 		self.reserveCapacity (self.count + k);
 	}
 }
 
-fileprivate extension Comparable {
+/* fileprivate */ extension Comparable {
 	fileprivate static func comparator (lhs: Self, rhs: Self) -> ComparisonResult {
 		if (lhs < rhs) {
 			return .orderedAscending;
@@ -546,7 +546,7 @@ fileprivate extension Comparable {
 	}
 }
 
-fileprivate extension Collection where Element == CPCMonthView.AspectRatio {
+/* fileprivate */ extension Collection where Element == CPCMonthView.AspectRatio {
 	fileprivate typealias Attributes = CPCCalendarView.Layout.Attributes;
 	private typealias AttributesPosition = CPCCalendarView.Layout.Storage.AttributesPosition;
 	

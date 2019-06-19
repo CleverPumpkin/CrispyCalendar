@@ -93,7 +93,7 @@ extension CPCWeek.BackingStorage: CPCCalendarUnitBackingType {
 	}
 }
 	
-public extension CPCWeek {
+/* public */ extension CPCWeek {
 	/// Value that represents a current week.
 	public static var current: CPCWeek {
 		return self.current (using: CalendarWrapper.currentUsed);
@@ -143,7 +143,7 @@ public extension CPCWeek {
 	}
 }
 
-internal extension CPCWeek {
+/* internal */ extension CPCWeek {
 	/// Value that represents a current week in the specified calendar.
 	///
 	/// - Parameter calendar: Calendar to use.

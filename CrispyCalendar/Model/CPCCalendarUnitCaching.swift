@@ -36,7 +36,7 @@ internal enum CPCCommonCalendarUnitCacheKey: CaseIterable {
 	case previous;
 }
 
-internal extension CPCCalendarUnit {
+/* internal */ extension CPCCalendarUnit {
 	/// See CPCCommonCalendarUnitCackeKey.
 	internal typealias CommonCacheKey = CPCCommonCalendarUnitCacheKey;
 	
@@ -80,7 +80,7 @@ internal extension CPCCalendarUnit {
 	}
 }
 
-internal extension CPCCompoundCalendarUnit {
+/* internal */ extension CPCCompoundCalendarUnit {
 	/// Query calendar units cache for subunit of a compound calendar unit.
 	///
 	/// - Parameter index: Index of queried subunit.
@@ -137,7 +137,7 @@ private protocol CPCUnusedItemsPurgingCacheProtocol {
 
 // MARK: - Cache implementation
 
-internal extension CPCCalendarWrapper {
+/* internal */ extension CPCCalendarWrapper {
 	internal typealias UnitSpecificCacheProtocol = CPCCalendarUnitSpecificCacheProtocol;
 	internal typealias CommonUnitValuesCacheProtocol = CPCCalendarCommonUnitValuesCacheProtocol;
 	

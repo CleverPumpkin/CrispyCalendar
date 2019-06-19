@@ -27,7 +27,7 @@ internal protocol CPCMultiMonthsViewProtocol: AnyObject {
 	var monthViewsManager: CPCMonthViewsManager { get }
 }
 
-internal extension CPCMultiMonthsViewProtocol {
+/* internal */ extension CPCMultiMonthsViewProtocol {
 	internal var unownedMonthViews: UnownedArray <CPCMonthView> {
 		return self.monthViewsManager.unownedMonthViews;
 	}
@@ -37,7 +37,7 @@ internal extension CPCMultiMonthsViewProtocol {
 	}
 }
 
-internal extension CPCMultiMonthsViewProtocol where Self: CPCViewDelegatingSelectionHandling {
+/* internal */ extension CPCMultiMonthsViewProtocol where Self: CPCViewDelegatingSelectionHandling {
 	internal var selectionHandler: SelectionHandler {
 		get { return self.monthViewsManager.multiSelectionHandler }
 		set { self.monthViewsManager.setMultiSelectionHandler (newValue) }
@@ -72,7 +72,7 @@ internal final class CPCMonthViewsManager {
 	}
 }
 
-internal extension CPCMonthViewsManager {
+/* internal */ extension CPCMonthViewsManager {
 	internal var monthViews: [CPCMonthView] {
 		return Array (self.unownedMonthViews);
 	}
@@ -199,7 +199,7 @@ extension CPCMonthViewsManager: CPCViewProtocol {
 	}
 }
 
-internal extension CPCMonthViewsManager {
+/* internal */ extension CPCMonthViewsManager {
 	private struct MonthViewHandler: CPCViewSelectionHandlerProtocol {
 		fileprivate let selection: Selection;
 		fileprivate unowned let monthView: CPCMonthView;
@@ -252,8 +252,8 @@ internal extension CPCMonthViewsManager {
 	}
 }
 
-fileprivate extension RangeReplaceableCollection {
+/* fileprivate */ extension RangeReplaceableCollection {
 	fileprivate mutating func remove (where predicate: (Element) throws -> Bool) rethrows -> Element? {
-		return try self.index (where: predicate).map { self.remove (at: $0) };
+		return try self.firstIndex (where: predicate).map { self.remove (at: $0) };
 	}
 }

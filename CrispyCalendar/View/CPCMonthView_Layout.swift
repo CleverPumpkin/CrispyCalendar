@@ -23,13 +23,13 @@
 
 import UIKit
 
-internal extension UIView {
+/* internal */ extension UIView {
 	internal var separatorWidth: CGFloat {
 		return 1.0 / (self.window?.screen ?? .main).nativeScale;
 	}
 }
 
-internal extension CPCMonthView {
+/* internal */ extension CPCMonthView {
 	internal typealias CellIndices = GridIndices <Int>;
 	internal typealias CellIndex = CellIndices.Element;
 
@@ -205,7 +205,7 @@ internal extension CPCMonthView {
 	}
 }
 
-fileprivate extension CGFloat {
+/* fileprivate */ extension CGFloat {
 	fileprivate func applyingForX (_ transform: CGAffineTransform) -> CGFloat {
 		return CGPoint (x: self, y: 0.0).applying (transform).x;
 	}
@@ -216,7 +216,7 @@ fileprivate extension CGFloat {
 }
 
 #if !swift(>=4.2)
-fileprivate extension CGRect {
+/* fileprivate */ extension CGRect {
 	fileprivate func inset (by insets: UIEdgeInsets) -> CGRect {
 		return UIEdgeInsetsInsetRect (self, insets);
 	}

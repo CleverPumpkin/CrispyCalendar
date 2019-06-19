@@ -30,7 +30,7 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 	func collectionView (_ collectionView: UICollectionView, estimatedAspectRatioComponentsForItemAt indexPath: IndexPath) -> CPCMonthView.AspectRatio;
 }
 
-internal extension CPCCalendarView {
+/* internal */ extension CPCCalendarView {
 	internal final class Layout: UICollectionViewLayout {
 		internal typealias ColumnContentInsetReference = CPCCalendarView.ColumnContentInsetReference;
 		
@@ -241,7 +241,7 @@ internal extension CPCCalendarView {
 	}
 }
 
-internal extension CPCCalendarView.Layout {
+/* internal */ extension CPCCalendarView.Layout {
 	internal final class Attributes: UICollectionViewLayoutAttributes {
 		internal var drawsLeadingSeparator = false;
 		internal var drawsTrailingSeparator = false;
@@ -283,7 +283,7 @@ internal extension CPCCalendarView.Layout {
 				<Attributes \(UnsafePointer (to: self));
 				frame: \(self.frame);
 				indexPath: \(self.indexPath));
-				position: [\(self.position.row, self.position.item)];
+				position: [\(self.position.row), \(self.position.item)];
 				height = \(self.aspectRatio.multiplier) x width + \(self.aspectRatio.constant)>
 			""".replacingOccurrences (of: "\n\t", with: " ");
 		}
@@ -464,7 +464,7 @@ private extension CPCCalendarView.Layout {
 	}
 }
 
-fileprivate extension UICollectionView {
+/* fileprivate */ extension UICollectionView {
 	fileprivate var visibleContentBounds: CGRect {
 		return self.contentBounds (for: self.bounds);
 	}
@@ -499,7 +499,7 @@ fileprivate extension UICollectionView {
 	}
 }
 
-internal extension UIEdgeInsets {
+/* internal */ extension UIEdgeInsets {
 	internal var width: CGFloat {
 		return self.left + self.right;
 	}
@@ -509,7 +509,7 @@ internal extension UIEdgeInsets {
 	}
 }
 
-fileprivate extension CGFloat {
+/* fileprivate */ extension CGFloat {
 	fileprivate static let virtualOriginHeight = CGFloat.virtualContentHeight / 2.0;
 #if arch(x86_64) || arch(arm64)
 	fileprivate static let virtualContentHeight = CGFloat (1 << 38);
@@ -518,18 +518,20 @@ fileprivate extension CGFloat {
 #endif
 }
 
-fileprivate extension UIUserInterfaceIdiom {
+/* fileprivate */ extension UIUserInterfaceIdiom {
 	fileprivate var defaultLayoutColumnsCount: Int {
 		switch (self) {
 		case .unspecified, .phone, .carPlay:
 			return 1;
 		case .pad, .tv:
 			return 3;
+		@unknown default:
+			return 1;
 		}
 	}
 }
 
-fileprivate extension BinaryInteger {
+/* fileprivate */ extension BinaryInteger {
 	fileprivate func nextDividable (by divisor: Self) -> Self {
 		let remainder = self % divisor;
 		return ((remainder > 0) ? self + divisor - remainder : self);

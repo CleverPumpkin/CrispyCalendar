@@ -23,7 +23,7 @@
 
 import UIKit
 
-internal extension CPCCalendarView {
+/* internal */ extension CPCCalendarView {
 	internal final class DataSource: NSObject {
 		internal static let cellReuseIdentifier = "CellID";
 
@@ -111,7 +111,7 @@ extension CPCCalendarView.DataSource: UICollectionViewDataSourcePrefetching {
 	}
 }
 
-internal extension CPCCalendarView.DataSource {
+/* internal */ extension CPCCalendarView.DataSource {
 	internal func scrollToToday (_ collectionView: UICollectionView, animated: Bool = true) {
 		return self.scroll (collectionView: collectionView,  to: CPCDay (containing: self.scrollToTodayDate, calendar: self.calendar), animated: animated);
 	}
@@ -299,7 +299,7 @@ private extension CPCCalendarView.DataSource {
 }
 
 
-fileprivate extension CPCCalendarView.DataSource {
+/* fileprivate */ extension CPCCalendarView.DataSource {
 	fileprivate var startingMonth: CPCMonth {
 		return self.startingDay.containingMonth;
 	}
@@ -340,13 +340,13 @@ fileprivate extension CPCCalendarView.DataSource {
 	}
 }
 
-fileprivate extension IndexPath {
+/* fileprivate */ extension IndexPath {
 	fileprivate init (referenceForDay day: CPCDay) {
 		self.init (item: .zerothVirtualItemIndex + day.containingYear [ordinal: 0].distance (to: day.containingMonth), section: 0);
 	}
 }
 
-fileprivate extension Sequence where Element: Comparable {
+/* fileprivate */ extension Sequence where Element: Comparable {
 	fileprivate func minmax () -> (minimum: Element, maximum: Element)? {
 		var iterator = self.makeIterator ();
 		guard let first = iterator.next () else {
@@ -361,13 +361,13 @@ fileprivate extension Sequence where Element: Comparable {
 	}
 }
 
-fileprivate extension CPCCalendarUnit {
+/* fileprivate */ extension CPCCalendarUnit {
 	fileprivate var middleDay: CPCDay {
 		return CPCDay (containing: self.start + self.duration / 2, calendar: self.calendarWrapper);
 	}
 }
 
-fileprivate extension Int {
+/* fileprivate */ extension Int {
 	fileprivate static let virtualItemsCount = 0x40000;
 	fileprivate static let zerothVirtualItemIndex = Int.virtualItemsCount / 2;
 }

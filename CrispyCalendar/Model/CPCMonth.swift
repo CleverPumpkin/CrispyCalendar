@@ -61,7 +61,7 @@ extension CPCMonth: CPCCompoundCalendarUnit {
 	}
 }
 
-public extension CPCMonth {
+/* public */ extension CPCMonth {
 	/// Value that represents a current month.
 	public static var current: CPCMonth {
 		return self.current (using: CalendarWrapper.currentUsed);
@@ -126,7 +126,7 @@ public extension CPCMonth {
 	}
 }
 
-internal extension CPCMonth {
+/* internal */ extension CPCMonth {
 	/// Value that represents a current month in the specified calendar.
 	///
 	/// - Parameter calendar: Calendar to use.

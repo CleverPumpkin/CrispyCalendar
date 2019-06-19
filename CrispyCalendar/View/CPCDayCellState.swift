@@ -54,7 +54,7 @@ extension CPCDayCellState: CaseIterable {
 	};
 }
 
-internal extension CPCDayCellState {
+/* internal */ extension CPCDayCellState {
 	internal var isCompressible: Bool {
 		return __CPCDayCellStateIsCompressible (self);
 	}

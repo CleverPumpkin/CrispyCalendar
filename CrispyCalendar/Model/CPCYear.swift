@@ -68,7 +68,7 @@ extension CPCYear: CPCCompoundCalendarUnit {
 	}
 }
 
-public extension CPCYear {
+/* public */ extension CPCYear {
 	/// Value that represents a current year.
 	public static var current: CPCYear {
 		return self.current  (using: CalendarWrapper.currentUsed);
@@ -123,7 +123,7 @@ public extension CPCYear {
 	}
 }
 
-internal extension CPCYear {
+/* internal */ extension CPCYear {
 	/// Value that represents a current year in the specified calendar.
 	///
 	/// - Parameter calendar: Calendar to use.

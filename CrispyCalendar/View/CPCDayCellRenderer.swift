@@ -66,7 +66,7 @@ public protocol CPCDayCellRenderer {
 	func drawCellTitle (in context: Context);
 }
 
-public extension CPCDayCellRenderer {
+/* public */ extension CPCDayCellRenderer {
 	/// - SeeAlso: `CPCDayCellRenderingContext`.
 	public typealias Context = CPCDayCellRenderingContext;
 

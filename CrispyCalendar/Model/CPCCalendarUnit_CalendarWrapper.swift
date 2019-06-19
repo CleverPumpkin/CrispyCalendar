@@ -139,13 +139,13 @@ private func CPCCalendarViewMainRunLoopObserver (observer: CFRunLoopObserver!, a
 	calendarWrapper.mainRunLoopWillStartWaiting ();
 }
 
-public extension Calendar {
+/* public */ extension Calendar {
 	internal func wrapped () -> CPCCalendarWrapper {
 		return CPCCalendarWrapper.wrap (self);
 	}
 }
 
-fileprivate extension Unmanaged {
+/* fileprivate */ extension Unmanaged {
 	fileprivate static func makeRunLoopObserverContext (observer: Instance) -> CFRunLoopObserverContext {
 		return CFRunLoopObserverContext (
 			version: 0,
