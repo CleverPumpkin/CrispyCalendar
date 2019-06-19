@@ -133,7 +133,7 @@ extension ConfigItemPushingCalendarController {
 	}
 }
 
-fileprivate extension Bool {
+/* fileprivate */ extension Bool {
 	fileprivate static var random: Bool {
 		return arc4random () > UInt32.max / 2;
 	}
@@ -255,7 +255,7 @@ private class CustomSelectionHandlingVC: SelectionTrackingCalendarVC, CPCCalenda
 	}
 }
 
-fileprivate extension UIColor {
+/* fileprivate */ extension UIColor {
 	fileprivate static var random: UIColor {
 		let r = CGFloat (arc4random ()) / CGFloat (UInt32.max);
 		let g = CGFloat (arc4random ()) / CGFloat (UInt32.max);
@@ -406,18 +406,20 @@ private struct ColumnedCalendarItem: ConfigItemPushingCalendarController {
 	}
 }
 
-fileprivate extension UIUserInterfaceIdiom {
+/* fileprivate */ extension UIUserInterfaceIdiom {
 	fileprivate var hasLargeScreen: Bool {
 		switch (self) {
 		case .unspecified, .phone, .carPlay:
 			return false;
 		case .pad, .tv:
 			return true;
+		@unknown default:
+			return false;
 		}
 	}
 }
 
-fileprivate extension UIEdgeInsets {
+/* fileprivate */ extension UIEdgeInsets {
 	fileprivate init (largeScreen: Bool, landscape: Bool) {
 		if (largeScreen) {
 			self.init (top: 20.0, left: 20.0, bottom: 20.0, right: 20.0);
