@@ -25,6 +25,7 @@ import Foundation
 
 /// Calendar unit that represents a week.
 public struct CPCWeek {
+	@usableFromInline
 	internal struct BackingStorage: Hashable {
 		fileprivate let date: Date;
 		
@@ -36,7 +37,7 @@ public struct CPCWeek {
 	@usableFromInline
 	internal let backingValue: UnitBackingType;
 	@usableFromInline
-	internal let calendarWrapper: CalendarWrapper;
+	internal let calendarWrapper: CPCCalendarWrapper;
 	@usableFromInline
 	internal let indicesCache: ContiguousArray <Int>;
 
@@ -55,6 +56,7 @@ extension CPCWeek: CPCCalendarUnitBase {
 
 extension CPCWeek: CPCCompoundCalendarUnit {
 	public typealias Element = CPCDay;
+	@usableFromInline
 	internal typealias UnitBackingType = BackingStorage;
 	
 	internal static let representedUnit = Calendar.Component.weekOfYear;

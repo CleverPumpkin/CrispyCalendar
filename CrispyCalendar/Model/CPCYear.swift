@@ -26,7 +26,7 @@ import Foundation
 /// Calendar unit that represents a year.
 public struct CPCYear {
 	@usableFromInline
-	internal let calendarWrapper: CalendarWrapper;
+	internal let calendarWrapper: CPCCalendarWrapper;
 	@usableFromInline
 	internal let backingValue: BackingStorage;
 	@usableFromInline
@@ -58,11 +58,15 @@ extension CPCYear: CPCCalendarUnitBase {
 
 extension CPCYear: CPCCompoundCalendarUnit {
 	public typealias Element = CPCMonth;
+	@usableFromInline
 	internal typealias UnitBackingType = BackingStorage;
 	
+	@usableFromInline
 	internal static let representedUnit = Calendar.Component.year;
+	@usableFromInline
 	internal static let descriptionDateFormatTemplate = "yyyy";
 
+	@usableFromInline
 	internal func componentValue (of element: Element) -> Int {
 		return abs (element.month);
 	}

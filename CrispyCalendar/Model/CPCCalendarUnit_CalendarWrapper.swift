@@ -24,6 +24,7 @@
 import Foundation
 
 /// Wraps a Calendar instance into a reference type to enable short-circuit equality evaluation using identity operator.
+@usableFromInline
 internal final class CPCCalendarWrapper: NSObject {
 	private static var instances = UnfairThreadsafeStorage (UnownedDictionary <Calendar, CPCCalendarWrapper> ());
 	
