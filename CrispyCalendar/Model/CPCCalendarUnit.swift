@@ -219,7 +219,7 @@ extension CPCCalendarUnit {
 internal func resultingCalendarForOperation <T, U> (for first: T, _ second: U) -> CPCCalendarWrapper where T: CPCCalendarUnit, U: CPCCalendarUnit {
 	let calendar = first.calendarWrapper;
 	guard second.calendarWrapper == calendar else {
-		fatalError ("[CrispyCalendar] Sanity check failure: cannot decide on resulting calendar for operation on \(T.self) and \(U.self) values: incompatible calendars \(calendar.calendar, second.calendar)");
+		fatalError ("[CrispyCalendar] Sanity check failure: cannot decide on resulting calendar for operation on \(T.self) and \(U.self) values: incompatible calendars \(calendar.calendar), \(second.calendar)");
 	}
 	return calendar;
 }
@@ -264,7 +264,7 @@ extension CPCCalendarUnit {
 	}
 }
 
-fileprivate extension DateIntervalFormatter {
+/* fileprivate */ extension DateIntervalFormatter {
 	private struct CacheKey: Hashable {
 		private let unitType: ObjectIdentifier;
 		private unowned let calendar: CPCCalendarWrapper;
@@ -307,13 +307,13 @@ fileprivate extension DateIntervalFormatter {
 	}
 }
 
-internal extension Locale {
+/* internal */ extension Locale {
 	internal static var currentUsed: Locale {
 		return Bundle.main.preferredLocalizations.first.map (Locale.init) ?? .current;
 	}
 }
 
-internal extension Calendar {
+/* internal */ extension Calendar {
 	internal static var currentUsed: Calendar {
 		var result = Calendar.current;
 		result.locale = .currentUsed;

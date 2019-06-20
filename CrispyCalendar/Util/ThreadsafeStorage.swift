@@ -46,19 +46,19 @@ internal struct ThreadsafeStorage <Lock, Value> {
 	}
 }
 
-internal extension ThreadsafeStorage where Lock == os_unfair_lock {
+/* internal */ extension ThreadsafeStorage where Lock == os_unfair_lock {
 	internal init (_ value: Value) {
 		self.init (lock: UnfairLockWrapper (), value: value);
 	}
 }
 
-internal extension ThreadsafeStorage where Lock == DispatchSemaphore {
+/* internal */ extension ThreadsafeStorage where Lock == DispatchSemaphore {
 	internal init (_ value: Value) {
 		self.init (lock: DispatchSemaphore (asLockWrapper: ()), value: value);
 	}
 }
 
-internal extension ThreadsafeStorage where Lock == pthread_rwlock_t {
+/* internal */ extension ThreadsafeStorage where Lock == pthread_rwlock_t {
 	internal init (_ value: Value) {
 		self.init (lock: PThreadRWLockWrapper (), value: value);
 	}

@@ -24,6 +24,7 @@
 import Foundation
 
 /// Wraps a Calendar instance into a reference type to enable short-circuit equality evaluation using identity operator.
+@usableFromInline
 internal final class CPCCalendarWrapper: NSObject {
 	private static var instances = UnfairThreadsafeStorage (UnownedDictionary <Calendar, CPCCalendarWrapper> ());
 	
@@ -139,13 +140,13 @@ private func CPCCalendarViewMainRunLoopObserver (observer: CFRunLoopObserver!, a
 	calendarWrapper.mainRunLoopWillStartWaiting ();
 }
 
-public extension Calendar {
+/* public */ extension Calendar {
 	internal func wrapped () -> CPCCalendarWrapper {
 		return CPCCalendarWrapper.wrap (self);
 	}
 }
 
-fileprivate extension Unmanaged {
+/* fileprivate */ extension Unmanaged {
 	fileprivate static func makeRunLoopObserverContext (observer: Instance) -> CFRunLoopObserverContext {
 		return CFRunLoopObserverContext (
 			version: 0,

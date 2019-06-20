@@ -9,7 +9,7 @@ Pod::Spec.new do |spec|
 	spec.source            = { :git => "#{spec.homepage}.git", :tag => "v#{spec.version}" }
 	
 	spec.ios.deployment_target = '10.3'
-	spec.swift_version         = '4.2'
+	spec.swift_version         = '5.0'
 	spec.pod_target_xcconfig   = { 'DEFINES_MODULE' => 'YES' }
 	spec.source_files          = "#{spec.name}/{Util,Model,View,Supporting Files}/*.{h,c,m,swift}"
 	spec.public_header_files   = "#{spec.name}/{Util,Model,View,Supporting Files}/*.h"

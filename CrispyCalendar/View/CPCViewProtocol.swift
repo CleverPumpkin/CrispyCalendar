@@ -85,11 +85,11 @@ internal struct CPCDayCellStateBasedStorage <Value>: ExpressibleByDictionaryLite
 	}
 }
 
-fileprivate extension UIEdgeInsets {
+/* fileprivate */ extension UIEdgeInsets {
 	fileprivate static let defaultMonthTitle = UIEdgeInsets (top: 8.0, left: 8.0, bottom: 8.0, right: 8.0);
 }
 
-fileprivate extension UIFont {
+/* fileprivate */ extension UIFont {
 	fileprivate static var defaultMonthTitle: UIFont {
 		return .preferredFont (forTextStyle: .headline);
 	}
@@ -99,7 +99,7 @@ fileprivate extension UIFont {
 	}
 }
 
-fileprivate extension UIColor {
+/* fileprivate */ extension UIColor {
 	fileprivate static var defaultMonthTitle: UIColor {
 		return .darkText;
 	}
@@ -113,7 +113,7 @@ fileprivate extension UIColor {
 	}
 }
 
-internal extension NSObjectProtocol {
+/* internal */ extension NSObjectProtocol {
 	internal var isAppearanceProxy: Bool {
 		guard let selfClass = object_getClass (self) else {
 			return true;
@@ -190,7 +190,7 @@ public protocol CPCViewProtocol: AnyObject {
 	func setDayCellBackgroundColor (_ backgroundColor: UIColor?, for state: DayCellState);
 }
 
-public extension CPCViewProtocol {
+/* public */ extension CPCViewProtocol {
 	/// See `CPCViewTitleStyle`.
 	public typealias TitleStyle = CPCViewTitleStyle;
 	/// See `CPCDayCellState`.

@@ -23,15 +23,18 @@
 
 import Foundation
 
-internal extension CPCDay {
+/* internal */ extension CPCDay {
+	@usableFromInline
 	internal typealias BackingStorage = __CPCDayBackingStorage;
 }
 
-internal extension CPCMonth {
+/* internal */ extension CPCMonth {
+	@usableFromInline
 	internal typealias BackingStorage = __CPCMonthBackingStorage;
 }
 
-internal extension CPCYear {
+/* internal */ extension CPCYear {
+	@usableFromInline
 	internal typealias BackingStorage = __CPCYearBackingStorage;
 }
 
@@ -216,7 +219,7 @@ extension CPCYear.BackingStorage: CustomStringConvertible, CustomDebugStringConv
 }
 
 #if !arch(x86_64) && !arch(arm64)
-fileprivate extension __CPCYearMonthStorageLayout {
+/* fileprivate */ extension __CPCYearMonthStorageLayout {
 	private typealias Layout = __CPCYearMonthStorageLayout;
 	
 	private static var layoutsCache = UnfairThreadsafeStorage ([Calendar.Identifier: Layout] ());
@@ -260,6 +263,8 @@ extension __CPCYearMonthStorageLayout: CustomStringConvertible, CustomDebugStrin
 			return "japanese";
 		case .chinese:
 			return "chinese";
+		@unknown default:
+			return "??? (rawValue = \(self.rawValue))";
 		}
 	}
 	
@@ -272,7 +277,7 @@ extension __CPCYearMonthStorageLayout: CustomStringConvertible, CustomDebugStrin
 
 #endif
 
-fileprivate extension DateComponents {
+/* fileprivate */ extension DateComponents {
 	fileprivate var encodedMonth: Int? {
 		get {
 			return self.month.map {
@@ -315,13 +320,13 @@ extension RawValueConvertible {
 #endif
 }
 
-fileprivate extension FixedWidthInteger {
+/* fileprivate */ extension FixedWidthInteger {
 	fileprivate var usedBitCount: Int {
 		return Self.bitWidth - self.leadingZeroBitCount;
 	}
 }
 
-fileprivate extension Range where Bound: FixedWidthInteger {
+/* fileprivate */ extension Range where Bound: FixedWidthInteger {
 	fileprivate var usedBitCount: Int {
 		return (self.upperBound - self.lowerBound - 1).usedBitCount;
 	}

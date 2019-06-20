@@ -110,7 +110,7 @@ extension CPCCompoundCalendarUnit {
 		return self.indicesCache.ordinalValue (forCompoundCalendarUnitComponentValue: self.componentValue (of: element)).map (self.index);
 	}
 
-	@inlinable
+	@inline (never)
 	public subscript (position: Index) -> Element {
 		if let cachedResult = self.cachedElement (at: position) {
 			return cachedResult;
@@ -131,7 +131,7 @@ extension CPCCompoundCalendarUnit {
 	}
 }
 
-internal extension ContiguousArray where Element == Int {
+/* internal */ extension ContiguousArray where Element == Int {
 	@usableFromInline
 	internal func ordinalValue (forCompoundCalendarUnitComponentValue componentValue: Int) -> Int? {
 		let expected = componentValue - self [0];

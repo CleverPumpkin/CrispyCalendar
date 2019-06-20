@@ -147,7 +147,7 @@ extension BoundedRangeProtocol {
 	}
 }
 
-internal extension BoundedRangeProtocol where Bound: Strideable {
+/* internal */ extension BoundedRangeProtocol where Bound: Strideable {
 	internal var span: Bound.Stride {
 		return self.lowerBound.distance (to: self.upperBound);
 	}
@@ -230,25 +230,25 @@ extension CountableClosedRange: ClosedRangeBaseProtocol {}
 #endif
 
 #if !swift(>=4.2)
-internal extension RangeBaseProtocol where Bound: BinaryInteger {
+/* internal */ extension RangeBaseProtocol where Bound: BinaryInteger {
 	internal init <R> (_ range: R) where R: RangeExpression, R.Bound: FixedWidthInteger {
 		self.init (Range <R.Bound> (range));
 	}
 }
 
-internal extension RangeBaseProtocol where Bound: FixedWidthInteger, Bound.Stride: SignedInteger {
+/* internal */ extension RangeBaseProtocol where Bound: FixedWidthInteger, Bound.Stride: SignedInteger {
 	internal init <R> (_ range: R) where R: RangeExpression, R.Bound == Bound {
 		self.init (range.unwrapped);
 	}
 }
 
-internal extension ClosedRangeBaseProtocol where Bound: BinaryInteger {
+/* internal */ extension ClosedRangeBaseProtocol where Bound: BinaryInteger {
 	internal init <R> (_ range: R) where R: RangeExpression, R.Bound: FixedWidthInteger {
 		self.init (Range <R.Bound> (range));
 	}
 }
 
-internal extension ClosedRangeBaseProtocol where Bound: FixedWidthInteger, Bound.Stride: SignedInteger {
+/* internal */ extension ClosedRangeBaseProtocol where Bound: FixedWidthInteger, Bound.Stride: SignedInteger {
 	internal init <R> (_ range: R) where R: RangeExpression, R.Bound == Bound {
 		self.init (range.unwrapped);
 	}

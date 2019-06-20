@@ -23,7 +23,7 @@
 
 import Swift
 
-internal extension RangeReplaceableCollection {
+/* internal */ extension RangeReplaceableCollection {
 	internal static func + (lhs: Self, rhs: Element) -> Self {
 		return lhs + CollectionOfOne (rhs);
 	}
@@ -37,7 +37,7 @@ internal extension RangeReplaceableCollection {
 	}
 }
 
-internal extension Set {
+/* internal */ extension Set {
 	internal func union (_ element: Element) -> Set {
 		return self.union (CollectionOfOne (element));
 	}

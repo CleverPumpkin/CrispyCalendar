@@ -103,7 +103,7 @@ extension UnownedDictionary: Collection, ExpressibleByDictionaryLiteral {
 	}
 }
 
-internal extension UnsafePointer where Pointee: AnyObject {
+/* internal */ extension UnsafePointer where Pointee: AnyObject {
 	internal var pointee: Pointee {
 		return Unmanaged <Pointee>.fromOpaque (self).takeUnretainedValue ();
 	}

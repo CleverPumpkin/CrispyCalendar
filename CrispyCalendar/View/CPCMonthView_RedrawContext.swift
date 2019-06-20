@@ -23,7 +23,7 @@
 
 import UIKit
 
-fileprivate extension UIColor {
+/* fileprivate */ extension UIColor {
 	fileprivate var isInvisible: Bool {
 		var alpha = 0.0 as CGFloat;
 		self.getWhite (nil, alpha: &alpha);
@@ -31,18 +31,18 @@ fileprivate extension UIColor {
 	}
 }
 
-fileprivate extension UIRectCorner {
+/* fileprivate */ extension UIRectCorner {
 	fileprivate static let anyLeft: UIRectCorner = [.topLeft, .bottomLeft];
 	fileprivate static let anyTop: UIRectCorner = [.topLeft, .topRight];
 }
 
-internal extension DateFormatter {
+/* internal */ extension DateFormatter {
 	internal static func eraseCachedFormatters (calendar: CPCCalendarWrapper) {
 		self.availableFormatters.withMutableStoredValue { $0 = $0.filter { $0.key.calendarWrapper !== calendar } };
 	}
 }
 
-fileprivate extension DateFormatter {
+/* fileprivate */ extension DateFormatter {
 	private struct CacheKey: Hashable {
 		fileprivate unowned let calendarWrapper: CPCCalendarWrapper;
 		private let dateFormat: String;
@@ -129,7 +129,7 @@ internal protocol CPCMonthViewRedrawContext {
 	func run ();
 }
 
-internal extension CPCMonthView {
+/* internal */ extension CPCMonthView {
 	internal typealias RedrawContext = CPCMonthViewRedrawContext;
 	
 	fileprivate struct TitleRedrawContext {
@@ -275,7 +275,7 @@ extension CPCMonthView.TitleRedrawContext: CPCMonthViewRedrawContextImpl {
 	}
 }
 
-fileprivate extension CPCDayCellState {
+/* fileprivate */ extension CPCDayCellState {
 	fileprivate var parent: CPCDayCellState? {
 		if self.contains (.isToday) {
 			return self.subtracting (.isToday);
@@ -470,6 +470,6 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 	}
 }
 
-fileprivate extension NSParagraphStyle {
+/* fileprivate */ extension NSParagraphStyle {
 	fileprivate static let dayCellTitleStyle = NSParagraphStyle.style (alignment: .center, lineBreakMode: .byClipping);
 }

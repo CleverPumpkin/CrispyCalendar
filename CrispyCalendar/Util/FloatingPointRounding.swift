@@ -22,7 +22,7 @@
 //
 
 
-internal extension FloatingPoint {
+/* internal */ extension FloatingPoint {
 	internal func rounded (scale: Self) -> Self {
 		return self.rounded (.toNearestOrAwayFromZero, scale: scale);
 	}
@@ -32,7 +32,7 @@ internal extension FloatingPoint {
 	}
 }
 
-internal extension BinaryFloatingPoint where IntegerLiteralType: BinaryInteger {
+/* internal */ extension BinaryFloatingPoint where IntegerLiteralType: BinaryInteger {
 	internal func integerRounded (_ rule: FloatingPointRoundingRule) -> IntegerLiteralType {
 		return IntegerLiteralType (self.rounded (rule));
 	}

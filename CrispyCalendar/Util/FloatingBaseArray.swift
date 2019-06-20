@@ -61,7 +61,7 @@ extension FloatingBaseArray: MutableCollection, RandomAccessCollection {
 	}
 }
 
-internal extension FloatingBaseArray /* RangeReplacementCollection subset */ {
+/* internal */ extension FloatingBaseArray /* RangeReplacementCollection subset */ {
 	internal init (baseOffset: Int = 0) {
 		self.backing = ContiguousArray ();
 		self.baseOffset = baseOffset;
@@ -134,19 +134,19 @@ extension FloatingBaseArray: ExpressibleByArrayLiteral {
 	}
 }
 
-internal extension FloatingBaseArray {
+/* internal */ extension FloatingBaseArray {
 	func withUnsafeBufferPointer <R> (_ body: (UnsafeBufferPointer<Element>) throws -> R) rethrows -> R {
 		return try self.backing.withUnsafeBufferPointer (body);
 	}
 }
 
-internal extension Range where Bound: Strideable {
+/* internal */ extension Range where Bound: Strideable {
 	internal func offset (by offset: Bound.Stride) -> Range {
 		return self.lowerBound.advanced (by: offset) ..< self.upperBound.advanced (by: offset);
 	}
 }
 
-internal extension FloatingBaseArray where Element: NSObject, Element: NSCopying {
+/* internal */ extension FloatingBaseArray where Element: NSObject, Element: NSCopying {
 	internal init (_ other: FloatingBaseArray, copyItems: Bool) {
 		if (copyItems) {
 			self.init (other.backing, baseOffset: other.baseOffset, copyItems: true);

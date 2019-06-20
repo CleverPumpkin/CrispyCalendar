@@ -23,7 +23,7 @@
 
 import Foundation
 
-public extension CPCViewSelection {
+/* public */ extension CPCViewSelection {
 	/// Check whether a day is selected given all selected days.
 	///
 	/// - Parameter day: The day to check for containment.
@@ -103,7 +103,7 @@ public extension CPCViewSelection {
 	}
 }
 
-public extension CPCViewSelection {
+/* public */ extension CPCViewSelection {
 	/// Forms union of two values and stores the result in the left-hand-side variable.
 	///
 	/// - Parameters:

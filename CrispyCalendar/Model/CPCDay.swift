@@ -45,7 +45,7 @@ extension CPCDay: CPCCalendarUnit {
 	internal static let descriptionDateFormatTemplate = "ddMMyyyy";
 }
 
-public extension CPCDay {
+/* public */ extension CPCDay {
 	/// Value that represents a current day.
 	public static var today: CPCDay {
 		return self.today (using: CalendarWrapper.currentUsed);
@@ -130,7 +130,7 @@ public extension CPCDay {
 	}
 }
 
-internal extension CPCDay {
+/* internal */ extension CPCDay {
 	/// Value that represents a current day in the specified calendar.
 	///
 	/// - Parameter calendar: Calendar to use.

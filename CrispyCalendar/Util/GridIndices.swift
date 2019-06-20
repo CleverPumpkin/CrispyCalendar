@@ -328,7 +328,7 @@ extension GridIndices: RandomAccessCollection {
 	}
 	
 	internal func index (after i: Element) -> Element {
-		guard let indexIndex = self.values.index (of: i) else {
+		guard let indexIndex = self.values.firstIndex (of: i) else {
 			fatalError ("[CrispyCalendar] Internal error: invalid index \(i) for grid indices \(self)");
 		}
 		let nextIndexIndex = indexIndex + 1;
@@ -339,7 +339,7 @@ extension GridIndices: RandomAccessCollection {
 		if i == self.endIndex {
 			return guarantee (self.values.last);
 		}
-		guard let indexIndex = self.values.index (of: i) else {
+		guard let indexIndex = self.values.firstIndex (of: i) else {
 			fatalError ("[CrispyCalendar] Internal error: invalid index \(i) for grid indices \(self)");
 		}
 		return self.values [indexIndex - 1];

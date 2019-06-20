@@ -23,7 +23,7 @@
 
 import UIKit
 
-internal extension NSParagraphStyle {
+/* internal */ extension NSParagraphStyle {
 	internal static let centeredWithTailTruncation = makeCentered (lineBreakMode: .byTruncatingTail);
 	internal static let centeredWithMiddleTruncation = makeCentered (lineBreakMode: .byTruncatingMiddle);
 

@@ -23,7 +23,7 @@
 
 import UIKit
 
-fileprivate extension NSLayoutConstraint {
+/* fileprivate */ extension NSLayoutConstraint {
 	fileprivate static let placeholder = UIView ().widthAnchor.constraint (equalToConstant: 0.0);
 }
 
@@ -591,7 +591,7 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 	}
 }
 
-internal extension CPCMonthView {
+/* internal */ extension CPCMonthView {
 	internal func titleFontDidUpdate () {
 		self.effectiveTitleFont = self.scaledFont (self.titleFont, using: CPCMonthView.titleMetrics);
 	}
@@ -701,7 +701,7 @@ extension CPCMonthView {
 	}
 }
 
-fileprivate extension Calendar {
+/* fileprivate */ extension Calendar {
 	fileprivate func estimateSpan (of unit: Calendar.Component, in other: Calendar.Component) -> ClosedRange <Int> {
 		if let minRange = self.minimumRange (of: unit), let maxRange = self.maximumRange (of: unit) {
 			return minRange.count ... maxRange.count;
@@ -721,7 +721,7 @@ fileprivate extension Calendar {
 	}
 }
 
-fileprivate extension CPCViewAppearanceStorage {
+/* fileprivate */ extension CPCViewAppearanceStorage {
 	fileprivate var monthViewInitializationValues: (UIFont, UIEdgeInsets, UIFont) {
 		return (self.titleFont, self.titleMargins, self.dayCellFont);
 	}

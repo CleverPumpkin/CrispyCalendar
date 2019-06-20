@@ -23,7 +23,7 @@
 
 import UIKit
 
-fileprivate extension CGSize {
+/* fileprivate */ extension CGSize {
 	fileprivate enum Constraint {
 		case none;
 		case width (CGFloat);
@@ -117,7 +117,7 @@ public protocol CPCViewMeasuring {
 	func sizeThatFits (_ size: CGSize, attributes: LayoutAttributes) -> CGSize;
 }
 
-public extension CPCViewMeasuring {
+/* public */ extension CPCViewMeasuring {
 	public static func widthThatFits (height: CGFloat, with attributes: LayoutAttributes) -> CGFloat {
 		return self.sizeThatFits (CGSize (width: .infinity, height: height), with: attributes).width;
 	}
@@ -201,11 +201,11 @@ extension CPCFixedAspectRatioView where Self: UIView {
 }
 
 #if !swift(>=4.2)
-internal extension UIView {
+/* internal */ extension UIView {
 	internal static let noIntrinsicMetric = UIViewNoIntrinsicMetric;
 }
 
-fileprivate extension UITableView {
+/* fileprivate */ extension UITableView {
 	fileprivate static let automaticDimension = UITableViewAutomaticDimension;
 }
 #endif
