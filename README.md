@@ -50,7 +50,7 @@ source 'https://github.com/CocoaPods/Specs.git'
 platform :ios, '10.3'
 
 target 'TargetName' do
-    pod 'CrispyCalendar', '~> 1.0.0'
+    pod 'CrispyCalendar', '~> 1.0.1'
 end
 ```
 
