@@ -141,8 +141,8 @@ open class CPCCalendarViewController: UIViewController {
 	}
 	
 	/// The view that the controller manages.
-	open var calendarView: CPCCalendarView {
-		return unsafeDowncast (self.view);
+	open var calendarView: CPCCalendarView! {
+		return self.view as? CPCCalendarView
 	}
 	
 	/// Week view that is rendered as part of calendar view.
@@ -210,7 +210,7 @@ open class CPCCalendarViewController: UIViewController {
 	}
 	
 	deinit {
-		self.calendarView.calendarViewController = nil;
+		self.calendarView?.calendarViewController = nil;
 	}
 	
 	open override func loadView () {
