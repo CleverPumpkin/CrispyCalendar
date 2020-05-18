@@ -261,7 +261,8 @@ open class CPCCalendarViewController: UIViewController {
 	@objc open func selectionDidChange () {}
 	
 	private func layoutWeekView () {
-		let weekView = self.weekView!, oldWeekViewHeight = weekView.bounds.height, weekViewTop: CGFloat;
+		guard let weekView = self.weekView else { return }
+		let oldWeekViewHeight = weekView.bounds.height, weekViewTop: CGFloat;
 		if #available (iOS 11.0, *) {
 			weekViewTop = self.view.safeAreaInsets.top - self.additionalSafeAreaInsets.top;
 		} else {

@@ -1,6 +1,6 @@
 //
-//  CPCAppDelegate.swift
-//  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
+//  TabBarVC.swift
+//  Copyright © 2020 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -23,16 +23,20 @@
 
 import UIKit
 
-@UIApplicationMain
-internal class CPCAppDelegate: UIResponder, UIApplicationDelegate {
-	internal var window: UIWindow?;
+class TabBarVC: UITabBarController {
 
-	internal func application (_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-		let window = UIWindow (frame: UIScreen.main.bounds);
-		window.rootViewController = UINavigationController(rootViewController: TabBarVC());
-		window.makeKeyAndVisible ();
-		self.window = window;
+	override func viewDidLoad() {
+		super.viewDidLoad()
+		
+		let firstViewController = CPCDashboardVC()
+		firstViewController.tabBarItem = UITabBarItem(title: "Calendar", image: nil, selectedImage: nil)
 
-		return true;
-	}
+		let secondViewController = CPCDashboardList()
+		secondViewController.tabBarItem = UITabBarItem(title: "List", image: nil, selectedImage: nil)
+
+		let tabBarList = [firstViewController, secondViewController]
+
+		viewControllers = tabBarList
+    }
+
 }
