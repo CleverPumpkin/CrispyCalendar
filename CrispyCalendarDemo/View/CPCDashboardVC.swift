@@ -307,7 +307,6 @@ private class WeirdCalendarVC: SelectionTrackingCalendarVC {
 		var calendar = Calendar (identifier: self.identifier);
 		calendar.locale = Bundle.main.preferredLocalizations.first.map (Locale.init) ?? Locale.current;
 		self.calendarView.calendar = calendar;
-		self.weekView.calendar = calendar;
 	}
 }
 

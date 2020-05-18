@@ -210,20 +210,6 @@ extension CPCCalendarUnit {
 	}
 }
 
-/// Test equivalence of units' calendars and abort if they differ.
-///
-/// - Parameters:
-///   - first: First calendar unit.
-///   - second: Second calendar unit.
-/// - Returns: Calendar of both of supplied units.
-internal func resultingCalendarForOperation <T, U> (for first: T, _ second: U) -> CPCCalendarWrapper where T: CPCCalendarUnit, U: CPCCalendarUnit {
-	let calendar = first.calendarWrapper;
-	guard second.calendarWrapper == calendar else {
-		fatalError ("[CrispyCalendar] Sanity check failure: cannot decide on resulting calendar for operation on \(T.self) and \(U.self) values: incompatible calendars \(calendar.calendar), \(second.calendar)");
-	}
-	return calendar;
-}
-
 // MARK: - Parent protocol conformances.
 
 extension CPCCalendarUnit {
@@ -232,7 +218,7 @@ extension CPCCalendarUnit {
 			return cachedResult;
 		}
 		
-		let calendar = resultingCalendarForOperation (for: self, other);
+		let calendar = self;
 		let result = self.backingValue.distance (to: other.backingValue, using: calendar.calendar);
 		self.cacheDistance (result, to: other);
 		return result;
