@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		04C704B02472AC5D00A2D88B /* TabBarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C704AF2472AC5D00A2D88B /* TabBarVC.swift */; };
+		04C704B22472ADFF00A2D88B /* CPCDashboardVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C704B12472ADFF00A2D88B /* CPCDashboardVC.swift */; };
 		430492AA2094724F00A4F1F1 /* ComputedCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430492A92094724F00A4F1F1 /* ComputedCollection.swift */; };
 		430492AD2094B54000A4F1F1 /* RangeExpressionInitialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430492AC2094B54000A4F1F1 /* RangeExpressionInitialization.swift */; };
 		43101B93209CDFBD00904529 /* GridIndices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101B92209CDFBD00904529 /* GridIndices.swift */; };
@@ -53,7 +55,7 @@
 		437E314F20EE3BF300B64A5F /* CrispyCalendar.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 43C06FE820924E7400202ED8 /* CrispyCalendar.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		438454CC20D27E0E00CDC209 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 438454C620D27E0E00CDC209 /* Assets.xcassets */; };
 		438454CD20D27E0E00CDC209 /* CPCAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438454C820D27E0E00CDC209 /* CPCAppDelegate.swift */; };
-		438454CF20D27E0E00CDC209 /* CPCDashboardVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438454CB20D27E0E00CDC209 /* CPCDashboardVC.swift */; };
+		438454CF20D27E0E00CDC209 /* CPCDashboardList.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438454CB20D27E0E00CDC209 /* CPCDashboardList.swift */; };
 		438454D220D2880D00CDC209 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 438454D120D2880D00CDC209 /* LaunchScreen.xib */; };
 		438454D920D2A41B00CDC209 /* CPCCalendarViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438454D820D2A41A00CDC209 /* CPCCalendarViewController.swift */; };
 		438AAB5B20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 438AAB5A20D7B0DB00017249 /* CPCMultiMonthsViewProtocol.swift */; };
@@ -98,6 +100,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		04C704AF2472AC5D00A2D88B /* TabBarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarVC.swift; sourceTree = "<group>"; };
+		04C704B12472ADFF00A2D88B /* CPCDashboardVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCDashboardVC.swift; sourceTree = "<group>"; };
 		430492A92094724F00A4F1F1 /* ComputedCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputedCollection.swift; sourceTree = "<group>"; };
 		430492AC2094B54000A4F1F1 /* RangeExpressionInitialization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeExpressionInitialization.swift; sourceTree = "<group>"; };
 		4307A2A9217A038B00A717F8 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -145,7 +149,7 @@
 		438454C620D27E0E00CDC209 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		438454C820D27E0E00CDC209 /* CPCAppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCAppDelegate.swift; sourceTree = "<group>"; };
 		438454C920D27E0E00CDC209 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		438454CB20D27E0E00CDC209 /* CPCDashboardVC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCDashboardVC.swift; sourceTree = "<group>"; };
+		438454CB20D27E0E00CDC209 /* CPCDashboardList.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CPCDashboardList.swift; sourceTree = "<group>"; };
 		438454D020D27E8800CDC209 /* CrispyCalendarDemo.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CrispyCalendarDemo.xcconfig; sourceTree = "<group>"; };
 		438454D120D2880D00CDC209 /* LaunchScreen.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LaunchScreen.xib; sourceTree = "<group>"; };
 		438454D820D2A41A00CDC209 /* CPCCalendarViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCalendarViewController.swift; sourceTree = "<group>"; };
@@ -283,7 +287,9 @@
 		438454CA20D27E0E00CDC209 /* View */ = {
 			isa = PBXGroup;
 			children = (
-				438454CB20D27E0E00CDC209 /* CPCDashboardVC.swift */,
+				04C704AF2472AC5D00A2D88B /* TabBarVC.swift */,
+				04C704B12472ADFF00A2D88B /* CPCDashboardVC.swift */,
+				438454CB20D27E0E00CDC209 /* CPCDashboardList.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -534,7 +540,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				438454CF20D27E0E00CDC209 /* CPCDashboardVC.swift in Sources */,
+				438454CF20D27E0E00CDC209 /* CPCDashboardList.swift in Sources */,
+				04C704B02472AC5D00A2D88B /* TabBarVC.swift in Sources */,
+				04C704B22472ADFF00A2D88B /* CPCDashboardVC.swift in Sources */,
 				438454CD20D27E0E00CDC209 /* CPCAppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

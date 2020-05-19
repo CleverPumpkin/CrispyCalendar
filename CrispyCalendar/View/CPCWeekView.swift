@@ -52,11 +52,6 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 		}
 	};
 	
-	/// Calendar to be used for weekday order & names.
-	open var calendar = Calendar.currentUsed {
-		didSet { self.setNeedsDisplay () }
-	}
-	
 	/// Style of rendered symbols.
 	@IBInspectable open dynamic var style: CPCDay.Weekday.Style {
 		get { return self.styleValue }
@@ -75,11 +70,26 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 		set { self.adjustsFontForContentSizeCategoryValue = newValue }
 	}
 	
+	/// Calendar to be used for weekday order & names.
+	open var calendar = Calendar.currentUsed {
+		didSet {
+			if calendarView?.calendar != self.calendar {
+				calendarView?.calendar = self.calendar
+			}
+			self.setNeedsDisplay()
+		}
+	}
+	
 	internal var contentSizeCategoryObserver: NSObjectProtocol?;
 	
 	internal var calendarView: CPCCalendarView? {
 		get { return self.calendarViewPtr?.pointee }
-		set { self.calendarViewPtr = UnsafePointer (to: newValue) }
+		set {
+			if let calendar = newValue?.calendar {
+				self.calendar = calendar
+			}
+			self.calendarViewPtr = UnsafePointer (to: newValue)
+		}
 	}
 	
 	private var weekendColorWasCustomized = false;

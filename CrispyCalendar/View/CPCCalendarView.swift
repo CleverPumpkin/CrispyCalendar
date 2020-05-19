@@ -84,6 +84,9 @@ open class CPCCalendarView: UIView {
 			guard self.calendarWrapper.calendar != newValue else {
 				return;
 			}
+			if weekView?.calendar != newValue {
+				weekView?.calendar = newValue
+			}
 			self.calendarWrapper = newValue.wrapped ();
 		}
 	}
@@ -145,6 +148,7 @@ open class CPCCalendarView: UIView {
 	
 	private var dataSource = DataSource ();
 	private var calendarViewControllerPtr: UnsafePointer <CPCCalendarViewController>?;
+	private var weekView: CPCWeekView?
 	
 	public override init (frame: CGRect) {
 		let collectionView = CPCCalendarView.makeCollectionView (frame);
@@ -214,12 +218,14 @@ open class CPCCalendarView: UIView {
 		super.didAddSubview (subview);
 		if let weekView = subview as? CPCWeekView {
 			weekView.calendarView = self;
+			self.weekView = weekView;
 		}
 	}
 	
 	open override func willRemoveSubview (_ subview: UIView) {
 		if let weekView = subview as? CPCWeekView {
 			weekView.calendarView = nil;
+			self.weekView = weekView;
 		}
 		super.willRemoveSubview (subview);
 	}
