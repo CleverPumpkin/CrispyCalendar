@@ -71,8 +71,13 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	}
 	
 	/// Calendar to be used for weekday order & names.
-	internal var calendar = Calendar.currentUsed {
-		didSet { self.setNeedsDisplay () }
+	open var calendar = Calendar.currentUsed {
+		didSet {
+			if calendarView?.calendar != self.calendar {
+				calendarView?.calendar = self.calendar
+			}
+			self.setNeedsDisplay()
+		}
 	}
 	
 	internal var contentSizeCategoryObserver: NSObjectProtocol?;
