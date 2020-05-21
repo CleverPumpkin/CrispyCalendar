@@ -85,11 +85,15 @@ class CPCDashboardVC: CPCCalendarViewController {
 			context.graphicsContext.setFillColor(
 				context.state == .isToday ?
 					UIColor.lightGray.cgColor :
-					UIColor.blue.cgColor
+					UIColor(red: 255 / 255, green: 164 / 255, blue: 0, alpha: 1).cgColor
 			)
-			
 			context.graphicsContext.setLineWidth(0)
-			context.graphicsContext.addEllipse(in: context.frame.inset(by: UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)))
+			context.graphicsContext.addPath(
+				UIBezierPath(
+					roundedRect: context.frame.inset(by: UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)),
+					cornerRadius: 4
+				).cgPath
+			)
 			context.graphicsContext.drawPath(using: .fillStroke)
 		}
 		
