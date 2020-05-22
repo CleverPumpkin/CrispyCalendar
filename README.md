@@ -29,14 +29,9 @@ Whether you are writing yet another one task tracker or calendar app, or simply 
 
 ## Getting Started
 
-* [Getting Started](https://cleverpumpkin.github.io/CrispyCalendarDocs/public/getting-started.html) contains framework overview and describes basic concepts.
-* Common usage patterns and various examples of code can be found in [Examples](https://cleverpumpkin.github.io/CrispyCalendarDocs/public/Guides.html) directory.
-* [Demo project](CrispyCalendar.xcodeproj).
+* Common usage patterns and various examples of code can be found in [Demo project](CrispyCalendar.xcodeproj).
 * [API Reference](https://cleverpumpkin.github.io/CrispyCalendarDocs/public/index.html) contains detailed
   descriptions of the vast majority of `public` & `open` types and identifiers.
-* [Internals Reference](https://cleverpumpkin.github.io/CrispyCalendarDocs/internal/index.html) lays out
-  a number of internal design decisions and rationale. Its completeness is far from ideal but there is an
-  ongoing work.
 
 ## Installation
 
