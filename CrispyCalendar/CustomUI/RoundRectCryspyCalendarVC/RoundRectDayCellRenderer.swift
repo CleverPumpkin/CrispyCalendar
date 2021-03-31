@@ -30,6 +30,21 @@ enum SelectionPosition {
 	case middle
 	case last
 	case none
+	
+	var edgesInsets: UIEdgeInsets {
+		switch self {
+		case .none:
+			return UIEdgeInsets(top: -1, left: -1, bottom: -1, right: -1)
+		case .single:
+			return UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 2)
+		case .middle:
+			return UIEdgeInsets(top: 2, left: -1, bottom: 2, right: -1)
+		case .first:
+			return UIEdgeInsets(top: 2, left: 2, bottom: 2, right: -2)
+		case .last:
+			return UIEdgeInsets(top: 2, left: -2, bottom: 2, right: 2)
+		}
+	}
 }
 
 protocol RoundRectDayCellRendererDelegate: AnyObject {
@@ -62,7 +77,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 	
 	func drawCellBackground(in context: Context) {
 		context.graphicsContext.setFillColor(model.roundRectCellModel.simpleCellColor.cgColor)
-		context.graphicsContext.fill(context.frame.inset(by: UIEdgeInsets(top: -1, left: -1, bottom: -1, right: -1)))
+		context.graphicsContext.fill(context.frame.inset(by: SelectionPosition.none.edgesInsets))
 		guard let selectionPosition = delegate?.selectionPosition(for: context.day) else { return }
 		guard context.state != [], context.state != .disabled else {
 			return
@@ -143,14 +158,14 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 	}
 
 	private func drawSingleCell(_ context: Context, isFilled: Bool) {
-		drawCellWith(context, corners: .allCorners, insets: UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 2), isFilled: isFilled, color: model.roundRectCellModel.selectedEndsCellColor)
+		drawCellWith(context, corners: .allCorners, insets: SelectionPosition.single.edgesInsets, isFilled: isFilled, color: model.roundRectCellModel.selectedEndsCellColor)
 		if context.state.contains(.isToday) {
 			addDot(context, fillColor: model.roundRectDotModel.todayDotColorSelected)
 		}
 	}
 	
 	private func drawMiddleCell(_ context: Context) {
-		let edges = UIEdgeInsets(top: 2, left: -1, bottom: 2, right: -1)
+		let edges = SelectionPosition.middle.edgesInsets
 		context.graphicsContext.setFillColor(model.roundRectCellModel.selectedMiddleCellColor.cgColor)
 		context.graphicsContext.setStrokeColor(model.roundRectCellModel.selectedMiddleCellColor.cgColor)
 		context.graphicsContext.fill(context.frame.inset(by: edges))
@@ -190,7 +205,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		drawCellWith(
 			context,
 			corners: [.topLeft, .bottomLeft],
-			insets: UIEdgeInsets(top: 2, left: 2, bottom: 2, right: -2),
+			insets: SelectionPosition.first.edgesInsets,
 			isFilled: true,
 			color: model.roundRectCellModel.selectedEndsCellColor
 		)
@@ -200,7 +215,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		drawCellWith(
 			context,
 			corners: [.topRight, .bottomRight],
-			insets: UIEdgeInsets(top: 2, left: -2, bottom: 2, right: 2),
+			insets: SelectionPosition.last.edgesInsets,
 			isFilled: true,
 			color: model.roundRectCellModel.selectedEndsCellColor
 		)
