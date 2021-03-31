@@ -1,5 +1,5 @@
 //
-//  Custom.swift
+//  RoundRectDayCellRenderer.swift
 //  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -39,6 +39,12 @@ protocol RoundRectDayCellRendererDelegate: AnyObject {
 }
 
 struct RoundRectDayCellRenderer: CPCDayCellRenderer {
+	
+	// MARK: - Private types
+	
+	private enum Constants {
+		static let dotOffset: CGFloat = 4
+	}
 	
 	// MARK: - Private vars
 	
@@ -82,17 +88,21 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		paragraphStyle.alignment = NSTextAlignment.center
 		let isWeekend = context.day.weekday.isWeekend
 		let foregroundColor: UIColor
-		var isTodaySelected = false
+		let isTodaySelected: Bool
 		if let datesRange = delegate?.currentSelection {
 			isTodaySelected = datesRange.contains(.today)
+		} else {
+			isTodaySelected = false
 		}
 		let isEnds: Bool
-		if case let .some(selectionPosition) = delegate?.selectionPosition(for: context.day) {
+
+		if let selectionPosition = delegate?.selectionPosition(for: context.day) {
 			isEnds = selectionPosition == .first || selectionPosition == .last || selectionPosition == .single
 		} else {
 			isEnds = false
 		}
 		if (isTodaySelected || context.state == .selected) && delegate?.currentSelection != nil && isEnds {
+			// today selected OR just cell in selected range AND selected range(not single) AND is ends
 			foregroundColor = model.roundRectTitleModel.selectedEndsTitleColor
 		} else if context.state == .disabled {
 			foregroundColor = model.roundRectTitleModel.disableTitleColor
@@ -123,7 +133,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		let dotSize = CGSize(width: 5, height: 5)
 		let rect = CGRect(
 			x: titleFrame.midX - dotSize.width / 2,
-			y: titleFrame.maxY + 4,
+			y: titleFrame.maxY + Constants.dotOffset,
 			width: dotSize.width,
 			height: dotSize.height
 		)
@@ -133,7 +143,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 	}
 
 	private func drawSingleCell(_ context: Context, isFilled: Bool) {
-		addBezierPath(context, corners: .allCorners, insets: UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 2), isFilled: isFilled, color: model.roundRectCellModel.selectedEndsCellColor)
+		drawCellWith(context, corners: .allCorners, insets: UIEdgeInsets(top: 2, left: 2, bottom: 2, right: 2), isFilled: isFilled, color: model.roundRectCellModel.selectedEndsCellColor)
 		if context.state.contains(.isToday) {
 			addDot(context, fillColor: model.roundRectDotModel.todayDotColorSelected)
 		}
@@ -147,7 +157,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		context.graphicsContext.stroke(context.frame.inset(by: edges))
 	}
 	
-	private func addBezierPath(
+	private func drawCellWith(
 		_ context: Context,
 		corners: UIRectCorner,
 		insets: UIEdgeInsets,
@@ -177,7 +187,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 	}
 	
 	private func drawFirstSelectionPositionCell(_ context: Context) {
-		addBezierPath(
+		drawCellWith(
 			context,
 			corners: [.topLeft, .bottomLeft],
 			insets: UIEdgeInsets(top: 2, left: 2, bottom: 2, right: -2),
@@ -187,7 +197,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 	}
 	
 	private func drawLastSelectionPositionCell(_ context: Context) {
-		addBezierPath(
+		drawCellWith(
 			context,
 			corners: [.topRight, .bottomRight],
 			insets: UIEdgeInsets(top: 2, left: -2, bottom: 2, right: 2),

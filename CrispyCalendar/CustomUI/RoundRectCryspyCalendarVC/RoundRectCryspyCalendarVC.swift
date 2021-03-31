@@ -1,5 +1,5 @@
 //
-//  RoundRectCryspyCalendarVC.swift
+//  RoundRectCrispyCalendarVC.swift
 //  Copyright © 2020 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,31 +24,63 @@
 import UIKit
 import CrispyCalendar
 
-class RoundRectCryspyCalendarVC: CPCCalendarViewController {
+class RoundRectCrispyCalendarVC: CPCCalendarViewController {
 	
-	// MARK: - Internal Property
+	// MARK: - Open Property
+	
+	open var calendarMaximumDate: Date? {
+		return Calendar.current.startOfDay(for: Date()) + 3600 * 24 // tomorrow
+	}
 
-	private let calendar: Calendar = {
-		var calendar = Calendar.current
-		calendar.firstWeekday = 2
-		return calendar
-	}()
+	// MARK: - Private Property
 	
+	private let calendar: Calendar
 	private let renderModel: RoundRectRenderModel
 	
 	// MARK: - Initialization / Deinitialization
 	
 	init(
 		renderModel: RoundRectRenderModel,
-		weekView: CPCWeekView
+		weekView: CPCWeekView,
+		calendar: Calendar
 	) {
 		self.renderModel = renderModel
+		self.calendar = calendar
 		super.init(nibName: nil, bundle: nil)
 		self.weekView = weekView
 	}
 	
 	required init?(coder aDecoder: NSCoder) {
-		fatalError("init(coder:) has not been implemented")
+		self.renderModel = RoundRectRenderModel(
+			roundRectTitleModel: RoundRectTitleModel(
+				titleColor: .black,
+				selectedEndsTitleColor: .white,
+				selectedMiddleTitleColor: .lightGray,
+				disableTitleColor: .lightGray,
+				weekendsTitleColor: .black,
+				titleFont: .systemFont(ofSize: 17)
+			),
+			roundRectCellModel: RoundRectCellModel(
+				simpleCellColor: .white,
+				selectedEndsCellColor: .blue,
+				selectedMiddleCellColor: .lightGray,
+				endsCellRadius: 4
+			),
+			roundRectDotModel: RoundRectDotModel(
+				todayDotColor: .red,
+				todayDotColorSelected: .white
+			),
+			roundRectWeekViewModel: RoundRectWeekViewModel(
+				shadowColor: .black,
+				backgroundColor: .white,
+				textColor: .black,
+				weekEndColor: .black
+			)
+		)
+		var calendar = Calendar.current
+		calendar.firstWeekday = 2 // monday
+		self.calendar = calendar
+		super.init(coder: aDecoder)
 	}
 	
 	// MARK: - Internal Methods
@@ -81,7 +113,7 @@ class RoundRectCryspyCalendarVC: CPCCalendarViewController {
 		calendarView.cellRenderer = RoundRectDayCellRenderer(delegate: self, renderModel: renderModel)
 		calendarView.backgroundColor = UIColor.white
 		calendarView.calendar = calendar
-		calendarView.maximumDate = Calendar.current.startOfDay(for: Date()) + 3600 * 24
+		calendarView.maximumDate = calendarMaximumDate
 		calendarView.titleMargins = UIEdgeInsets(top: 16, left: 16, bottom: 8, right: 16)
 	}
 	
@@ -106,21 +138,24 @@ class RoundRectCryspyCalendarVC: CPCCalendarViewController {
 		
 		self.weekView = weekView
 	}
+	
+	private func handleCalendarTap(_ day: CPCDay) {
+		setSelectedCells(selected: day)
+		calendarView.cellRenderer = RoundRectDayCellRenderer(delegate: self, renderModel: renderModel)
+	}
 }
 
 // MARK: - CPCCalendarViewSelectionDelegate
 
-extension RoundRectCryspyCalendarVC: CPCCalendarViewSelectionDelegate {
+extension RoundRectCrispyCalendarVC: CPCCalendarViewSelectionDelegate {
 	
 	func calendarView(_ calendarView: CPCCalendarView, shouldSelect day: CPCDay) -> Bool {
-		setSelectedCells(selected: day)
-		calendarView.cellRenderer = RoundRectDayCellRenderer(delegate: self, renderModel: renderModel)
+		handleCalendarTap(day)
 		return true
 	}
 	
 	func calendarView(_ calendarView: CPCCalendarView, shouldDeselect day: CPCDay) -> Bool {
-		setSelectedCells(selected: day)
-		calendarView.cellRenderer = RoundRectDayCellRenderer(delegate: self, renderModel: renderModel)
+		handleCalendarTap(day)
 		return true
 	}
 	
@@ -144,7 +179,7 @@ extension RoundRectCryspyCalendarVC: CPCCalendarViewSelectionDelegate {
 
 // MARK: - RoundRectDayCellRendererDelegate
 
-extension RoundRectCryspyCalendarVC: RoundRectDayCellRendererDelegate {
+extension RoundRectCrispyCalendarVC: RoundRectDayCellRendererDelegate {
 	var currentSelection: CountableRange<CPCDay>? {
 		guard case let .range(days) = calendarView.selection, !days.isEmpty else { return nil }
 		return days
@@ -152,7 +187,7 @@ extension RoundRectCryspyCalendarVC: RoundRectDayCellRendererDelegate {
 	
 	func selectionPosition(for day: CPCDay) -> SelectionPosition {
 		guard case let .range(days) = selection, !days.isEmpty else { return .none }
-		if days.count == 1, days.first == day {
+		if days.count == 1 && days.first == day {
 			return .single
 		} else if days.first == day {
 			return .first
