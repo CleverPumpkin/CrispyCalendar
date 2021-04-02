@@ -31,7 +31,7 @@ enum SelectionPosition {
 	case last
 	case none
 	
-	var edgesInsets: UIEdgeInsets {
+	var edgeInsets: UIEdgeInsets {
 		switch self {
 		case .none:
 			return UIEdgeInsets(top: -1, left: -1, bottom: -1, right: -1)
@@ -77,7 +77,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 	
 	func drawCellBackground(in context: Context) {
 		context.graphicsContext.setFillColor(model.roundRectCellModel.simpleCellColor.cgColor)
-		context.graphicsContext.fill(context.frame.inset(by: SelectionPosition.none.edgesInsets))
+		context.graphicsContext.fill(context.frame.inset(by: SelectionPosition.none.edgeInsets))
 		guard let selectionPosition = delegate?.selectionPosition(for: context.day) else { return }
 		guard context.state != [], context.state != .disabled else {
 			return
@@ -103,20 +103,13 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		paragraphStyle.alignment = NSTextAlignment.center
 		let isWeekend = context.day.weekday.isWeekend
 		let foregroundColor: UIColor
-		let isTodaySelected: Bool
-		if let datesRange = delegate?.currentSelection {
-			isTodaySelected = datesRange.contains(.today)
-		} else {
-			isTodaySelected = false
-		}
 		let isEnds: Bool
-
 		if let selectionPosition = delegate?.selectionPosition(for: context.day) {
 			isEnds = selectionPosition == .first || selectionPosition == .last || selectionPosition == .single
 		} else {
 			isEnds = false
 		}
-		if (isTodaySelected || context.state == .selected) && delegate?.currentSelection != nil && isEnds {
+		if (context.state.contains(.selected)) && delegate?.currentSelection != nil && isEnds {
 			// today selected OR just cell in selected range AND selected range(not single) AND is ends
 			foregroundColor = model.roundRectTitleModel.selectedEndsTitleColor
 		} else if context.state == .disabled {
@@ -158,14 +151,14 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 	}
 
 	private func drawSingleCell(_ context: Context, isFilled: Bool) {
-		drawCellWith(context, corners: .allCorners, insets: SelectionPosition.single.edgesInsets, isFilled: isFilled, color: model.roundRectCellModel.selectedEndsCellColor)
+		drawCellWith(context, corners: .allCorners, insets: SelectionPosition.single.edgeInsets, isFilled: isFilled, color: model.roundRectCellModel.selectedEndsCellColor)
 		if context.state.contains(.isToday) {
 			addDot(context, fillColor: model.roundRectDotModel.todayDotColorSelected)
 		}
 	}
 	
 	private func drawMiddleCell(_ context: Context) {
-		let edges = SelectionPosition.middle.edgesInsets
+		let edges = SelectionPosition.middle.edgeInsets
 		context.graphicsContext.setFillColor(model.roundRectCellModel.selectedMiddleCellColor.cgColor)
 		context.graphicsContext.setStrokeColor(model.roundRectCellModel.selectedMiddleCellColor.cgColor)
 		context.graphicsContext.fill(context.frame.inset(by: edges))
@@ -205,7 +198,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		drawCellWith(
 			context,
 			corners: [.topLeft, .bottomLeft],
-			insets: SelectionPosition.first.edgesInsets,
+			insets: SelectionPosition.first.edgeInsets,
 			isFilled: true,
 			color: model.roundRectCellModel.selectedEndsCellColor
 		)
@@ -215,7 +208,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		drawCellWith(
 			context,
 			corners: [.topRight, .bottomRight],
-			insets: SelectionPosition.last.edgesInsets,
+			insets: SelectionPosition.last.edgeInsets,
 			isFilled: true,
 			color: model.roundRectCellModel.selectedEndsCellColor
 		)

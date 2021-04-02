@@ -24,14 +24,16 @@
 import UIKit
 import CrispyCalendar
 
-class RoundRectCrispyCalendarVC: CPCCalendarViewController {
+public class RoundRectCrispyCalendarVC: CPCCalendarViewController {
 	
-	// MARK: - Open Property
+	// MARK: - Public Property
 	
-	open var calendarMaximumDate: Date? {
-		return Calendar.current.startOfDay(for: Date()) + 3600 * 24 // tomorrow
+	public var calendarMaximumDate = Calendar.current.startOfDay(for: Date()) + .days(1) {
+		didSet {
+			calendarView.maximumDate = calendarMaximumDate
+		}
 	}
-
+	
 	// MARK: - Private Property
 	
 	private let calendar: Calendar
@@ -85,13 +87,13 @@ class RoundRectCrispyCalendarVC: CPCCalendarViewController {
 	
 	// MARK: - Internal Methods
 
-	override func viewDidLoad() {
+	public override func viewDidLoad() {
 		super.viewDidLoad()
 		setupCalendarView()
 		setupWeekView()
 	}
 	
-	override func viewDidAppear(_ animated: Bool) {
+	public override func viewDidAppear(_ animated: Bool) {
 		super.viewDidAppear(animated)
 		switch selection {
 		case .single(let day):
@@ -149,12 +151,12 @@ class RoundRectCrispyCalendarVC: CPCCalendarViewController {
 
 extension RoundRectCrispyCalendarVC: CPCCalendarViewSelectionDelegate {
 	
-	func calendarView(_ calendarView: CPCCalendarView, shouldSelect day: CPCDay) -> Bool {
+	public func calendarView(_ calendarView: CPCCalendarView, shouldSelect day: CPCDay) -> Bool {
 		handleCalendarTap(day)
 		return true
 	}
 	
-	func calendarView(_ calendarView: CPCCalendarView, shouldDeselect day: CPCDay) -> Bool {
+	public func calendarView(_ calendarView: CPCCalendarView, shouldDeselect day: CPCDay) -> Bool {
 		handleCalendarTap(day)
 		return true
 	}

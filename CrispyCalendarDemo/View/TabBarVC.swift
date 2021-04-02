@@ -29,43 +29,21 @@ class TabBarVC: UITabBarController {
 	override func viewDidLoad() {
 		super.viewDidLoad()
 		
-		let model = RoundRectRenderModel(
-			roundRectTitleModel: RoundRectTitleModel(
-				titleColor: .black,
-				selectedEndsTitleColor: .white,
-				selectedMiddleTitleColor: .lightGray,
-				disableTitleColor: .lightGray,
-				weekendsTitleColor: .black,
-				titleFont: .systemFont(ofSize: 17)
-			),
-			roundRectCellModel: RoundRectCellModel(
-				simpleCellColor: .white,
-				selectedEndsCellColor: .blue,
-				selectedMiddleCellColor: .lightGray,
-				endsCellRadius: 8
-			),
-			roundRectDotModel: RoundRectDotModel(
-				todayDotColor: .red,
-				todayDotColorSelected: .white
-			),
-			roundRectWeekViewModel: RoundRectWeekViewModel(
-				shadowColor: .black,
-				backgroundColor: .white,
-				textColor: .black,
-				weekEndColor: .black
-			)
+		let firstViewController = CPCDashboardVC()
+		firstViewController.tabBarItem = UITabBarItem(title: "Calendar", image: nil, selectedImage: nil)
+		
+		let secondViewController = RoundRectCrispyCalendarVC(
+			renderModel: RoundRectRenderModel.demoModel,
+			weekView: CPCWeekView(),
+			calendar: Calendar.current
 		)
 		
-		let test2 = CPCWeekView()
-		var calendar = Calendar.current
-		calendar.firstWeekday = 5
-		let firstViewController = RoundRectCrispyCalendarVC(renderModel: model, weekView: test2, calendar: calendar)
-		firstViewController.tabBarItem = UITabBarItem(title: "Calendar", image: nil, selectedImage: nil)
-
-		let secondViewController = CPCDashboardList()
-		secondViewController.tabBarItem = UITabBarItem(title: "List", image: nil, selectedImage: nil)
-
-		let tabBarList = [firstViewController, secondViewController]
+		secondViewController.tabBarItem = UITabBarItem(title: "RoundedRect", image: nil, selectedImage: nil)
+		
+		let thirdViewController = CPCDashboardList()
+		thirdViewController.tabBarItem = UITabBarItem(title: "List", image: nil, selectedImage: nil)
+		
+		let tabBarList = [firstViewController, secondViewController, thirdViewController]
 
 		viewControllers = tabBarList
 	}

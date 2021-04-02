@@ -1,5 +1,5 @@
 //
-//  CustomRenderModel.swift
+//  TimeInterval+days.swift
 //  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,42 +21,10 @@
 //  THE SOFTWARE.
 //
 
-import UIKit
+import Foundation
 
-struct RoundRectRenderModel {
-	let roundRectTitleModel: RoundRectTitleModel
-	let roundRectCellModel: RoundRectCellModel
-	let roundRectDotModel: RoundRectDotModel
-	let roundRectWeekViewModel: RoundRectWeekViewModel
-}
-
-extension RoundRectRenderModel {
-	static var demoModel: RoundRectRenderModel {
-		return RoundRectRenderModel(
-			roundRectTitleModel: RoundRectTitleModel(
-				titleColor: .black,
-				selectedEndsTitleColor: .white,
-				selectedMiddleTitleColor: .lightGray,
-				disableTitleColor: .lightGray,
-				weekendsTitleColor: .black,
-				titleFont: .systemFont(ofSize: 17)
-			),
-			roundRectCellModel: RoundRectCellModel(
-				simpleCellColor: .white,
-				selectedEndsCellColor: .blue,
-				selectedMiddleCellColor: .lightGray,
-				endsCellRadius: 8
-			),
-			roundRectDotModel: RoundRectDotModel(
-				todayDotColor: .red,
-				todayDotColorSelected: .white
-			),
-			roundRectWeekViewModel: RoundRectWeekViewModel(
-				shadowColor: .black,
-				backgroundColor: .white,
-				textColor: .black,
-				weekEndColor: .black
-			)
-		)
+public extension TimeInterval {
+	static func days(_ days: Int) -> TimeInterval {
+		return TimeInterval(days * 60 * 60 * 24)
 	}
 }

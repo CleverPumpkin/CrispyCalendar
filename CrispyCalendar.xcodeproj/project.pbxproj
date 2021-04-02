@@ -10,6 +10,7 @@
 		04040D40260E202D005E0B42 /* RoundRectDayCellRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04040D3F260E202D005E0B42 /* RoundRectDayCellRenderer.swift */; };
 		043BB2882611BB1D00697FAE /* RoundRectCryspyCalendarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 043BB2872611BB1D00697FAE /* RoundRectCryspyCalendarVC.swift */; };
 		044A8820261232E3000DD1F5 /* WeekViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 044A881F261232E3000DD1F5 /* WeekViewModel.swift */; };
+		0476E0A62616E9640035C2A4 /* TimeInterval+days.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0476E0A52616E9640035C2A4 /* TimeInterval+days.swift */; };
 		047D00A82612123200AC400C /* RoundRectTitleModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047D00A72612123200AC400C /* RoundRectTitleModel.swift */; };
 		047D00AB2612123E00AC400C /* RoundRectCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047D00AA2612123E00AC400C /* RoundRectCellModel.swift */; };
 		047D00AE2612125F00AC400C /* RoundRectDotModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047D00AD2612125F00AC400C /* RoundRectDotModel.swift */; };
@@ -110,6 +111,7 @@
 		04040D3F260E202D005E0B42 /* RoundRectDayCellRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectDayCellRenderer.swift; sourceTree = "<group>"; };
 		043BB2872611BB1D00697FAE /* RoundRectCryspyCalendarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectCryspyCalendarVC.swift; sourceTree = "<group>"; };
 		044A881F261232E3000DD1F5 /* WeekViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekViewModel.swift; sourceTree = "<group>"; };
+		0476E0A52616E9640035C2A4 /* TimeInterval+days.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimeInterval+days.swift"; sourceTree = "<group>"; };
 		047D00A72612123200AC400C /* RoundRectTitleModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectTitleModel.swift; sourceTree = "<group>"; };
 		047D00AA2612123E00AC400C /* RoundRectCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectCellModel.swift; sourceTree = "<group>"; };
 		047D00AD2612125F00AC400C /* RoundRectDotModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectDotModel.swift; sourceTree = "<group>"; };
@@ -236,6 +238,7 @@
 			isa = PBXGroup;
 			children = (
 				043BB2862611BAEC00697FAE /* RoundRectCryspyCalendarVC */,
+				0476E0A52616E9640035C2A4 /* TimeInterval+days.swift */,
 			);
 			path = CustomUI;
 			sourceTree = "<group>";
@@ -626,6 +629,7 @@
 				4314536F20B220AB0019EB01 /* NSParagraphStyle_convenience.swift in Sources */,
 				43BBBA9421836A7C005E7147 /* CPCViewSelection.m in Sources */,
 				43689DB82093656000052C7A /* CPCCompoundCalendarUnit.swift in Sources */,
+				0476E0A62616E9640035C2A4 /* TimeInterval+days.swift in Sources */,
 				43C07001209259B900202ED8 /* CPCDay.swift in Sources */,
 				43C0700A2092F26500202ED8 /* CPCWeek.swift in Sources */,
 				43C070042092ED9C00202ED8 /* CPCMonth.swift in Sources */,
