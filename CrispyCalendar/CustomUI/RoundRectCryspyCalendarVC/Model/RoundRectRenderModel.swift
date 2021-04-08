@@ -1,6 +1,6 @@
 //
-//  TabBarVC.swift
-//  Copyright © 2020 Cleverpumpkin, Ltd. All rights reserved.
+//  CustomRenderModel.swift
+//  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -22,30 +22,41 @@
 //
 
 import UIKit
-import CrispyCalendar
 
-class TabBarVC: UITabBarController {
+struct RoundRectRenderModel {
+	let roundRectTitleModel: RoundRectTitleModel
+	let roundRectCellModel: RoundRectCellModel
+	let roundRectDotModel: RoundRectDotModel
+	let roundRectWeekViewModel: RoundRectWeekViewModel
+}
 
-	override func viewDidLoad() {
-		super.viewDidLoad()
-		
-		let firstViewController = CPCDashboardVC()
-		firstViewController.tabBarItem = UITabBarItem(title: "Calendar", image: nil, selectedImage: nil)
-		
-		let secondViewController = RoundRectCrispyCalendarVC(
-			renderModel: RoundRectRenderModel.demoModel,
-			weekView: CPCWeekView(),
-			calendar: Calendar.current
+extension RoundRectRenderModel {
+	static var demoModel: RoundRectRenderModel {
+		return RoundRectRenderModel(
+			roundRectTitleModel: RoundRectTitleModel(
+				titleColor: .black,
+				selectedEndsTitleColor: .white,
+				selectedMiddleTitleColor: .lightGray,
+				disableTitleColor: .lightGray,
+				weekendsTitleColor: .black,
+				titleFont: .systemFont(ofSize: 17)
+			),
+			roundRectCellModel: RoundRectCellModel(
+				simpleCellColor: .white,
+				selectedEndsCellColor: .blue,
+				selectedMiddleCellColor: .lightGray,
+				endsCellRadius: 8
+			),
+			roundRectDotModel: RoundRectDotModel(
+				todayDotColor: .red,
+				todayDotColorSelected: .white
+			),
+			roundRectWeekViewModel: RoundRectWeekViewModel(
+				shadowColor: .black,
+				backgroundColor: .white,
+				textColor: .black,
+				weekEndColor: .black
+			)
 		)
-		
-		secondViewController.tabBarItem = UITabBarItem(title: "RoundedRect", image: nil, selectedImage: nil)
-		
-		let thirdViewController = CPCDashboardList()
-		thirdViewController.tabBarItem = UITabBarItem(title: "List", image: nil, selectedImage: nil)
-		
-		let tabBarList = [firstViewController, secondViewController, thirdViewController]
-
-		viewControllers = tabBarList
 	}
-
 }

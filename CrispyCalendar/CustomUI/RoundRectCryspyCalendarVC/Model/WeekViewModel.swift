@@ -1,6 +1,6 @@
 //
-//  CrispyCalendarDemo.xcconfig
-//  Copyright © 2018 Cleverpumpkin, Ltd. All rights reserved.
+//  RoundRectWeekViewModel.swift
+//  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -21,10 +21,11 @@
 //  THE SOFTWARE.
 //
 
-CPC_VERSION = 1.0.2
-CPC_VERSION_SHORT = $(CPC_VERSION).0
-SWIFT_VERSION = 5.0
+import UIKit
 
-CODE_SIGN_IDENTITY = iPhone Developer
-CODE_SIGN_STYLE = Automatic
-DEVELOPMENT_TEAM = LSKU6K4UN2 // See https://developer.apple.com/account/#/membership to find out your Team ID.
+struct RoundRectWeekViewModel {
+	let shadowColor: UIColor
+	let backgroundColor: UIColor
+	let textColor: UIColor
+	let weekEndColor: UIColor
+}
