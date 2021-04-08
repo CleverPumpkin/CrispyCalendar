@@ -11,8 +11,8 @@ Pod::Spec.new do |spec|
 	spec.ios.deployment_target = '10.3'
 	spec.swift_version         = '5.0'
 	spec.pod_target_xcconfig   = { 'DEFINES_MODULE' => 'YES' }
-	spec.source_files          = "#{spec.name}/{Util,Model,View,Supporting Files}/*.{h,c,m,swift}"
-	spec.public_header_files   = "#{spec.name}/{Util,Model,View,Supporting Files}/*.h"
+	spec.source_files          = "#{spec.name}/**/*.{h,c,m,swift}"
+	spec.public_header_files   = "#{spec.name}/**/*.h"
 	spec.private_header_files  = "#{spec.name}/View/CPCDayCellRenderer.h"
 	spec.module_map            = "#{spec.name}/Supporting Files/#{spec.name}.modulemap"
 	spec.requires_arc          = true
