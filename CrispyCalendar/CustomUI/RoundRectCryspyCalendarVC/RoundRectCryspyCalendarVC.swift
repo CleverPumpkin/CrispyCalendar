@@ -34,6 +34,16 @@ public class RoundRectCrispyCalendarVC: CPCCalendarViewController {
 		}
 	}
 	
+	public var currentSelectedDateRange: Range<Date>? {
+		guard
+			let range = currentSelection,
+			let first = range.first,
+			let last = range.last else {
+			return nil
+		}
+		return first.calendarDate..<last.calendarDate
+	}
+	
 	// MARK: - Private Property
 	
 	private let calendar: Calendar
