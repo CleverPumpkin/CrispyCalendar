@@ -23,11 +23,23 @@
 
 import UIKit
 
-struct RoundRectRenderModel {
-	let roundRectTitleModel: RoundRectTitleModel
-	let roundRectCellModel: RoundRectCellModel
-	let roundRectDotModel: RoundRectDotModel
-	let roundRectWeekViewModel: RoundRectWeekViewModel
+public struct RoundRectRenderModel {
+	public let roundRectTitleModel: RoundRectTitleModel
+	public let roundRectCellModel: RoundRectCellModel
+	public let roundRectDotModel: RoundRectDotModel
+	public let roundRectWeekViewModel: RoundRectWeekViewModel
+	
+	public init(
+		roundRectTitleModel: RoundRectTitleModel,
+		roundRectCellModel: RoundRectCellModel,
+		roundRectDotModel: RoundRectDotModel,
+		roundRectWeekViewModel: RoundRectWeekViewModel
+	) {
+		self.roundRectTitleModel = roundRectTitleModel
+		self.roundRectCellModel = roundRectCellModel
+		self.roundRectDotModel = roundRectDotModel
+		self.roundRectWeekViewModel = roundRectWeekViewModel
+	}
 }
 
 extension RoundRectRenderModel {

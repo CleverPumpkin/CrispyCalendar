@@ -23,11 +23,28 @@
 
 import UIKit
 
-struct RoundRectTitleModel {
-	let titleColor: UIColor
-	let selectedEndsTitleColor: UIColor
-	let selectedMiddleTitleColor: UIColor
-	let disableTitleColor: UIColor
-	let weekendsTitleColor: UIColor
-	let titleFont: UIFont
+public struct RoundRectTitleModel {
+	public let titleColor: UIColor
+	public let selectedEndsTitleColor: UIColor
+	public let selectedMiddleTitleColor: UIColor
+	public let disableTitleColor: UIColor
+	public let weekendsTitleColor: UIColor
+	public let titleFont: UIFont
+	
+	public init(
+		titleColor: UIColor,
+		selectedEndsTitleColor: UIColor,
+		selectedMiddleTitleColor: UIColor,
+		disableTitleColor: UIColor,
+		weekendsTitleColor: UIColor,
+		titleFont: UIFont
+	) {
+		self.titleColor = titleColor
+		self.selectedEndsTitleColor = selectedEndsTitleColor
+		self.selectedMiddleTitleColor = selectedMiddleTitleColor
+		self.disableTitleColor = disableTitleColor
+		self.weekendsTitleColor = weekendsTitleColor
+		self.titleFont = titleFont
+
+	}
 }

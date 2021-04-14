@@ -23,9 +23,21 @@
 
 import UIKit
 
-struct RoundRectWeekViewModel {
-	let shadowColor: UIColor
-	let backgroundColor: UIColor
-	let textColor: UIColor
-	let weekEndColor: UIColor
+public struct RoundRectWeekViewModel {
+	public let shadowColor: UIColor
+	public let backgroundColor: UIColor
+	public let textColor: UIColor
+	public let weekEndColor: UIColor
+	
+	public init(
+		shadowColor: UIColor,
+		backgroundColor: UIColor,
+		textColor: UIColor,
+		weekEndColor: UIColor
+	) {
+		self.shadowColor = shadowColor
+		self.backgroundColor = backgroundColor
+		self.textColor = textColor
+		self.weekEndColor = weekEndColor
+	}
 }

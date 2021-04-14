@@ -51,7 +51,7 @@ public class RoundRectCrispyCalendarVC: CPCCalendarViewController {
 	
 	// MARK: - Initialization / Deinitialization
 	
-	init(
+	public init(
 		renderModel: RoundRectRenderModel,
 		weekView: CPCWeekView,
 		calendar: Calendar

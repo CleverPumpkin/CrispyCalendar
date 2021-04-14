@@ -23,9 +23,21 @@
 
 import UIKit
 
-struct RoundRectCellModel {
-	let simpleCellColor: UIColor
-	let selectedEndsCellColor: UIColor
-	let selectedMiddleCellColor: UIColor
-	let endsCellRadius: CGFloat
+public struct RoundRectCellModel {
+	public let simpleCellColor: UIColor
+	public let selectedEndsCellColor: UIColor
+	public let selectedMiddleCellColor: UIColor
+	public let endsCellRadius: CGFloat
+	
+	public init(
+		simpleCellColor: UIColor,
+		selectedEndsCellColor: UIColor,
+		selectedMiddleCellColor: UIColor,
+		endsCellRadius: CGFloat
+	) {
+		self.simpleCellColor = simpleCellColor
+		self.selectedEndsCellColor = selectedEndsCellColor
+		self.selectedMiddleCellColor = selectedMiddleCellColor
+		self.endsCellRadius = endsCellRadius
+	}
 }
