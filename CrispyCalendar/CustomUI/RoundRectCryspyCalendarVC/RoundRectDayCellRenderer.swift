@@ -98,7 +98,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		}
 	}
 	
-	func drawCellTitle(in context: Context) {
+	func drawTitleForCell(in context: Context) {
 		let paragraphStyle = NSMutableParagraphStyle()
 		paragraphStyle.alignment = NSTextAlignment.center
 		let isWeekend = context.day.weekday.isWeekend

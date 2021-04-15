@@ -63,7 +63,7 @@ public protocol CPCDayCellRenderer {
 	/// Renders title of a day cell. Default implementation calls `drawCellTitle (title:attributes:frame:in:)` with corresponding values of `context`.
 	///
 	/// - Parameter context: Cell rendering context.
-	func drawCellTitle (in context: Context);
+	func drawTitleForCell (in context: Context);
 }
 
 /* public */ extension CPCDayCellRenderer {
@@ -72,7 +72,7 @@ public protocol CPCDayCellRenderer {
 
 	public func drawCell (in context: Context) {
 		self.drawCellBackground (in: context);
-		self.drawCellTitle (in: context);
+		self.drawTitleForCell (in: context);
 	}
 	
 	public func drawCellBackground (in context: Context) {
@@ -97,7 +97,7 @@ public protocol CPCDayCellRenderer {
 		context.restoreGState ();
 	}
 	
-	public func drawCellTitle (in context: Context) {
+	public func drawTitleForCell (in context: Context) {
 		self.drawCellTitle (title: context.title, attributes: context.titleAttributes, frame: context.titleFrame, in: context.graphicsContext);
 	}
 	
