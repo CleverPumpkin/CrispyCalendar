@@ -201,9 +201,9 @@ extension RoundRectCrispyCalendarVC: RoundRectDayCellRendererDelegate {
 		guard case let .range(days) = selection, !days.isEmpty else { return .none }
 		if days.count == 1 && days.first == day {
 			return .single
-		} else if days.first == day {
+		} else if let firstDay = days.first, firstDay.calendarDate == day.calendarDate {
 			return .first
-		} else if days.last == day {
+		} else if let lastDay = days.last, lastDay.calendarDate == day.calendarDate {
 			return .last
 		} else if days.contains(day) {
 			return .middle
