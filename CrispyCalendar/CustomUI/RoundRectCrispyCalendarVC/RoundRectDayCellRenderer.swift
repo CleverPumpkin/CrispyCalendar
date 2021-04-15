@@ -98,7 +98,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		}
 	}
 	
-	func drawTitleForCell(in context: Context) {
+	func drawCellTitle(in context: Context) {
 		let paragraphStyle = NSMutableParagraphStyle()
 		paragraphStyle.alignment = NSTextAlignment.center
 		let isWeekend = context.day.weekday.isWeekend
@@ -132,6 +132,14 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 			frame: context.titleFrame,
 			in: context.graphicsContext
 		)
+	}
+	
+	public func drawCellTitle (title: NSString, attributes: NSDictionary, frame: CGRect, in context: CGContext) {
+		guard let stringAttributes = attributes as? [NSAttributedString.Key: Any] else {
+			title.draw(in: frame, withAttributes: nil)
+			return
+		}
+		title.draw(in: frame, withAttributes: stringAttributes)
 	}
 	
 	// MARK: - Private methods
