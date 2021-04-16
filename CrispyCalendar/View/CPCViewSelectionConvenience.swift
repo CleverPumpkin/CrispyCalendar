@@ -66,7 +66,13 @@ import Foundation
 		case .single (.some (let selectedDay)):
 			return [selectedDay];
 		case .range (let selectedDays):
-			return Set (selectedDays);
+			/// fix crash with selected range
+			var selectedDaysArray: [CPCDay] = []
+			for index in 0..<selectedDays.count {
+				let item = selectedDays.startIndex.advanced(by: index)
+				selectedDaysArray.append(item)
+			}
+			return Set (selectedDaysArray);
 		case .unordered (let selectedDays):
 			return selectedDays;
 		case .ordered (let selectedDays):
