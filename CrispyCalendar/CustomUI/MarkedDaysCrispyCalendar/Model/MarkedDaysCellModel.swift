@@ -24,11 +24,20 @@
 import Foundation
 
 public struct MarkedDaysCellModel {
-	public let simpleCellColor: UIColor
+	public let unmarkedCellColor: UIColor
 	public let markedCellColor: UIColor
 	
 	public init(simpleCellColor: UIColor, markedCellColor: UIColor) {
-		self.simpleCellColor = simpleCellColor
+		self.unmarkedCellColor = simpleCellColor
 		self.markedCellColor = markedCellColor
+	}
+}
+
+extension MarkedDaysCellModel {
+	static public var demoModel: MarkedDaysCellModel {
+		return MarkedDaysCellModel(
+			simpleCellColor: .white,
+			markedCellColor: .orange
+		)
 	}
 }

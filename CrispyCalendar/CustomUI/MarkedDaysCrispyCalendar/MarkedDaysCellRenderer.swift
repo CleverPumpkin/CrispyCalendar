@@ -1,5 +1,5 @@
 //
-//  EventDayCellRenderer.swift
+//  MarkedDaysCellRenderer.swift
 //  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -61,7 +61,7 @@ struct MarkedDaysCellRenderer: CPCDayCellRenderer {
 	// MARK: - CPCDayCellRenderer
 	
 	func drawCellBackground(in context: Context) {
-		context.graphicsContext.setFillColor(model.cellModel.simpleCellColor.cgColor)
+		context.graphicsContext.setFillColor(model.cellModel.unmarkedCellColor.cgColor)
 		context.graphicsContext.fill(context.frame.inset(by: Constants.edgeInsets))
 		guard let selectionPosition = delegate?.selectionPosition(for: context.day) else { return }
 		switch selectionPosition {
@@ -70,28 +70,29 @@ struct MarkedDaysCellRenderer: CPCDayCellRenderer {
 		case .selectedAndMarked:
 			drawSingleCell(context, isFilled: true)
 		case .disabled:
-			if context.state.contains(.isToday) {
-				addDot(context, fillColor: model.dotModel.todayDotColorDisabled)
-			}
+			break
+		}
+		if context.state.contains(.isToday) {
+			let dotColor = selectionPosition == .disabled ? model.dotModel.dotColorDisabled : model.dotModel.dotColor
+			addDot(context, fillColor: dotColor)
 		}
 	}
 	
 	func drawCellTitle(in context: Context) {
 		let paragraphStyle = NSMutableParagraphStyle()
 		paragraphStyle.alignment = NSTextAlignment.center
-		var foregroundColor: UIColor = model.titleModel.dayTitleColor
+		var foregroundColor: UIColor = model.titleModel.titleColor
 		if let selectionPosition = delegate?.selectionPosition(for: context.day) {
 			switch selectionPosition {
-			case .marked:
-				foregroundColor = model.titleModel.dayTitleColor
-			case .selectedAndMarked:
-				foregroundColor = model.titleModel.dayTitleColor
+			case .marked,
+				 .selectedAndMarked:
+				foregroundColor = model.titleModel.titleColor
 			case .disabled:
-				foregroundColor = model.titleModel.dayDisableTitleColor
+				foregroundColor = model.titleModel.disableTitleColor
 			}
 		}
 		let textFontAttributes: [NSAttributedString.Key: Any] = [
-			NSAttributedString.Key.font: UIFont.systemFont(ofSize: 17),
+			NSAttributedString.Key.font: model.titleModel.titleFont,
 			NSAttributedString.Key.foregroundColor: foregroundColor,
 			NSAttributedString.Key.paragraphStyle: paragraphStyle
 		]
@@ -127,9 +128,6 @@ struct MarkedDaysCellRenderer: CPCDayCellRenderer {
 			isFilled: isFilled,
 			color: model.cellModel.markedCellColor
 		)
-		if context.state.contains(.isToday) {
-			addDot(context, fillColor: model.dotModel.todayDotColor)
-		}
 	}
 	
 	private func drawCellWith(
@@ -163,7 +161,7 @@ struct MarkedDaysCellRenderer: CPCDayCellRenderer {
 	
 	private func addDot(_ context: Context, fillColor: UIColor) {
 		let titleFrame = context.titleFrame
-		let dotSize = CGSize(width: 5, height: 5)
+		let dotSize = model.dotModel.dotSize
 		let rect = CGRect(
 			x: titleFrame.midX - dotSize.width / 2,
 			y: titleFrame.maxY + Constants.dotOffset,

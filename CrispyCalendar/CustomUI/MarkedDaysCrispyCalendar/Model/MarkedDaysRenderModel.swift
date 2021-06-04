@@ -45,29 +45,12 @@ public struct MarkedDaysRenderModel {
 extension MarkedDaysRenderModel {
 	static public var demoModel: MarkedDaysRenderModel {
 		return MarkedDaysRenderModel(
-			titleModel: MarkedDaysTitleModel(
-				dayTitleColor: .black,
-				dayDisableTitleColor: .lightGray,
-				dayWeekendsTitleColor: .black,
-				dayTitleFont: .systemFont(ofSize: 17)
-			),
-			cellModel: MarkedDaysCellModel(
-				simpleCellColor: .white,
-				markedCellColor: .orange
-			),
-			dotModel: MarkedDaysDotModel(
-				todayDotColor: .black,
-				todayDotColorDisabled: .lightGray
-			),
-			weekModel: MarkedDaysWeekViewModel(
-				weekViewBackgroundColor: .white,
-				weekViewTextColor: .black,
-				weekViewWeekEndColor: .red,
-				weekViewBorderColor: .lightGray
-			)
+			titleModel: MarkedDaysTitleModel.demoModel,
+			cellModel: MarkedDaysCellModel.demoModel,
+			dotModel: MarkedDaysDotModel.demoModel,
+			weekModel: MarkedDaysWeekViewModel.demoModel
 		)
 	}
-	
 	
 	static public var demoDates: [Date] {
 		return [

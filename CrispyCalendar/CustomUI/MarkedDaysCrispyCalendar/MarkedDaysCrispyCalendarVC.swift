@@ -1,5 +1,5 @@
 //
-//  EventCrispyCalendarVC.swift
+//  MarkedDaysCrispyCalendarVC.swift
 //  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -56,28 +56,7 @@ public class MarkedDaysCrispyCalendarVC: CPCCalendarViewController {
 		var calendar = Calendar.current
 		calendar.firstWeekday = 2 // Monday
 		self.calendar = calendar
-		self.renderModel = MarkedDaysRenderModel(
-			titleModel: MarkedDaysTitleModel(
-				dayTitleColor: .black,
-				dayDisableTitleColor: .lightGray,
-				dayWeekendsTitleColor: .black,
-				dayTitleFont: .systemFont(ofSize: 17)
-			),
-			cellModel: MarkedDaysCellModel(
-				simpleCellColor: .white,
-				markedCellColor: .orange
-			),
-			dotModel: MarkedDaysDotModel(
-				todayDotColor: .black,
-				todayDotColorDisabled: .lightGray
-			),
-			weekModel: MarkedDaysWeekViewModel(
-				weekViewBackgroundColor: .white,
-				weekViewTextColor: .black,
-				weekViewWeekEndColor: .red,
-				weekViewBorderColor: .lightGray
-			)
-		)
+		self.renderModel = MarkedDaysRenderModel.demoModel
 		self.markedDays = []
 		super.init(coder: aDecoder)
 	}
@@ -136,11 +115,11 @@ public class MarkedDaysCrispyCalendarVC: CPCCalendarViewController {
 				height: .zero)
 		)
 		weekView.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
-		weekView.backgroundColor = renderModel.weekModel.weekViewBackgroundColor
-		weekView.textColor = renderModel.weekModel.weekViewTextColor
-		weekView.weekendColor = renderModel.weekModel.weekViewWeekEndColor
+		weekView.backgroundColor = renderModel.weekModel.backgroundColor
+		weekView.textColor = renderModel.weekModel.textColor
+		weekView.weekendColor = renderModel.weekModel.weekEndColor
 		weekView.layer.borderWidth = 1
-		weekView.layer.borderColor = renderModel.weekModel.weekViewBorderColor.cgColor
+		weekView.layer.borderColor = renderModel.weekModel.borderColor.cgColor
 		self.weekView = weekView
 	}
 	
@@ -180,7 +159,7 @@ extension MarkedDaysCrispyCalendarVC: CPCCalendarViewSelectionDelegate {
 	}
 }
 
-// MARK: - EventDayCellRendererDelegate
+// MARK: - MarkedDaysCellRendererDelegate
 
 extension MarkedDaysCrispyCalendarVC: MarkedDaysCellRendererDelegate {
 	var currentSelection: CPCDay? {

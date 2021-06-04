@@ -255,21 +255,21 @@
 		044A882326123913000DD1F5 /* CustomUI */ = {
 			isa = PBXGroup;
 			children = (
-				047CA5562664E3DA00F197B9 /* EventCrispyCalendar */,
+				047CA5562664E3DA00F197B9 /* MarkedDaysCrispyCalendar */,
 				043BB2862611BAEC00697FAE /* RoundRectCryspyCalendarVC */,
 				0476E0A52616E9640035C2A4 /* TimeInterval+days.swift */,
 			);
 			path = CustomUI;
 			sourceTree = "<group>";
 		};
-		047CA5562664E3DA00F197B9 /* EventCrispyCalendar */ = {
+		047CA5562664E3DA00F197B9 /* MarkedDaysCrispyCalendar */ = {
 			isa = PBXGroup;
 			children = (
 				047CA5A726650C3800F197B9 /* Model */,
 				047CA5572664E3F100F197B9 /* MarkedDaysCrispyCalendarVC.swift */,
 				047CA55A2664E41600F197B9 /* MarkedDaysCellRenderer.swift */,
 			);
-			path = EventCrispyCalendar;
+			path = MarkedDaysCrispyCalendar;
 			sourceTree = "<group>";
 		};
 		047CA5A726650C3800F197B9 /* Model */ = {

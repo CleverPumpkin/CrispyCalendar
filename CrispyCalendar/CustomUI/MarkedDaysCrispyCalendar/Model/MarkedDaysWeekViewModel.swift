@@ -24,10 +24,10 @@
 import Foundation
 
 public struct MarkedDaysWeekViewModel {
-	public let weekViewBackgroundColor: UIColor
-	public let weekViewTextColor: UIColor
-	public let weekViewWeekEndColor: UIColor
-	public let weekViewBorderColor: UIColor
+	public let backgroundColor: UIColor
+	public let textColor: UIColor
+	public let weekEndColor: UIColor
+	public let borderColor: UIColor
 	
 	public init(
 		weekViewBackgroundColor: UIColor,
@@ -35,9 +35,20 @@ public struct MarkedDaysWeekViewModel {
 		weekViewWeekEndColor: UIColor,
 		weekViewBorderColor: UIColor
 	) {
-		self.weekViewBackgroundColor = weekViewBackgroundColor
-		self.weekViewTextColor = weekViewTextColor
-		self.weekViewWeekEndColor = weekViewWeekEndColor
-		self.weekViewBorderColor = weekViewBorderColor
+		self.backgroundColor = weekViewBackgroundColor
+		self.textColor = weekViewTextColor
+		self.weekEndColor = weekViewWeekEndColor
+		self.borderColor = weekViewBorderColor
+	}
+}
+
+extension MarkedDaysWeekViewModel {
+	static public var demoModel: MarkedDaysWeekViewModel {
+		return MarkedDaysWeekViewModel(
+			weekViewBackgroundColor: .white,
+			weekViewTextColor: .black,
+			weekViewWeekEndColor: .red,
+			weekViewBorderColor: .lightGray
+		)
 	}
 }

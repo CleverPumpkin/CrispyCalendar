@@ -24,15 +24,26 @@
 import Foundation
 
 public struct MarkedDaysTitleModel {
-	public let dayTitleColor: UIColor
-	public let dayDisableTitleColor: UIColor
-	public let dayWeekendsTitleColor: UIColor
-	public let dayTitleFont: UIFont
+	public let titleColor: UIColor
+	public let disableTitleColor: UIColor
+	public let weekendsTitleColor: UIColor
+	public let titleFont: UIFont
 	
 	public init(dayTitleColor: UIColor, dayDisableTitleColor: UIColor, dayWeekendsTitleColor: UIColor, dayTitleFont: UIFont) {
-		self.dayTitleColor = dayTitleColor
-		self.dayDisableTitleColor = dayDisableTitleColor
-		self.dayWeekendsTitleColor = dayWeekendsTitleColor
-		self.dayTitleFont = dayTitleFont
+		self.titleColor = dayTitleColor
+		self.disableTitleColor = dayDisableTitleColor
+		self.weekendsTitleColor = dayWeekendsTitleColor
+		self.titleFont = dayTitleFont
+	}
+}
+
+extension MarkedDaysTitleModel {
+	static public var demoModel: MarkedDaysTitleModel {
+		return MarkedDaysTitleModel(
+			dayTitleColor: .black,
+			dayDisableTitleColor: .lightGray,
+			dayWeekendsTitleColor: .black,
+			dayTitleFont: .systemFont(ofSize: 17)
+		)
 	}
 }
