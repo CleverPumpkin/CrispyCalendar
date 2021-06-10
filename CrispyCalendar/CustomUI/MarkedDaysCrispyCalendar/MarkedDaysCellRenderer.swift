@@ -23,7 +23,7 @@
 
 import UIKit
 
-enum SelectionPosition {
+enum MarkedSelectionPosition {
 	case marked
 	case selectedAndMarked
 	case disabled
@@ -32,7 +32,7 @@ enum SelectionPosition {
 protocol MarkedDaysCellRendererDelegate: AnyObject {
 	var currentSelection: CPCDay? { get }
 	
-	func selectionPosition(for day: CPCDay) -> SelectionPosition
+	func selectionPosition(for day: CPCDay) -> MarkedSelectionPosition
 }
 
 struct MarkedDaysCellRenderer: CPCDayCellRenderer {

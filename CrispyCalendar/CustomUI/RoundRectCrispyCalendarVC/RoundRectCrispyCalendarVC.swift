@@ -197,7 +197,7 @@ extension RoundRectCrispyCalendarVC: RoundRectDayCellRendererDelegate {
 		return days
 	}
 	
-	func selectionPosition(for day: CPCDay) -> SelectionPosition {
+	func selectionPosition(for day: CPCDay) -> RoundRectSelectionPosition {
 		guard case let .range(days) = selection, !days.isEmpty else { return .none }
 		if days.count == 1 && days.first?.calendarDate == day.calendarDate {
 			return .single

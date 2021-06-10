@@ -169,7 +169,7 @@ extension MarkedDaysCrispyCalendarVC: MarkedDaysCellRendererDelegate {
 		return day
 	}
 	
-	func selectionPosition(for day: CPCDay) -> SelectionPosition {
+	func selectionPosition(for day: CPCDay) -> MarkedSelectionPosition {
 		if isDayIsMarked(day) && day.backingValue == currentSelection?.backingValue {
 			return .selectedAndMarked
 		} else if isDayIsMarked(day) {
