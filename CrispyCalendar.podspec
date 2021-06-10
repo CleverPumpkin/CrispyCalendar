@@ -1,6 +1,6 @@
 Pod::Spec.new do |spec|
 	spec.name              = 'CrispyCalendar'
-	spec.version           = '1.0.3-test'
+	spec.version           = '1.0.3-rc1'
 	spec.license           = { :type => 'MIT' }
 	spec.homepage          = "https://github.com/CleverPumpkin/CrispyCalendar"
 	spec.documentation_url = "https://cleverpumpkin.github.io/CrispyCalendarDocs/public/"
