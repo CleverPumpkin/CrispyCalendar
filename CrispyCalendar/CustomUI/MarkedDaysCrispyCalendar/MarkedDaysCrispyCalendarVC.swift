@@ -31,6 +31,8 @@ public class MarkedDaysCrispyCalendarVC: CPCCalendarViewController {
 		return currentSelection?.calendarDate
 	}
 	
+	public var dateTapHandleBlock: ((Date) -> Void)?
+	
 	// MARK: - Private properties
 	
 	private let calendar: Calendar
@@ -43,11 +45,13 @@ public class MarkedDaysCrispyCalendarVC: CPCCalendarViewController {
 		markedDays: [Date],
 		renderModel: MarkedDaysRenderModel,
 		weekView: CPCWeekView,
-		calendar: Calendar
+		calendar: Calendar,
+		dateTapHandleBlock: ((Date) -> Void)? = nil
 	) {
 		self.markedDays = markedDays.map { $0.crispyDay }
 		self.renderModel = renderModel
 		self.calendar = calendar
+		self.dateTapHandleBlock = dateTapHandleBlock
 		super.init(nibName: nil, bundle: nil)
 		self.weekView = weekView
 	}
@@ -125,6 +129,7 @@ public class MarkedDaysCrispyCalendarVC: CPCCalendarViewController {
 	
 
 	private func handleCalendarTap(_ day: CPCDay) {
+		dateTapHandleBlock?(day.calendarDate)
 		setSelectedCells(selected: day)
 		calendarView.cellRenderer = MarkedDaysCellRenderer(delegate: self, renderModel: renderModel)
 	}

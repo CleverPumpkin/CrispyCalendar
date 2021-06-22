@@ -33,10 +33,12 @@ class TabBarVC: UITabBarController {
 			markedDays: MarkedDaysRenderModel.demoDates,
 			renderModel: MarkedDaysRenderModel.demoModel,
 			weekView: CPCWeekView(),
-			calendar: Calendar.current
-		)
-		firstViewController.tabBarItem = UITabBarItem(title: "Marked", image: nil, selectedImage: nil)
+			calendar: Calendar.current) { date in
+			// handle tap to date here
+			print(date)
+		}
 		
+		firstViewController.tabBarItem = UITabBarItem(title: "Marked", image: nil, selectedImage: nil)
 		let secondViewController = RoundRectCrispyCalendarVC(
 			renderModel: RoundRectRenderModel.demoModel,
 			weekView: CPCWeekView(),
