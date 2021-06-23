@@ -41,6 +41,7 @@ struct MarkedDaysCellRenderer: CPCDayCellRenderer {
 	
 	private enum Constants {
 		static let dotOffset: CGFloat = 2
+		static let edgeInsetsDefault = UIEdgeInsets(top: -1, left: -1, bottom: -1, right: -1)
 		static let edgeInsets = UIEdgeInsets(top: 4, left: 4, bottom: 4, right: 4)
 		static let cellRadius = 4
 	}
@@ -62,7 +63,7 @@ struct MarkedDaysCellRenderer: CPCDayCellRenderer {
 	
 	func drawCellBackground(in context: Context) {
 		context.graphicsContext.setFillColor(model.cellModel.unmarkedCellColor.cgColor)
-		context.graphicsContext.fill(context.frame.inset(by: Constants.edgeInsets))
+		context.graphicsContext.fill(context.frame.inset(by: Constants.edgeInsetsDefault))
 		guard let selectionPosition = delegate?.selectionPosition(for: context.day) else { return }
 		switch selectionPosition {
 		case .marked:
