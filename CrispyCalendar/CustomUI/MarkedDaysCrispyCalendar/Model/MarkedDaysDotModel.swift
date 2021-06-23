@@ -26,12 +26,19 @@ import Foundation
 public struct MarkedDaysDotModel {
 	public let dotColor: UIColor
 	public let dotColorDisabled: UIColor
+	public let dotColorSelected: UIColor
 	public let dotSize: CGSize
 	
-	public init(todayDotColor: UIColor, todayDotColorDisabled: UIColor, dotSize: CGSize) {
+	public init(
+		todayDotColor: UIColor,
+		todayDotColorDisabled: UIColor,
+		dotColorSelected: UIColor,
+		dotSize: CGSize
+	) {
 		self.dotColor = todayDotColor
 		self.dotColorDisabled = todayDotColorDisabled
 		self.dotSize = dotSize
+		self.dotColorSelected = dotColorSelected
 	}
 }
 
@@ -40,6 +47,7 @@ extension MarkedDaysDotModel {
 		return MarkedDaysDotModel(
 			todayDotColor: .black,
 			todayDotColorDisabled: .lightGray,
+			dotColorSelected: .white,
 			dotSize: CGSize(width: 5, height: 5)
 		)
 	}

@@ -27,12 +27,20 @@ public struct MarkedDaysTitleModel {
 	public let titleColor: UIColor
 	public let disableTitleColor: UIColor
 	public let weekendsTitleColor: UIColor
+	public let daySelectedTitleColor: UIColor
 	public let titleFont: UIFont
 	
-	public init(dayTitleColor: UIColor, dayDisableTitleColor: UIColor, dayWeekendsTitleColor: UIColor, dayTitleFont: UIFont) {
+	public init(
+		dayTitleColor: UIColor,
+		dayDisableTitleColor: UIColor,
+		dayWeekendsTitleColor: UIColor,
+		daySelectedTitleColor: UIColor,
+		dayTitleFont: UIFont
+	) {
 		self.titleColor = dayTitleColor
 		self.disableTitleColor = dayDisableTitleColor
 		self.weekendsTitleColor = dayWeekendsTitleColor
+		self.daySelectedTitleColor = daySelectedTitleColor
 		self.titleFont = dayTitleFont
 	}
 }
@@ -43,6 +51,7 @@ extension MarkedDaysTitleModel {
 			dayTitleColor: .black,
 			dayDisableTitleColor: .lightGray,
 			dayWeekendsTitleColor: .black,
+			daySelectedTitleColor: .white,
 			dayTitleFont: .systemFont(ofSize: 17)
 		)
 	}

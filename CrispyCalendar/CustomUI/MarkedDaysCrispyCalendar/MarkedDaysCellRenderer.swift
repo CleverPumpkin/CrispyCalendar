@@ -74,7 +74,15 @@ struct MarkedDaysCellRenderer: CPCDayCellRenderer {
 			break
 		}
 		if context.state.contains(.isToday) {
-			let dotColor = selectionPosition == .disabled ? model.dotModel.dotColorDisabled : model.dotModel.dotColor
+			let dotColor: UIColor
+			switch selectionPosition {
+			case .disabled:
+				dotColor = model.dotModel.dotColorDisabled
+			case .marked:
+				dotColor = model.dotModel.dotColor
+			case .selectedAndMarked:
+				dotColor = model.dotModel.dotColorSelected
+			}
 			addDot(context, fillColor: dotColor)
 		}
 	}
@@ -85,9 +93,10 @@ struct MarkedDaysCellRenderer: CPCDayCellRenderer {
 		var foregroundColor: UIColor = model.titleModel.titleColor
 		if let selectionPosition = delegate?.selectionPosition(for: context.day) {
 			switch selectionPosition {
-			case .marked,
-				 .selectedAndMarked:
+			case .marked:
 				foregroundColor = model.titleModel.titleColor
+			case .selectedAndMarked:
+				foregroundColor = model.titleModel.daySelectedTitleColor
 			case .disabled:
 				foregroundColor = model.titleModel.disableTitleColor
 			}
