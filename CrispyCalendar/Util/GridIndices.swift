@@ -327,6 +327,11 @@ extension GridIndices: RandomAccessCollection {
 		return position;
 	}
 	
+	/// That's ok since we don't use it and it is internal
+	internal subscript(bounds: Range<Element>) -> GridIndices<Idx> {
+		return self
+	}
+	
 	internal func index (after i: Element) -> Element {
 		guard let indexIndex = self.values.firstIndex (of: i) else {
 			fatalError ("[CrispyCalendar] Internal error: invalid index \(i) for grid indices \(self)");
