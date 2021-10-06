@@ -153,6 +153,38 @@ extension ComputedIndices: RandomAccessCollection {
 		return position;
 	}
 	
+	internal subscript(bounds: Range<Index>) -> ComputedIndices<Element> {
+		let firstIndexIndex = self.managedIndices.firstIndex(of: bounds.lowerBound)
+		let lastIndexIndex = self.managedIndices.firstIndex(of: bounds.upperBound)
+
+		if let firstIndexIndex = firstIndexIndex, let lastIndexIndex = lastIndexIndex {
+			let endIndex = lastIndexIndex < self.managedIndices.count - 1
+			? self.managedIndices[lastIndexIndex + 1]
+			: endIndex
+
+			return Self.init(
+				self.managedIndices[firstIndexIndex...lastIndexIndex],
+				end: endIndex
+			)
+		} else if let firstIndexIndex = firstIndexIndex {
+			return Self.init(
+				self.managedIndices[firstIndexIndex...],
+				end: self.endIndex
+			)
+		} else if let lastIndexIndex = lastIndexIndex {
+				let endIndex = lastIndexIndex < self.managedIndices.count - 1
+				? self.managedIndices[lastIndexIndex + 1]
+				: endIndex
+
+			return Self.init(
+				self.managedIndices[...lastIndexIndex],
+				end: endIndex
+			)
+		}
+
+		return Self.init([], end: endIndex)
+	}
+	
 	internal func index (after i: Index) -> Index {
 		guard let indexIndex = self.managedIndices.firstIndex (of: i), indexIndex < self.managedIndices.count - 1 else {
 			return self.endIndex;
