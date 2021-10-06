@@ -23,7 +23,15 @@
 
 import UIKit
 
-struct RoundRectDotModel {
-	let todayDotColor: UIColor
-	let todayDotColorSelected: UIColor
+public struct RoundRectDotModel {
+	public let todayDotColor: UIColor
+	public let todayDotColorSelected: UIColor
+	
+	public init(
+		todayDotColor: UIColor,
+		todayDotColorSelected: UIColor
+	) {
+		self.todayDotColor = todayDotColor
+		self.todayDotColorSelected = todayDotColorSelected
+	}
 }

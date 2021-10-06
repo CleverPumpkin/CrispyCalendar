@@ -1,5 +1,5 @@
 //
-//  RoundRectCellModel.swift
+//  RoundRectWeekViewModel.swift
 //  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,9 +23,21 @@
 
 import UIKit
 
-struct RoundRectCellModel {
-	let simpleCellColor: UIColor
-	let selectedEndsCellColor: UIColor
-	let selectedMiddleCellColor: UIColor
-	let endsCellRadius: CGFloat
+public struct RoundRectWeekViewModel {
+	public let shadowColor: UIColor
+	public let backgroundColor: UIColor
+	public let textColor: UIColor
+	public let weekEndColor: UIColor
+	
+	public init(
+		shadowColor: UIColor,
+		backgroundColor: UIColor,
+		textColor: UIColor,
+		weekEndColor: UIColor
+	) {
+		self.shadowColor = shadowColor
+		self.backgroundColor = backgroundColor
+		self.textColor = textColor
+		self.weekEndColor = weekEndColor
+	}
 }

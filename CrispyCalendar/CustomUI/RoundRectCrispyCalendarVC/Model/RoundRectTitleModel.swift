@@ -1,6 +1,6 @@
 //
-//  TabBarVC.swift
-//  Copyright © 2020 Cleverpumpkin, Ltd. All rights reserved.
+//  RoundRectTitleModel.swift
+//  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -22,36 +22,29 @@
 //
 
 import UIKit
-import CrispyCalendar
 
-class TabBarVC: UITabBarController {
+public struct RoundRectTitleModel {
+	public let titleColor: UIColor
+	public let selectedEndsTitleColor: UIColor
+	public let selectedMiddleTitleColor: UIColor
+	public let disableTitleColor: UIColor
+	public let weekendsTitleColor: UIColor
+	public let titleFont: UIFont
+	
+	public init(
+		titleColor: UIColor,
+		selectedEndsTitleColor: UIColor,
+		selectedMiddleTitleColor: UIColor,
+		disableTitleColor: UIColor,
+		weekendsTitleColor: UIColor,
+		titleFont: UIFont
+	) {
+		self.titleColor = titleColor
+		self.selectedEndsTitleColor = selectedEndsTitleColor
+		self.selectedMiddleTitleColor = selectedMiddleTitleColor
+		self.disableTitleColor = disableTitleColor
+		self.weekendsTitleColor = weekendsTitleColor
+		self.titleFont = titleFont
 
-	override func viewDidLoad() {
-		super.viewDidLoad()
-		
-		let firstViewController = MarkedDaysCrispyCalendarVC(
-			markedDays: MarkedDaysRenderModel.demoDates,
-			renderModel: MarkedDaysRenderModel.demoModel,
-			weekView: CPCWeekView(),
-			calendar: Calendar.current) { date in
-			// handle tap to date here
-			print(date)
-		}
-		
-		firstViewController.tabBarItem = UITabBarItem(title: "Marked", image: nil, selectedImage: nil)
-		let secondViewController = RoundRectCrispyCalendarVC(
-			renderModel: RoundRectRenderModel.demoModel,
-			weekView: CPCWeekView(),
-			calendar: Calendar.current
-		)
-		
-		secondViewController.tabBarItem = UITabBarItem(title: "RoundedRect", image: nil, selectedImage: nil)
-		
-		let thirdViewController = CPCDashboardList()
-		thirdViewController.tabBarItem = UITabBarItem(title: "List", image: nil, selectedImage: nil)
-		
-		let tabBarList = [firstViewController, secondViewController, thirdViewController]
-
-		viewControllers = tabBarList
 	}
 }

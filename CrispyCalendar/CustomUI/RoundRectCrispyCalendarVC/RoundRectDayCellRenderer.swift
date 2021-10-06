@@ -24,7 +24,7 @@
 import UIKit
 import CrispyCalendar
 
-enum SelectionPosition {
+enum RoundRectSelectionPosition {
 	case single
 	case first
 	case middle
@@ -50,7 +50,7 @@ enum SelectionPosition {
 protocol RoundRectDayCellRendererDelegate: AnyObject {
 	var currentSelection: CountableRange<CPCDay>? { get }
 	
-	func selectionPosition(for day: CPCDay) -> SelectionPosition
+	func selectionPosition(for day: CPCDay) -> RoundRectSelectionPosition
 }
 
 struct RoundRectDayCellRenderer: CPCDayCellRenderer {
@@ -77,7 +77,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 	
 	func drawCellBackground(in context: Context) {
 		context.graphicsContext.setFillColor(model.roundRectCellModel.simpleCellColor.cgColor)
-		context.graphicsContext.fill(context.frame.inset(by: SelectionPosition.none.edgeInsets))
+		context.graphicsContext.fill(context.frame.inset(by: RoundRectSelectionPosition.none.edgeInsets))
 		guard let selectionPosition = delegate?.selectionPosition(for: context.day) else { return }
 		guard context.state != [], context.state != .disabled else {
 			return
@@ -134,6 +134,14 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		)
 	}
 	
+	public func drawCellTitle (title: NSString, attributes: NSDictionary, frame: CGRect, in context: CGContext) {
+		guard let stringAttributes = attributes as? [NSAttributedString.Key: Any] else {
+			title.draw(in: frame, withAttributes: nil)
+			return
+		}
+		title.draw(in: frame, withAttributes: stringAttributes)
+	}
+	
 	// MARK: - Private methods
 	
 	private func addDot(_ context: Context, fillColor: UIColor) {
@@ -151,14 +159,14 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 	}
 
 	private func drawSingleCell(_ context: Context, isFilled: Bool) {
-		drawCellWith(context, corners: .allCorners, insets: SelectionPosition.single.edgeInsets, isFilled: isFilled, color: model.roundRectCellModel.selectedEndsCellColor)
+		drawCellWith(context, corners: .allCorners, insets: RoundRectSelectionPosition.single.edgeInsets, isFilled: isFilled, color: model.roundRectCellModel.selectedEndsCellColor)
 		if context.state.contains(.isToday) {
 			addDot(context, fillColor: model.roundRectDotModel.todayDotColorSelected)
 		}
 	}
 	
 	private func drawMiddleCell(_ context: Context) {
-		let edges = SelectionPosition.middle.edgeInsets
+		let edges = RoundRectSelectionPosition.middle.edgeInsets
 		context.graphicsContext.setFillColor(model.roundRectCellModel.selectedMiddleCellColor.cgColor)
 		context.graphicsContext.setStrokeColor(model.roundRectCellModel.selectedMiddleCellColor.cgColor)
 		context.graphicsContext.fill(context.frame.inset(by: edges))
@@ -198,7 +206,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		drawCellWith(
 			context,
 			corners: [.topLeft, .bottomLeft],
-			insets: SelectionPosition.first.edgeInsets,
+			insets: RoundRectSelectionPosition.first.edgeInsets,
 			isFilled: true,
 			color: model.roundRectCellModel.selectedEndsCellColor
 		)
@@ -208,7 +216,7 @@ struct RoundRectDayCellRenderer: CPCDayCellRenderer {
 		drawCellWith(
 			context,
 			corners: [.topRight, .bottomRight],
-			insets: SelectionPosition.last.edgeInsets,
+			insets: RoundRectSelectionPosition.last.edgeInsets,
 			isFilled: true,
 			color: model.roundRectCellModel.selectedEndsCellColor
 		)

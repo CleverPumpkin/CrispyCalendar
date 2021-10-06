@@ -51,7 +51,7 @@ public class RoundRectCrispyCalendarVC: CPCCalendarViewController {
 	
 	// MARK: - Initialization / Deinitialization
 	
-	init(
+	public init(
 		renderModel: RoundRectRenderModel,
 		weekView: CPCWeekView,
 		calendar: Calendar
@@ -197,13 +197,13 @@ extension RoundRectCrispyCalendarVC: RoundRectDayCellRendererDelegate {
 		return days
 	}
 	
-	func selectionPosition(for day: CPCDay) -> SelectionPosition {
+	func selectionPosition(for day: CPCDay) -> RoundRectSelectionPosition {
 		guard case let .range(days) = selection, !days.isEmpty else { return .none }
-		if days.count == 1 && days.first == day {
+		if days.count == 1 && days.first?.calendarDate == day.calendarDate {
 			return .single
-		} else if days.first == day {
+		} else if let firstDay = days.first, firstDay.calendarDate == day.calendarDate {
 			return .first
-		} else if days.last == day {
+		} else if let lastDay = days.last, lastDay.calendarDate == day.calendarDate {
 			return .last
 		} else if days.contains(day) {
 			return .middle

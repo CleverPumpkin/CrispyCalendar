@@ -8,9 +8,16 @@
 
 /* Begin PBXBuildFile section */
 		04040D40260E202D005E0B42 /* RoundRectDayCellRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04040D3F260E202D005E0B42 /* RoundRectDayCellRenderer.swift */; };
-		043BB2882611BB1D00697FAE /* RoundRectCryspyCalendarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 043BB2872611BB1D00697FAE /* RoundRectCryspyCalendarVC.swift */; };
+		043BB2882611BB1D00697FAE /* RoundRectCrispyCalendarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 043BB2872611BB1D00697FAE /* RoundRectCrispyCalendarVC.swift */; };
 		044A8820261232E3000DD1F5 /* WeekViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 044A881F261232E3000DD1F5 /* WeekViewModel.swift */; };
 		0476E0A62616E9640035C2A4 /* TimeInterval+days.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0476E0A52616E9640035C2A4 /* TimeInterval+days.swift */; };
+		047CA5582664E3F100F197B9 /* MarkedDaysCrispyCalendarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047CA5572664E3F100F197B9 /* MarkedDaysCrispyCalendarVC.swift */; };
+		047CA55B2664E41600F197B9 /* MarkedDaysCellRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047CA55A2664E41600F197B9 /* MarkedDaysCellRenderer.swift */; };
+		047CA5A926650C7400F197B9 /* MarkedDaysRenderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047CA5A826650C7400F197B9 /* MarkedDaysRenderModel.swift */; };
+		047CA5B02665199700F197B9 /* MarkedDaysTitleModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047CA5AF2665199700F197B9 /* MarkedDaysTitleModel.swift */; };
+		047CA5B3266519A300F197B9 /* MarkedDaysCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047CA5B2266519A300F197B9 /* MarkedDaysCellModel.swift */; };
+		047CA5B6266519AD00F197B9 /* MarkedDaysDotModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047CA5B5266519AD00F197B9 /* MarkedDaysDotModel.swift */; };
+		047CA5B9266519BC00F197B9 /* MarkedDaysWeekViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047CA5B8266519BC00F197B9 /* MarkedDaysWeekViewModel.swift */; };
 		047D00A82612123200AC400C /* RoundRectTitleModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047D00A72612123200AC400C /* RoundRectTitleModel.swift */; };
 		047D00AB2612123E00AC400C /* RoundRectCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047D00AA2612123E00AC400C /* RoundRectCellModel.swift */; };
 		047D00AE2612125F00AC400C /* RoundRectDotModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047D00AD2612125F00AC400C /* RoundRectDotModel.swift */; };
@@ -110,9 +117,16 @@
 
 /* Begin PBXFileReference section */
 		04040D3F260E202D005E0B42 /* RoundRectDayCellRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectDayCellRenderer.swift; sourceTree = "<group>"; };
-		043BB2872611BB1D00697FAE /* RoundRectCryspyCalendarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectCryspyCalendarVC.swift; sourceTree = "<group>"; };
+		043BB2872611BB1D00697FAE /* RoundRectCrispyCalendarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectCrispyCalendarVC.swift; sourceTree = "<group>"; };
 		044A881F261232E3000DD1F5 /* WeekViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekViewModel.swift; sourceTree = "<group>"; };
 		0476E0A52616E9640035C2A4 /* TimeInterval+days.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TimeInterval+days.swift"; sourceTree = "<group>"; };
+		047CA5572664E3F100F197B9 /* MarkedDaysCrispyCalendarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkedDaysCrispyCalendarVC.swift; sourceTree = "<group>"; };
+		047CA55A2664E41600F197B9 /* MarkedDaysCellRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkedDaysCellRenderer.swift; sourceTree = "<group>"; };
+		047CA5A826650C7400F197B9 /* MarkedDaysRenderModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkedDaysRenderModel.swift; sourceTree = "<group>"; };
+		047CA5AF2665199700F197B9 /* MarkedDaysTitleModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkedDaysTitleModel.swift; sourceTree = "<group>"; };
+		047CA5B2266519A300F197B9 /* MarkedDaysCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkedDaysCellModel.swift; sourceTree = "<group>"; };
+		047CA5B5266519AD00F197B9 /* MarkedDaysDotModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkedDaysDotModel.swift; sourceTree = "<group>"; };
+		047CA5B8266519BC00F197B9 /* MarkedDaysWeekViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarkedDaysWeekViewModel.swift; sourceTree = "<group>"; };
 		047D00A72612123200AC400C /* RoundRectTitleModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectTitleModel.swift; sourceTree = "<group>"; };
 		047D00AA2612123E00AC400C /* RoundRectCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectCellModel.swift; sourceTree = "<group>"; };
 		047D00AD2612125F00AC400C /* RoundRectDotModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectDotModel.swift; sourceTree = "<group>"; };
@@ -229,21 +243,45 @@
 		043BB2862611BAEC00697FAE /* RoundRectCryspyCalendarVC */ = {
 			isa = PBXGroup;
 			children = (
-				043BB2872611BB1D00697FAE /* RoundRectCryspyCalendarVC.swift */,
+				043BB2872611BB1D00697FAE /* RoundRectCrispyCalendarVC.swift */,
 				04040D3F260E202D005E0B42 /* RoundRectDayCellRenderer.swift */,
 				047D00B0261212B300AC400C /* Model */,
 				04A95431261F67E60031B341 /* CPCDay+Date.swift */,
 			);
-			path = RoundRectCryspyCalendarVC;
+			name = RoundRectCryspyCalendarVC;
+			path = RoundRectCrispyCalendarVC;
 			sourceTree = "<group>";
 		};
 		044A882326123913000DD1F5 /* CustomUI */ = {
 			isa = PBXGroup;
 			children = (
+				047CA5562664E3DA00F197B9 /* MarkedDaysCrispyCalendar */,
 				043BB2862611BAEC00697FAE /* RoundRectCryspyCalendarVC */,
 				0476E0A52616E9640035C2A4 /* TimeInterval+days.swift */,
 			);
 			path = CustomUI;
+			sourceTree = "<group>";
+		};
+		047CA5562664E3DA00F197B9 /* MarkedDaysCrispyCalendar */ = {
+			isa = PBXGroup;
+			children = (
+				047CA5A726650C3800F197B9 /* Model */,
+				047CA5572664E3F100F197B9 /* MarkedDaysCrispyCalendarVC.swift */,
+				047CA55A2664E41600F197B9 /* MarkedDaysCellRenderer.swift */,
+			);
+			path = MarkedDaysCrispyCalendar;
+			sourceTree = "<group>";
+		};
+		047CA5A726650C3800F197B9 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				047CA5A826650C7400F197B9 /* MarkedDaysRenderModel.swift */,
+				047CA5AF2665199700F197B9 /* MarkedDaysTitleModel.swift */,
+				047CA5B2266519A300F197B9 /* MarkedDaysCellModel.swift */,
+				047CA5B5266519AD00F197B9 /* MarkedDaysDotModel.swift */,
+				047CA5B8266519BC00F197B9 /* MarkedDaysWeekViewModel.swift */,
+			);
+			path = Model;
 			sourceTree = "<group>";
 		};
 		047D00B0261212B300AC400C /* Model */ = {
@@ -593,7 +631,7 @@
 			files = (
 				438454CF20D27E0E00CDC209 /* CPCDashboardList.swift in Sources */,
 				04951B082611D82C00310951 /* RoundRectRenderModel.swift in Sources */,
-				043BB2882611BB1D00697FAE /* RoundRectCryspyCalendarVC.swift in Sources */,
+				043BB2882611BB1D00697FAE /* RoundRectCrispyCalendarVC.swift in Sources */,
 				044A8820261232E3000DD1F5 /* WeekViewModel.swift in Sources */,
 				04C704B02472AC5D00A2D88B /* TabBarVC.swift in Sources */,
 				04C704B22472ADFF00A2D88B /* CPCDashboardVC.swift in Sources */,
@@ -612,21 +650,27 @@
 				43C070102092F85200202ED8 /* guarantee.swift in Sources */,
 				43B53AC320D421D900AA27BB /* unsafeCastConvenience.swift in Sources */,
 				436F53B820A4C14900ACE40A /* UnownedArray.swift in Sources */,
+				047CA5B3266519A300F197B9 /* MarkedDaysCellModel.swift in Sources */,
 				43B6E72120A0615400A7403B /* ThreadsafeStorage.swift in Sources */,
 				43584B1120A4F18E00035A81 /* FloatingPointRounding.swift in Sources */,
 				43101B93209CDFBD00904529 /* GridIndices.swift in Sources */,
 				4315019620B2A74600BD1186 /* CPCDayCellRenderer.swift in Sources */,
 				434D8F0520B4678A006B3BF6 /* CPCCalendarUnit_CalendarWrapper.swift in Sources */,
 				4318950720AC80F200D29AA8 /* RangeExpressionUnwrap.swift in Sources */,
+				047CA5B6266519AD00F197B9 /* MarkedDaysDotModel.swift in Sources */,
 				4314537120B226F40019EB01 /* CPCFontMetrics.swift in Sources */,
 				430492AD2094B54000A4F1F1 /* RangeExpressionInitialization.swift in Sources */,
 				430492AA2094724F00A4F1F1 /* ComputedCollection.swift in Sources */,
+				047CA5B9266519BC00F197B9 /* MarkedDaysWeekViewModel.swift in Sources */,
 				4377FEAC2188D482005BE22D /* FloatingBaseArray.swift in Sources */,
+				047CA5B02665199700F197B9 /* MarkedDaysTitleModel.swift in Sources */,
 				4314536D20B21DD90019EB01 /* CPCWeekView.swift in Sources */,
 				43C070062092EDC700202ED8 /* CPCDateInterval.swift in Sources */,
 				43689DB5209364BF00052C7A /* CPCCalendarUnitBackingType.swift in Sources */,
+				047CA5A926650C7400F197B9 /* MarkedDaysRenderModel.swift in Sources */,
 				43C0700C2092F49D00202ED8 /* CPCCalendarUnit.swift in Sources */,
 				4318950520AC80DE00D29AA8 /* CPCViewSelectionHandling.swift in Sources */,
+				047CA5582664E3F100F197B9 /* MarkedDaysCrispyCalendarVC.swift in Sources */,
 				4318950220A9B77900D29AA8 /* CPCCalendarUnitCaching.swift in Sources */,
 				43689DBB2093681100052C7A /* CPCCalendarUnitSymbol.swift in Sources */,
 				4314536F20B220AB0019EB01 /* NSParagraphStyle_convenience.swift in Sources */,
@@ -658,6 +702,7 @@
 				436F53BD20A4D8B900ACE40A /* CPCMultiMonthsView.swift in Sources */,
 				43689DC020936F2600052C7A /* CPCCalendarView.swift in Sources */,
 				43B53AC120D4194900AA27BB /* CPCCalendarView_Cell.swift in Sources */,
+				047CA55B2664E41600F197B9 /* MarkedDaysCellRenderer.swift in Sources */,
 				43148833218738810028EE89 /* CPCCalendarView_DataSource.swift in Sources */,
 				43148835218764670028EE89 /* CPCCalendarView_Layout.swift in Sources */,
 				4377FEAA218839EE005BE22D /* CPCCalendarView_Layout_Storage.swift in Sources */,

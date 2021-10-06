@@ -1,5 +1,5 @@
 //
-//  CustomRenderModel.swift
+//  RoundRectCellModel.swift
 //  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -23,40 +23,21 @@
 
 import UIKit
 
-struct RoundRectRenderModel {
-	let roundRectTitleModel: RoundRectTitleModel
-	let roundRectCellModel: RoundRectCellModel
-	let roundRectDotModel: RoundRectDotModel
-	let roundRectWeekViewModel: RoundRectWeekViewModel
-}
-
-extension RoundRectRenderModel {
-	static var demoModel: RoundRectRenderModel {
-		return RoundRectRenderModel(
-			roundRectTitleModel: RoundRectTitleModel(
-				titleColor: .black,
-				selectedEndsTitleColor: .white,
-				selectedMiddleTitleColor: .lightGray,
-				disableTitleColor: .lightGray,
-				weekendsTitleColor: .black,
-				titleFont: .systemFont(ofSize: 17)
-			),
-			roundRectCellModel: RoundRectCellModel(
-				simpleCellColor: .white,
-				selectedEndsCellColor: .blue,
-				selectedMiddleCellColor: .lightGray,
-				endsCellRadius: 8
-			),
-			roundRectDotModel: RoundRectDotModel(
-				todayDotColor: .red,
-				todayDotColorSelected: .white
-			),
-			roundRectWeekViewModel: RoundRectWeekViewModel(
-				shadowColor: .black,
-				backgroundColor: .white,
-				textColor: .black,
-				weekEndColor: .black
-			)
-		)
+public struct RoundRectCellModel {
+	public let simpleCellColor: UIColor
+	public let selectedEndsCellColor: UIColor
+	public let selectedMiddleCellColor: UIColor
+	public let endsCellRadius: CGFloat
+	
+	public init(
+		simpleCellColor: UIColor,
+		selectedEndsCellColor: UIColor,
+		selectedMiddleCellColor: UIColor,
+		endsCellRadius: CGFloat
+	) {
+		self.simpleCellColor = simpleCellColor
+		self.selectedEndsCellColor = selectedEndsCellColor
+		self.selectedMiddleCellColor = selectedMiddleCellColor
+		self.endsCellRadius = endsCellRadius
 	}
 }

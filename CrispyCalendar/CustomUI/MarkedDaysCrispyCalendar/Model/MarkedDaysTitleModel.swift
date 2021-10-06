@@ -1,5 +1,5 @@
 //
-//  RoundRectTitleModel.swift
+//  MarkedDaysTitleModel.swift
 //  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,13 +21,38 @@
 //  THE SOFTWARE.
 //
 
-import UIKit
+import Foundation
 
-struct RoundRectTitleModel {
-	let titleColor: UIColor
-	let selectedEndsTitleColor: UIColor
-	let selectedMiddleTitleColor: UIColor
-	let disableTitleColor: UIColor
-	let weekendsTitleColor: UIColor
-	let titleFont: UIFont
+public struct MarkedDaysTitleModel {
+	public let titleColor: UIColor
+	public let disableTitleColor: UIColor
+	public let weekendsTitleColor: UIColor
+	public let daySelectedTitleColor: UIColor
+	public let titleFont: UIFont
+	
+	public init(
+		dayTitleColor: UIColor,
+		dayDisableTitleColor: UIColor,
+		dayWeekendsTitleColor: UIColor,
+		daySelectedTitleColor: UIColor,
+		dayTitleFont: UIFont
+	) {
+		self.titleColor = dayTitleColor
+		self.disableTitleColor = dayDisableTitleColor
+		self.weekendsTitleColor = dayWeekendsTitleColor
+		self.daySelectedTitleColor = daySelectedTitleColor
+		self.titleFont = dayTitleFont
+	}
+}
+
+extension MarkedDaysTitleModel {
+	static public var demoModel: MarkedDaysTitleModel {
+		return MarkedDaysTitleModel(
+			dayTitleColor: .black,
+			dayDisableTitleColor: .lightGray,
+			dayWeekendsTitleColor: .black,
+			daySelectedTitleColor: .white,
+			dayTitleFont: .systemFont(ofSize: 17)
+		)
+	}
 }

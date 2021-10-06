@@ -1,5 +1,5 @@
 //
-//  RoundRectWeekViewModel.swift
+//  MarkedDaysCellModel.swift
 //  Copyright © 2021 Cleverpumpkin, Ltd. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,11 +21,23 @@
 //  THE SOFTWARE.
 //
 
-import UIKit
+import Foundation
 
-struct RoundRectWeekViewModel {
-	let shadowColor: UIColor
-	let backgroundColor: UIColor
-	let textColor: UIColor
-	let weekEndColor: UIColor
+public struct MarkedDaysCellModel {
+	public let unmarkedCellColor: UIColor
+	public let markedCellColor: UIColor
+	
+	public init(simpleCellColor: UIColor, markedCellColor: UIColor) {
+		self.unmarkedCellColor = simpleCellColor
+		self.markedCellColor = markedCellColor
+	}
+}
+
+extension MarkedDaysCellModel {
+	static public var demoModel: MarkedDaysCellModel {
+		return MarkedDaysCellModel(
+			simpleCellColor: .white,
+			markedCellColor: .orange
+		)
+	}
 }
