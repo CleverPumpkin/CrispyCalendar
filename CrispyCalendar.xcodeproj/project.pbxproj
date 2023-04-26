@@ -25,6 +25,7 @@
 		04A95432261F67E60031B341 /* CPCDay+Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A95431261F67E60031B341 /* CPCDay+Date.swift */; };
 		04C704B02472AC5D00A2D88B /* TabBarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C704AF2472AC5D00A2D88B /* TabBarVC.swift */; };
 		04C704B22472ADFF00A2D88B /* CPCDashboardVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C704B12472ADFF00A2D88B /* CPCDashboardVC.swift */; };
+		04C9001929F9554D00D52F0A /* Int+convenience.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C9001829F9554D00D52F0A /* Int+convenience.swift */; };
 		430492AA2094724F00A4F1F1 /* ComputedCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430492A92094724F00A4F1F1 /* ComputedCollection.swift */; };
 		430492AD2094B54000A4F1F1 /* RangeExpressionInitialization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 430492AC2094B54000A4F1F1 /* RangeExpressionInitialization.swift */; };
 		43101B93209CDFBD00904529 /* GridIndices.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43101B92209CDFBD00904529 /* GridIndices.swift */; };
@@ -134,6 +135,7 @@
 		04A95431261F67E60031B341 /* CPCDay+Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CPCDay+Date.swift"; sourceTree = "<group>"; };
 		04C704AF2472AC5D00A2D88B /* TabBarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarVC.swift; sourceTree = "<group>"; };
 		04C704B12472ADFF00A2D88B /* CPCDashboardVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCDashboardVC.swift; sourceTree = "<group>"; };
+		04C9001829F9554D00D52F0A /* Int+convenience.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Int+convenience.swift"; sourceTree = "<group>"; };
 		430492A92094724F00A4F1F1 /* ComputedCollection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ComputedCollection.swift; sourceTree = "<group>"; };
 		430492AC2094B54000A4F1F1 /* RangeExpressionInitialization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RangeExpressionInitialization.swift; sourceTree = "<group>"; };
 		4307A2A9217A038B00A717F8 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
@@ -296,6 +298,30 @@
 			path = Model;
 			sourceTree = "<group>";
 		};
+		04C9001529F9553000D52F0A /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				04C9001629F9553800D52F0A /* Swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
+		04C9001629F9553800D52F0A /* Swift */ = {
+			isa = PBXGroup;
+			children = (
+				04C9001729F9553D00D52F0A /* Internal */,
+			);
+			path = Swift;
+			sourceTree = "<group>";
+		};
+		04C9001729F9553D00D52F0A /* Internal */ = {
+			isa = PBXGroup;
+			children = (
+				04C9001829F9554D00D52F0A /* Int+convenience.swift */,
+			);
+			path = Internal;
+			sourceTree = "<group>";
+		};
 		430492A82094720100A4F1F1 /* Util */ = {
 			isa = PBXGroup;
 			children = (
@@ -405,6 +431,7 @@
 		43C06FE220924E5A00202ED8 /* CrispyCalendar */ = {
 			isa = PBXGroup;
 			children = (
+				04C9001529F9553000D52F0A /* Extensions */,
 				044A882326123913000DD1F5 /* CustomUI */,
 				430492A82094720100A4F1F1 /* Util */,
 				43C06FFB20924F0200202ED8 /* Model */,
@@ -690,6 +717,7 @@
 				434D8F0120B45032006B3BF6 /* CPCCalendarUnitSymbolImpl.swift in Sources */,
 				4314536120AF29BC0019EB01 /* CPCViewMeasuring.swift in Sources */,
 				4314535020AEEE7F0019EB01 /* CPCViewProtocol_ObjCSupport.swift in Sources */,
+				04C9001929F9554D00D52F0A /* Int+convenience.swift in Sources */,
 				435802C320ADD0AD002FFE83 /* CPCViewSelectionConvenience.swift in Sources */,
 				434D8F0320B46061006B3BF6 /* SingleElementOperations.swift in Sources */,
 				4314537320B22B340019EB01 /* CPCViewContentAdjusting.swift in Sources */,
