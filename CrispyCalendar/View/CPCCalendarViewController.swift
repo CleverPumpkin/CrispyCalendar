@@ -212,10 +212,22 @@ open class CPCCalendarViewController: UIViewController {
 	
 	public init(dateRange: ClosedRange<Date>, calendar: Calendar = .current) {
 		
-		let minimumMonth = CPCMonth(containing: dateRange.lowerBound, calendar: calendar)
-		let maximumMonth = CPCMonth(containing: dateRange.upperBound, calendar: calendar)
+		let maximumDay = CPCDay(containing: dateRange.upperBound, calendar: calendar)
+		let minimumDay = CPCDay(containing: dateRange.lowerBound, calendar: calendar)
+		let maximumMonth = maximumDay.containingMonth
+		let minimumMonth = minimumDay.containingMonth
+		let fistWeekOfMaximumMonth = maximumMonth.first
+		let fistDayOfMaximumMonth = fistWeekOfMaximumMonth?.first { day -> Bool in
+			day.containingMonth == maximumMonth
+		}
 		
-		self.numberOfMonthsToDisplay = minimumMonth.distance(to: maximumMonth)
+		var numberOfMonthsToDisplay = minimumMonth.distance(to: maximumMonth)
+		
+		if maximumDay == fistDayOfMaximumMonth {
+			numberOfMonthsToDisplay -= 1
+		}
+		
+		self.numberOfMonthsToDisplay = numberOfMonthsToDisplay
 		self.startingDay = CPCDay(containing: dateRange.lowerBound, calendar: .current)
 		
 		super.init(nibName: nil, bundle: nil)
