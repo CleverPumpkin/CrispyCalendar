@@ -66,6 +66,9 @@ public protocol CPCCalendarViewSelectionDelegate: AnyObject {
 /// the same unified selection handling and appearance attributes management, but assigning
 /// month values to specific views or arranging them visually remains under user control.
 open class CPCCalendarView: UIView {
+	
+	// MARK: - Public types
+	
 	/// Defines the boundary for ccalendar view content.
 	@objc (CPCCalendarViewColumnContentInsetReference)
 	public enum ColumnContentInsetReference: Int {
@@ -76,6 +79,8 @@ open class CPCCalendarView: UIView {
 		/// Uses `safeAreaInsets` as zero boundary.
 		case fromSafeAreaInsets;
 	};
+	
+	// MARK: - Public properties
 	
 	/// Calendar to be used for various locale-dependent info.
 	open var calendar: Calendar {
@@ -136,6 +141,8 @@ open class CPCCalendarView: UIView {
 		set { self.layout.columnContentInsetReference = newValue }
 	}
 	
+	// MARK: - Internal properties
+	
 	internal unowned let collectionView: UICollectionView;
 
 	internal var calendarViewController: CPCCalendarViewController? {
@@ -146,43 +153,54 @@ open class CPCCalendarView: UIView {
 		return self.dataSource.monthViewsManager;
 	}
 	
-	private var dataSource = DataSource ();
+	// MARK: - Private properties
+	
+	private var dataSource: DataSource
 	private var calendarViewControllerPtr: UnsafePointer <CPCCalendarViewController>?;
 	private var weekView: CPCWeekView?
 	
+	// MARK: - Initializaiton
+	
+	public init (frame: CGRect, startingDay: CPCDay?, numberOfMonthsToDisplay: Int?) {
+		let collectionView = CPCCalendarView.makeCollectionView(frame, numberOfMonthsToDisplay: numberOfMonthsToDisplay)
+		
+		self.collectionView = collectionView
+		self.dataSource = DataSource(statingAt: startingDay ?? .today)
+		
+		super.init (frame: frame)
+		
+		self.commonInit (collectionView)
+	}
+	
 	public override init (frame: CGRect) {
-		let collectionView = CPCCalendarView.makeCollectionView (frame);
+		let collectionView = CPCCalendarView.makeCollectionView(frame)
+		
 		self.collectionView = collectionView;
+		self.dataSource = DataSource()
+		
 		super.init (frame: frame);
+		
 		self.commonInit (collectionView);
 	}
 	
 	public required init? (coder aDecoder: NSCoder) {
-		let collectionView = CPCCalendarView.makeCollectionView (.zero);
-		self.collectionView = collectionView;
-		super.init (coder: aDecoder);
-		self.commonInit (collectionView);
+		let collectionView = CPCCalendarView.makeCollectionView(.zero)
+		
+		self.collectionView = collectionView
+		self.dataSource = DataSource()
+		
+		super.init (coder: aDecoder)
+		
+		self.commonInit (collectionView)
 	}
 	
-	private func commonInit (_ collectionView: UICollectionView) {
-		self.monthViewsManager.selectionDidChangeBlock = { [unowned self] in
-			self.selectionDidChange ();
-			self.calendarViewController?.selectionDidChange ();
-		};
-		collectionView.register (Cell.self, forCellWithReuseIdentifier: DataSource.cellReuseIdentifier);
-		self.prepareCollectionView (collectionView, using: self.dataSource);
-		self.addSubview (collectionView);
-	}
+	// MARK: - Deinitialization
 	
 	deinit {
-		self.monthViewsManager.prepareForContainerDeallocation ();
+		monthViewsManager.prepareForContainerDeallocation()
 	}
 	
-	private func prepareCollectionView (_ collectionView: UICollectionView, using dataSource: DataSource) {
-		collectionView.prefetchDataSource = dataSource;
-		collectionView.dataSource = dataSource;
-		collectionView.delegate = dataSource;
-	}
+	// MARK: - Public methods
 
 	open override func layoutSubviews () {
 		super.layoutSubviews ();
@@ -229,6 +247,24 @@ open class CPCCalendarView: UIView {
 		}
 		super.willRemoveSubview (subview);
 	}
+	
+	// MARK: - Private methods
+	
+	private func commonInit (_ collectionView: UICollectionView) {
+		self.monthViewsManager.selectionDidChangeBlock = { [unowned self] in
+			self.selectionDidChange ();
+			self.calendarViewController?.selectionDidChange ();
+		};
+		collectionView.register (Cell.self, forCellWithReuseIdentifier: DataSource.cellReuseIdentifier);
+		self.prepareCollectionView (collectionView, using: self.dataSource);
+		self.addSubview (collectionView);
+	}
+	
+	private func prepareCollectionView (_ collectionView: UICollectionView, using dataSource: DataSource) {
+		collectionView.prefetchDataSource = dataSource;
+		collectionView.dataSource = dataSource;
+		collectionView.delegate = dataSource;
+	}
 }
 
 extension CPCCalendarView {
@@ -248,13 +284,20 @@ extension CPCCalendarView {
 		}
 	}
 	
-	private static func makeCollectionView (_ frame: CGRect, calendar: Calendar = .currentUsed) -> UICollectionView {
-		let collectionView = UICollectionView (frame: frame.bounds, collectionViewLayout: Layout ());
-		collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight];
-		collectionView.allowsSelection = false;
-		collectionView.isDirectionalLockEnabled = true;
-		collectionView.alwaysBounceVertical = true;
-		return collectionView;
+	private static func makeCollectionView (
+		_ frame: CGRect,
+		calendar: Calendar = .currentUsed,
+		numberOfMonthsToDisplay: Int? = nil
+	) -> UICollectionView {
+		let layout = Layout(numberOfMonthsToDisplay: numberOfMonthsToDisplay)
+		let collectionView = UICollectionView(frame: frame.bounds, collectionViewLayout: layout)
+		
+		collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+		collectionView.allowsSelection = false
+		collectionView.isDirectionalLockEnabled = true
+		collectionView.alwaysBounceVertical = true
+		
+		return collectionView
 	}
 	
 	internal func invalidateLayout () {

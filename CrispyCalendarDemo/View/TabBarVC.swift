@@ -38,11 +38,15 @@ class TabBarVC: UITabBarController {
 			print(date)
 		}
 		
+		let startDate = Date(timeIntervalSince1970: 1682517411)
+		let endDate = Date(timeIntervalSince1970: 1714129011)
+		
 		firstViewController.tabBarItem = UITabBarItem(title: "Marked", image: nil, selectedImage: nil)
 		let secondViewController = RoundRectCrispyCalendarVC(
 			renderModel: RoundRectRenderModel.demoModel,
 			weekView: CPCWeekView(),
-			calendar: Calendar.current
+			calendar: Calendar.current,
+			dateRange: startDate...endDate
 		)
 		
 		secondViewController.tabBarItem = UITabBarItem(title: "RoundedRect", image: nil, selectedImage: nil)

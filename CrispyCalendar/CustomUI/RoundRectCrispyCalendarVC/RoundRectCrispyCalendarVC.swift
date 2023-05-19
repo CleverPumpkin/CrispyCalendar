@@ -54,11 +54,15 @@ public class RoundRectCrispyCalendarVC: CPCCalendarViewController {
 	public init(
 		renderModel: RoundRectRenderModel,
 		weekView: CPCWeekView,
-		calendar: Calendar
+		calendar: Calendar,
+		dateRange: ClosedRange<Date>
 	) {
 		self.renderModel = renderModel
 		self.calendar = calendar
-		super.init(nibName: nil, bundle: nil)
+		super.init(
+			dateRange: dateRange,
+			calendar: calendar
+		)
 		self.weekView = weekView
 	}
 	

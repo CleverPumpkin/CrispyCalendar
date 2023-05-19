@@ -86,6 +86,9 @@ private enum SelectionStorage {
 /// A view controller that manages a `CPCCalendarView` instance as its root view and optionally displays
 /// a supplementary view providing weekdays for the calendar view.
 open class CPCCalendarViewController: UIViewController {
+	
+	// MARK: - Private types
+	
 	private final class ViewDelegate: CPCCalendarViewSelectionDelegate {
 		fileprivate weak var viewControllerDelegate: CPCCalendarViewControllerSelectionDelegate?;
 
@@ -114,13 +117,15 @@ open class CPCCalendarViewController: UIViewController {
 		}
 	}
 	
+	// MARK: - Public properties
+	
 	/// The object that acts as the selection delegate of this view controller.
 	open weak var selectionDelegate: CPCCalendarViewControllerSelectionDelegate? {
 		get {
 			return self.viewDelegate?.viewControllerDelegate;
 		}
 		set {
-			self.viewDelegate = self.selectionDelegate.map { ViewDelegate ($0, for: self) };
+			self.viewDelegate = newValue.map { ViewDelegate ($0, for: self) };
 			self.calendarView.selectionDelegate = self.viewDelegate;
 		}
 	}
@@ -195,41 +200,101 @@ open class CPCCalendarViewController: UIViewController {
 		get { return self.calendarView.columnContentInset }
 		set { self.calendarView.columnContentInset = newValue }
 	}
+	
+	// MARK: - Private properties
 
 	private var selectionStorage: SelectionStorageProtocol!;
 	private var viewDelegate: ViewDelegate?;
+	private let numberOfMonthsToDisplay: Int?
+	private let startingDay: CPCDay?
+	
+	// MARK: - Initialization
+	
+	public init(dateRange: ClosedRange<Date>, calendar: Calendar = .current) {
+		
+		let maximumDay = CPCDay(containing: dateRange.upperBound, calendar: calendar)
+		let minimumDay = CPCDay(containing: dateRange.lowerBound, calendar: calendar)
+		let maximumMonth = maximumDay.containingMonth
+		let minimumMonth = minimumDay.containingMonth
+		let fistWeekOfMaximumMonth = maximumMonth.first
+		let fistDayOfMaximumMonth = fistWeekOfMaximumMonth?.first { day -> Bool in
+			day.containingMonth == maximumMonth
+		}
+		
+		var numberOfMonthsToDisplay = minimumMonth.distance(to: maximumMonth)
+		
+		if maximumDay == fistDayOfMaximumMonth {
+			numberOfMonthsToDisplay -= 1
+		}
+		
+		self.numberOfMonthsToDisplay = numberOfMonthsToDisplay
+		self.startingDay = CPCDay(containing: dateRange.lowerBound, calendar: .current)
+		
+		super.init(nibName: nil, bundle: nil)
+		
+		commonInit()
+		
+		self.minimumDate = dateRange.lowerBound
+		self.maximumDate = dateRange.upperBound
+	}
 	
 	public override init (nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
-		super.init (nibName: nil, bundle: nil);
-		self.selectionStorage = SelectionStorage.make (for: self);
+		self.startingDay = nil
+		self.numberOfMonthsToDisplay = nil
+		
+		super.init(nibName: nil, bundle: nil)
+		
+		commonInit()
 	}
 	
 	public required init? (coder aDecoder: NSCoder) {
-		super.init (coder: aDecoder);
-		self.selectionStorage = SelectionStorage.make (for: self);
+		self.startingDay = nil
+		self.numberOfMonthsToDisplay = nil
+		
+		super.init(coder: aDecoder)
+		
+		commonInit()
 	}
+	
+	// MARK: - Deinitialization
 	
 	deinit {
 		self.calendarView?.calendarViewController = nil;
 	}
 	
+	// MARK: - Public methods
+	
 	open override func loadView () {
-		let view = CPCCalendarView (frame: UIScreen.main.bounds);
-		view.backgroundColor = .white;
+		let view = CPCCalendarView (
+			frame: UIScreen.main.bounds,
+			startingDay: startingDay,
+			numberOfMonthsToDisplay: numberOfMonthsToDisplay
+		)
 		
-		let weekView = CPCWeekView (frame: CGRect (origin: .zero, size: CGSize (width: view.bounds.width, height: 0.0)));
-		weekView.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin];
-		weekView.backgroundColor = .gray;
-		view.addSubview (weekView);
+		view.backgroundColor = .white
 		
-		let weekViewLayer = weekView.layer;
-		weekViewLayer.shadowColor = UIColor (white: 0.0, alpha: 1.0).cgColor;
-		weekViewLayer.shadowOpacity = 0.1;
-		weekViewLayer.shadowRadius = 8.0;
-		weekViewLayer.shadowOffset = .zero;
+		let weekView = CPCWeekView(
+			frame: CGRect(
+				origin: .zero,
+				size: CGSize(
+					width: view.bounds.width,
+					height: 0.0
+				)
+			)
+		)
+		
+		weekView.autoresizingMask = [.flexibleWidth, .flexibleBottomMargin]
+		weekView.backgroundColor = .gray
+		view.addSubview (weekView)
+		
+		let weekViewLayer = weekView.layer
+		weekViewLayer.shadowColor = UIColor (white: 0.0, alpha: 1.0).cgColor
+		weekViewLayer.shadowOpacity = 0.1
+		weekViewLayer.shadowRadius = 8.0
+		weekViewLayer.shadowOffset = .zero
 
-		self.view = view;
-		self.weekView = weekView;
+		self.view = view
+		self.weekView = weekView
 	}
 	
 	open override func viewWillLayoutSubviews () {
@@ -259,6 +324,13 @@ open class CPCCalendarViewController: UIViewController {
 	///
 	/// Default implementation does nothing. Subclasses can override it to perform additional actions whenever selection changes.
 	@objc open func selectionDidChange () {}
+	
+	// MARK: - Private methods
+	
+	private func commonInit() {
+		
+		selectionStorage = SelectionStorage.make(for: self)
+	}
 	
 	private func layoutWeekView () {
 		guard let weekView = self.weekView else { return }

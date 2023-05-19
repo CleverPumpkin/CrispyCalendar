@@ -32,7 +32,12 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 
 /* internal */ extension CPCCalendarView {
 	internal final class Layout: UICollectionViewLayout {
+		
+		// MARK: - Internal types
+		
 		internal typealias ColumnContentInsetReference = CPCCalendarView.ColumnContentInsetReference;
+		
+		// MARK: - Internal static properties
 		
 		internal override class var invalidationContextClass: AnyClass {
 			return InvalidationContext.self;
@@ -45,6 +50,8 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 				return .fromContentInset;
 			}
 		}
+		
+		// MARK: - Internal properties
 		
 		internal var columnCount = UIDevice.current.userInterfaceIdiom.defaultLayoutColumnsCount {
 			didSet {
@@ -68,10 +75,24 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 		}
 		
 		internal override var collectionViewContentSize: CGSize {
-			return CGSize (width: self.collectionView?.visibleContentBounds.width ?? 0.0, height: .virtualContentHeight);
+			
+			let contentHeight: CGFloat
+			
+			switch storage?.height {
+			case .unspecified:
+				contentHeight = .virtualContentHeight
+			case let .absolute(height):
+				contentHeight = height
+			case .none:
+				contentHeight = 0
+			}
+			
+			return CGSize(width: collectionView?.visibleContentBounds.width ?? 0.0, height: contentHeight)
 		}
 		
 		internal let invalidLayoutAttributes = Attributes (forCellWith: IndexPath ());
+		
+		// MARK: - Private properties
 		
 		private var delegate: CPCCalendarViewLayoutDelegate? {
 			guard let delegate = self.collectionView?.delegate else {
@@ -83,11 +104,31 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			return layoutDelegate;
 		}
 		
-		private var storage: Storage?;
-		private var referenceIndexPath: IndexPath = [];
+		private var shouldCenterMiddleRow: Bool {
+			numberOfMonthsToDisplay == nil
+		}
 		
+		private var storage: Storage?;
 		private var prevStorage: Storage?;
+		private var referenceIndexPath: IndexPath = [];
 		private var invalidationContext: InvalidationContext?;
+		private let numberOfMonthsToDisplay: Int?
+		
+		// MARK: - Initialization
+		
+		init(numberOfMonthsToDisplay: Int? = nil) {
+			self.numberOfMonthsToDisplay = numberOfMonthsToDisplay
+			
+			super.init()
+		}
+		
+		required init?(coder: NSCoder) {
+			self.numberOfMonthsToDisplay = nil
+			
+			super.init(coder: coder)
+		}
+		
+		// MARK: - Internal methods
 		
 		internal override func layoutAttributesForItem (at indexPath: IndexPath) -> UICollectionViewLayoutAttributes? {
 			guard let storage = self.storage ?? self.makeInitialStorage () else {
@@ -126,7 +167,7 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			}
 			if (context.invalidateEverything) {
 				self.storage = nil;
-				collectionView.contentCenterOffset.y = .virtualOriginHeight;
+				collectionView.contentCenterOffset.y = numberOfMonthsToDisplay == nil ? .virtualOriginHeight : 0
 			}
 			
 			if let storage = self.storage {
@@ -215,12 +256,15 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 						columnSpacing: self.columnSpacing,
 						contentScale: collectionView.separatorWidth,
 						middleRowOrigin: bounds.midY + additionalOffset,
-						invalidAttributes: self.invalidLayoutAttributes
+						invalidAttributes: self.invalidLayoutAttributes,
+						numberOfMonthsToDisplay: self.numberOfMonthsToDisplay
 					));
 				} else if context.updatedContentGuide {
 					storage.updateContentGuide (self.contentGuide);
-					if let middleCellFrame = self.layoutAttributesForItem (at: middleIndexPath)?.frame {
+					if numberOfMonthsToDisplay == nil, let middleCellFrame = self.layoutAttributesForItem (at: middleIndexPath)?.frame {
 						collectionView.contentCenterOffset.y = middleCellFrame.midY + additionalOffset;
+					} else {
+						collectionView.contentCenterOffset.y = additionalOffset;
 					}
 				}
 			}
@@ -384,7 +428,8 @@ private extension CPCCalendarView.Layout {
 			columnSpacing: self.columnSpacing,
 			contentScale: collectionView.separatorWidth,
 			middleRowOrigin: .virtualOriginHeight,
-			invalidAttributes: self.invalidLayoutAttributes
+			invalidAttributes: self.invalidLayoutAttributes,
+			numberOfMonthsToDisplay: self.numberOfMonthsToDisplay
 		));
 	}
 	

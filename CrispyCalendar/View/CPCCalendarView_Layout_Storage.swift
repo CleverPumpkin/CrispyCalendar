@@ -24,22 +24,36 @@
 import UIKit
 
 /* internal */ extension CPCCalendarView.Layout {
+	
+	// MARK: - Internal types
+	
+	internal enum HeightType {
+		case unspecified
+		case absolute(CGFloat)
+	}
+	
 	internal typealias AspectRatio = CPCMonthView.AspectRatio;
 	
 	internal final class Storage {
+		
+		// MARK: - Internal types
+		
 		internal struct LayoutInfo {
-			internal var columnCount = 1;
-			internal var contentGuide: Range <CGFloat>;
-			internal var columnSpacing = 0.0 as CGFloat;
-			internal var contentScale = 1.0 / UIScreen.main.nativeScale;
-			internal var middleRowOrigin: CGFloat;
-			internal var invalidAttributes: CPCCalendarView.Layout.Attributes;
+			var columnCount = 1
+			var contentGuide: Range <CGFloat>
+			var columnSpacing = 0.0 as CGFloat
+			var contentScale = 1.0 / UIScreen.main.nativeScale
+			var middleRowOrigin: CGFloat
+			var invalidAttributes: CPCCalendarView.Layout.Attributes
+			var numberOfMonthsToDisplay: Int? = nil
 		}
 		
 		internal struct AttributesPosition: Hashable {
 			internal let row: Int;
 			internal let item: Int;
 		}
+		
+		// MARK: - Internal properties
 		
 		internal var contentGuideLeading: CGFloat {
 			return self.contentGuide.lowerBound;
@@ -50,7 +64,27 @@ import UIKit
 		}
 
 		internal private (set) var columnSpacing: CGFloat;
+		
+		internal var height: HeightType {
 
+			guard let visibleRowsRange else {
+				return .unspecified
+			}
+
+			var targetIndex = visibleRowsRange.upperBound
+				
+			if targetIndex >= lastRowIndex {
+				targetIndex = lastRowIndex - 1
+			}
+				
+			let start = row(at: visibleRowsRange.lowerBound)
+			let end = row(at: targetIndex)
+				
+			return .absolute(end.frame.maxY - start.frame.minY)
+		}
+
+		// MARK: - Private properties
+		
 		fileprivate let columnCount: Int;
 		
 		fileprivate var columnWidth: CGFloat {
@@ -68,9 +102,12 @@ import UIKit
 		private var incompleteRowLengths = [Int: Int] ();
 		private var middleRowOrigin: CGFloat;
 		private var validatedRows: ClosedRange <Int>?;
+		private let visibleRowsRange: ClosedRange<Int>?
 		
 		private unowned let invalidAttributes: Attributes;
 
+		// MARK: - Initialization
+		
 		internal init <C> (middleRowData: C, layoutInfo: LayoutInfo) where C: Collection, C.Element == (indexPath: IndexPath, aspectRatio: AspectRatio) {
 			self.columnCount = layoutInfo.columnCount;
 			self.contentGuide = layoutInfo.contentGuide;
@@ -78,6 +115,12 @@ import UIKit
 			self.contentScale = layoutInfo.contentScale;
 			self.middleRowOrigin = layoutInfo.middleRowOrigin;
 			self.invalidAttributes = layoutInfo.invalidAttributes;
+			
+			if let numberOfMonthsToDisplay = layoutInfo.numberOfMonthsToDisplay {
+				self.visibleRowsRange = 0...(numberOfMonthsToDisplay / columnCount)
+			} else {
+				self.visibleRowsRange = nil
+			}
 			
 			self.rawAttributes = FloatingBaseArray ();
 			self.rawAttributes.reserveCapacity (self.columnCount);
@@ -104,31 +147,73 @@ import UIKit
 			self.rawAttributes = FloatingBaseArray (storage.rawAttributes, copyItems: true);
 			self.incompleteRowLengths = storage.incompleteRowLengths;
 			self.invalidAttributes = storage.invalidAttributes;
+			self.visibleRowsRange = storage.visibleRowsRange
 		}
 		
+		// MARK: - Internal methods
+		
 		internal func prependRow <C> (_ rowData: C, layoutImmediately: Bool = false) where C: Collection, C.Element == AspectRatio {
-			self.rawAttributes.reserveAdditionalCapacity (self.columnCount);
-			let firstRowIndexPath = self.firstIndexPath.offset (by: -rowData.count), newRowIndex = self.firstRowIndex - 1;
-			if (rowData.count < self.columnCount) {
-				self.rawAttributes.prepend (contentsOf: repeatElement (self.invalidAttributes, count: self.columnCount - rowData.count));
-				self.incompleteRowLengths [newRowIndex] = rowData.count;
+			rawAttributes.reserveAdditionalCapacity(columnCount)
+			
+			let firstRowIndexPath = firstIndexPath.offset(
+				by: -rowData.count
+			)
+			
+			let newRowIndex = self.firstRowIndex - 1
+			
+			if (rowData.count < columnCount) {
+				rawAttributes.prepend(
+					contentsOf: repeatElement(
+						invalidAttributes,
+						count: columnCount - rowData.count
+					)
+				)
+				
+				incompleteRowLengths[newRowIndex] = rowData.count
 			}
-			self.rawAttributes.prepend (contentsOf: rowData.makeAttributes (startingAt: firstRowIndexPath, row: newRowIndex, drawCellSeparators: self.columnCount > 1));
+			
+			rawAttributes.prepend(
+				contentsOf: rowData.makeAttributes(
+					startingAt: firstRowIndexPath,
+					row: newRowIndex,
+					drawCellSeparators: columnCount > 1,
+					visibleRowsRange: visibleRowsRange
+				)
+			)
+			
 			if (layoutImmediately) {
-				self.layoutRow (self.firstRow);
+				layoutRow(firstRow);
 			}
 		}
 
 		internal func appendRow <C> (_ rowData: C, layoutImmediately: Bool = false) where C: Collection, C.Element == AspectRatio {
-			self.rawAttributes.reserveAdditionalCapacity (self.columnCount);
-			let newRowIndex = self.lastRowIndex;
-			self.rawAttributes.append (contentsOf: rowData.makeAttributes (startingAt: self.lastIndexPath, row: newRowIndex, drawCellSeparators: self.columnCount > 1));
-			if (rowData.count < self.columnCount) {
-				self.rawAttributes.append (contentsOf: repeatElement (self.invalidAttributes, count: self.columnCount - rowData.count));
-				self.incompleteRowLengths [newRowIndex] = rowData.count;
+			
+			rawAttributes.reserveAdditionalCapacity(self.columnCount)
+			
+			let newRowIndex = lastRowIndex
+			
+			rawAttributes.append(
+				contentsOf: rowData.makeAttributes(
+					startingAt: lastIndexPath,
+					row: newRowIndex,
+					drawCellSeparators: columnCount > 1,
+					visibleRowsRange: visibleRowsRange
+				)
+			)
+			
+			if (rowData.count < columnCount) {
+				rawAttributes.append(
+					contentsOf: repeatElement(
+						invalidAttributes,
+						count: columnCount - rowData.count
+					)
+				)
+				
+				incompleteRowLengths[newRowIndex] = rowData.count
 			}
+			
 			if (layoutImmediately) {
-				self.layoutRow (at: self.lastRowIndex - 1);
+				layoutRow(at: lastRowIndex - 1);
 			}
 		}
 		
@@ -136,6 +221,8 @@ import UIKit
 			return Storage (copying: self);
 		}
 	}
+	
+	// MARK: - Private types
 	
 	fileprivate struct Row {
 		fileprivate var index: Int {
@@ -444,12 +531,23 @@ import UIKit
 			}
 			return row;
 		} else {
-			let middleRow = self.middleRow;
-			if (self.validatedRows == nil) {
-				middleRow.recalculateFrames { (self.middleRowOrigin - $0 / 2).rounded (scale: self.contentScale) };
-				self.validatedRows = 0 ... 0;
+			let middleRow = self.middleRow
+			
+			if (validatedRows == nil) {
+				
+				middleRow.recalculateFrames { height -> CGFloat in
+					
+					guard visibleRowsRange == nil else {
+						return 0
+					}
+					
+					return (middleRowOrigin - height / 2).rounded (scale: self.contentScale)
+				}
+				
+				validatedRows = 0 ... 0;
 			}
-			return middleRow;
+			
+			return middleRow
 		}
 	}
 	
@@ -550,12 +648,35 @@ extension UnsafeBufferRepresentable where Index: BinaryInteger, Element: Compara
 	fileprivate typealias Attributes = CPCCalendarView.Layout.Attributes;
 	private typealias AttributesPosition = CPCCalendarView.Layout.Storage.AttributesPosition;
 	
-	fileprivate func makeAttributes (startingAt indexPath: IndexPath, row: Int, drawCellSeparators: Bool) -> [Attributes] {
+	fileprivate func makeAttributes (
+		startingAt indexPath: IndexPath,
+		row: Int,
+		drawCellSeparators: Bool,
+		visibleRowsRange: ClosedRange<Int>?
+	) -> [Attributes] {
 		return self.enumerated ().map {
-			let result = Attributes (forCellWith: indexPath.offset (by: $0.offset));
-			result.position = AttributesPosition (row: row, item: $0.offset);
+			
+			let result = Attributes(
+				forCellWith: indexPath.offset(
+					by: $0.offset
+				)
+			)
+			
+			result.position = AttributesPosition(
+				row: row,
+				item: $0.offset
+			)
+			
 			result.aspectRatio = $0.element;
-			(result.drawsLeadingSeparator, result.drawsTrailingSeparator) = (drawCellSeparators, drawCellSeparators);
+			
+			(result.drawsLeadingSeparator, result.drawsTrailingSeparator) = (drawCellSeparators, drawCellSeparators)
+			
+			if let visibleRowsRange {
+				result.isHidden = !visibleRowsRange.contains(row)
+			} else {
+				result.isHidden = false
+			}
+			
 			return result;
 		};
 	}
