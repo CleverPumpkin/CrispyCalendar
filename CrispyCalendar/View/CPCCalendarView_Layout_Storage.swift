@@ -672,9 +672,9 @@ extension UnsafeBufferRepresentable where Index: BinaryInteger, Element: Compara
 			(result.drawsLeadingSeparator, result.drawsTrailingSeparator) = (drawCellSeparators, drawCellSeparators)
 			
 			if let visibleRowsRange {
-				result.isHidden = !visibleRowsRange.contains(row)
+				result.alpha = visibleRowsRange.contains(row) ? 1.0 : 0.0
 			} else {
-				result.isHidden = false
+				result.alpha = 1.0
 			}
 			
 			return result;
