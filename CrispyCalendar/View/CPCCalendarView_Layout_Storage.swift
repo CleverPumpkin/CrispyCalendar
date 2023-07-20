@@ -70,11 +70,11 @@ import UIKit
 			guard let visibleRowsRange else {
 				return .unspecified
 			}
-
-			var targetIndex = visibleRowsRange.upperBound
+			
+			let targetIndex = visibleRowsRange.upperBound
 				
-			if targetIndex >= lastRowIndex {
-				targetIndex = lastRowIndex - 1
+			guard targetIndex < lastRowIndex else {
+				return .unspecified
 			}
 				
 			let start = row(at: visibleRowsRange.lowerBound)

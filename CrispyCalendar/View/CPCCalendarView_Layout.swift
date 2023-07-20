@@ -458,22 +458,6 @@ private extension CPCCalendarView.Layout {
 			layoutInfo: layoutInfo
 		)
 		
-		guard let numberOfMonthsToDisplay else {
-			return storage
-		}
-		
-		for item in 0..<numberOfMonthsToDisplay {
-			
-			storage?.appendRow(
-				estimateAspectRatios(
-					forRowAfter: .init(
-						item: collectionView.numberOfItems(inSection: .zero) / 2 + item,
-						section: .zero
-					)
-				)
-			)
-		}
-		
 		return storage
 	}
 	
