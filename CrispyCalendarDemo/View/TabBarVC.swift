@@ -49,6 +49,8 @@ class TabBarVC: UITabBarController {
 			dateRange: startDate...endDate
 		)
 		
+		secondViewController.selection = .single(.today)
+		
 		secondViewController.tabBarItem = UITabBarItem(title: "RoundedRect", image: nil, selectedImage: nil)
 		
 		let thirdViewController = CPCDashboardList()

@@ -435,20 +435,46 @@ private extension CPCCalendarView.Layout {
 	
 	@discardableResult
 	private func makeStorage (middleIndexPath: IndexPath, layoutInfo: Storage.LayoutInfo) -> Storage? {
+		
 		guard let collectionView = self.collectionView, let delegate = self.delegate else {
-			return nil;
+			return nil
 		}
-		let sectionStart = delegate.collectionView (collectionView, startOfSectionFor: middleIndexPath);
-		let sectionEnd = delegate.collectionView (collectionView, endOfSectionFor: middleIndexPath);
-		let middleRowStartItem = sectionStart.item + (middleIndexPath.item - sectionStart.item) / self.columnCount * self.columnCount;
-		let middleRowEndItem = min (sectionEnd.item, middleRowStartItem + self.columnCount);
+		
+		let sectionStart = delegate.collectionView(collectionView, startOfSectionFor: middleIndexPath)
+		let sectionEnd = delegate.collectionView(collectionView, endOfSectionFor: middleIndexPath)
+		let middleRowStartItem = sectionStart.item + (middleIndexPath.item - sectionStart.item) / columnCount * columnCount
+		let middleRowEndItem = min(sectionEnd.item, middleRowStartItem + columnCount)
 		
 		let middleRowData: [(IndexPath, AspectRatio)] = (middleRowStartItem ..< middleRowEndItem).map {
-			let indexPath = IndexPath (item: $0, section: 0);
+			let indexPath = IndexPath(
+				item: $0,
+				section: 0
+			)
 			return (indexPath, delegate.collectionView (collectionView, estimatedAspectRatioComponentsForItemAt: indexPath));
-		};
-		self.storage = Storage (middleRowData: middleRowData, layoutInfo: layoutInfo);
-		return self.storage;
+		}
+		
+		storage = Storage(
+			middleRowData: middleRowData,
+			layoutInfo: layoutInfo
+		)
+		
+		guard let numberOfMonthsToDisplay else {
+			return storage
+		}
+		
+		for item in 0..<numberOfMonthsToDisplay {
+			
+			storage?.appendRow(
+				estimateAspectRatios(
+					forRowAfter: .init(
+						item: collectionView.numberOfItems(inSection: .zero) / 2 + item,
+						section: .zero
+					)
+				)
+			)
+		}
+		
+		return storage
 	}
 	
 	private func estimateAspectRatios (forRowBefore indexPath: IndexPath) -> [AspectRatio] {
