@@ -458,6 +458,16 @@ private extension CPCCalendarView.Layout {
 			layoutInfo: layoutInfo
 		)
 		
+		guard let numberOfMonthsToDisplay else {
+			return storage
+		}
+		
+		// Cache `numberOfMonthsToDisplay` items for correct height calculation in limited visible range mode
+		
+		_ = layoutAttributesForItem(
+			at: middleIndexPath.offset(by: numberOfMonthsToDisplay)
+		)
+		
 		return storage
 	}
 	
