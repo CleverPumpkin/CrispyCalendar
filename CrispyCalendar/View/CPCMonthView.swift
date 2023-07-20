@@ -141,6 +141,14 @@ open class CPCMonthView: UIControl, CPCViewProtocol {
 		}
 	}
 	
+	@IBInspectable open dynamic var separatorWidth: CGFloat {
+		get { return self.effectiveAppearanceStorage.separatorWidth }
+		set {
+			self.appearanceStorage.separatorWidth = newValue;
+			self.gridAppearanceDidUpdate ();
+		}
+	}
+	
 	/// A boolean flag indicating whether view leading separator must be drawn.
 	@IBInspectable open dynamic var drawsLeadingSeparator = false {
 		didSet {
@@ -477,7 +485,7 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 	/// This type groups various non-calendric layout attributes into single structure.
 	public struct PartialLayoutAttributes {
 		fileprivate let titleHeight: CGFloat;
-		fileprivate let separatorWidth: CGFloat;
+		fileprivate let scale: CGFloat;
 		
 		/// Initializes new non-calendric layout attributes instance.
 		///
@@ -485,15 +493,15 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 		///   - separatorWidth: Width of separator lines of the measured view. Typically is equal to `roundingScale`.
 		///   - titleFont: Font that the measure view would use to render month title.
 		///   - titleMargins: Additional month view title insets/outsets.
-		public init (separatorWidth: CGFloat, titleFont: UIFont, titleMargins: UIEdgeInsets) {
-			self.separatorWidth = separatorWidth;
-			self.titleHeight = (titleFont.lineHeight.rounded (.up, scale: separatorWidth) + titleMargins.top + titleMargins.bottom).rounded (.up, scale: separatorWidth);
+		public init (scale: CGFloat, titleFont: UIFont, titleMargins: UIEdgeInsets) {
+			self.scale = scale;
+			self.titleHeight = (titleFont.lineHeight.rounded (.up, scale: scale) + titleMargins.top + titleMargins.bottom).rounded (.up, scale: scale);
 		}
 	};
 
 	public struct LayoutAttributes: CPCViewLayoutAttributes {
 		public var roundingScale: CGFloat {
-			return self.separatorWidth;
+			return self.partialAttributes.scale;
 		}
 		
 		fileprivate let weekLength: Int;
@@ -504,7 +512,7 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 		}
 		
 		fileprivate var separatorWidth: CGFloat {
-			return self.partialAttributes.separatorWidth;
+			.zero
 		}
 		
 		private let partialAttributes: PartialLayoutAttributes;
@@ -515,7 +523,7 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 				return nil;
 			}
 
-			self.init (month: month, separatorWidth: view.separatorWidth, titleFont: view.effectiveTitleFont, titleMargins: view.effectiveTitleMargins);
+			self.init (month: month, scale: view.pixelSize, titleFont: view.effectiveTitleFont, titleMargins: view.effectiveTitleMargins);
 		}
 
 		/// Initializes layout attributes for a specific month view.
@@ -525,8 +533,8 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 		///   - separatorWidth: Width of separator lines of the measured view. Typically is equal to `roundingScale`.
 		///   - titleFont: Font that the measure view would use to render month title.
 		///   - titleMargins: Additional month view title insets/outsets.
-		public init (month: CPCMonth, separatorWidth: CGFloat, titleFont: UIFont, titleMargins: UIEdgeInsets) {
-			self.init (month: month, partialAttributes: PartialLayoutAttributes (separatorWidth: separatorWidth, titleFont: titleFont, titleMargins: titleMargins));
+		public init (month: CPCMonth, scale: CGFloat, titleFont: UIFont, titleMargins: UIEdgeInsets) {
+			self.init (month: month, partialAttributes: PartialLayoutAttributes (scale: scale, titleFont: titleFont, titleMargins: titleMargins));
 		}
 
 		/// Initializes layout attributes for a specific month view and other non-calendric partial attributes.

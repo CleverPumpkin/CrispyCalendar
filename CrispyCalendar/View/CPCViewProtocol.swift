@@ -130,6 +130,7 @@ internal final class CPCViewAppearanceStorage {
 	internal var titleMargins = UIEdgeInsets.defaultMonthTitle;
 	internal var dayCellFont = UIFont.defaultDayCellText;
 	internal var separatorColor = UIColor.defaultSeparator;
+	internal var separatorWidth = CGFloat.zero
 
 	internal var cellRenderer: CPCDayCellRenderer = CPCDefaultDayCellRenderer ();
 	internal var cellTextColors: CPCDayCellStateBasedStorage <UIColor> = [
@@ -160,6 +161,8 @@ public protocol CPCViewProtocol: AnyObject {
 	var dayCellFont: UIFont { get set };
 	/// The color of separator lines between days.
 	var separatorColor: UIColor { get set };
+	/// The width of separator lines between days.
+	var separatorWidth: CGFloat { get set }
 	/// Value describing currently selected days in this view.
 	var selection: Selection { get set };
 	/// Renderer that is used to draw each day cell.

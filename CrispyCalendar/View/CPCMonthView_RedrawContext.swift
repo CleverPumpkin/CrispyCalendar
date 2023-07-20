@@ -396,7 +396,7 @@ extension CPCMonthView.GridRedrawContext: CPCMonthViewRedrawContextImpl {
 		self.cellBackgroundColorGetter = { view.effectiveAppearanceStorage.cellBackgroundColors [$0] };
 
 		self.dayFormatter = DateFormatter.dequeueFormatter (for: month, dateFormatTemplate: "d");
-		self.cellTitleHeight = dayCellFont.lineHeight.rounded (.up, scale: layout.separatorWidth);
+		self.cellTitleHeight = dayCellFont.lineHeight.rounded (.up, scale: layout.scale);
 	}
 		
 	fileprivate func run (context ctx: CGContext) {

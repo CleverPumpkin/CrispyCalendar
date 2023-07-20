@@ -306,6 +306,7 @@ extension CPCCalendarView {
 }
 
 extension CPCCalendarView: CPCViewProtocol {
+	
 	@IBInspectable open dynamic var titleFont: UIFont {
 		get { return self.monthViewsManager.titleFont }
 		set {
@@ -360,6 +361,11 @@ extension CPCCalendarView: CPCViewProtocol {
 	@IBInspectable open dynamic var separatorColor: UIColor {
 		get { return self.monthViewsManager.separatorColor }
 		set { self.monthViewsManager.separatorColor = newValue }
+	}
+	
+	@IBInspectable open dynamic var separatorWidth: CGFloat {
+		get { return self.monthViewsManager.separatorWidth }
+		set { self.monthViewsManager.separatorWidth = newValue }
 	}
 	
 	open var cellRenderer: CellRenderer {

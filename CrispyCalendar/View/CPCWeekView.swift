@@ -62,7 +62,7 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	}
 	
 	open override var intrinsicContentSize: CGSize {
-		return CGSize (width: UIView.noIntrinsicMetric, height: self.effectiveFont.lineHeight.rounded (.up, scale: self.separatorWidth));
+		return CGSize (width: UIView.noIntrinsicMetric, height: self.effectiveFont.lineHeight.rounded (.up, scale: pixelSize));
 	}
 	
 	open var adjustsFontForContentSizeCategory: Bool {
@@ -207,7 +207,7 @@ open class CPCWeekView: UIView, CPCViewContentAdjusting {
 	
 	private func drawSingleWeek (in rect: CGRect) {
 		let isContentsFlipped = self.effectiveUserInterfaceLayoutDirection == .rightToLeft;
-		let style = self.style, week = CPCWeek.current (using: self.calendar), font = self.effectiveFont, lineHeight = font.lineHeight, scale = self.separatorWidth;
+		let style = self.style, week = CPCWeek.current (using: self.calendar), font = self.effectiveFont, lineHeight = font.lineHeight, scale = pixelSize;
 		let cellOriginY = (rect.midY - lineHeight / 2).rounded (.down, scale: scale);
 		let cellWidth = rect.width / CGFloat (week.count) * (isContentsFlipped ? -1.0 : 1.0), cellHeight = lineHeight.rounded (.up, scale: scale);
 		let weekdayAttributes: [NSAttributedString.Key: Any] = [

@@ -254,7 +254,7 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 						columnCount: self.columnCount,
 						contentGuide: self.contentGuide,
 						columnSpacing: self.columnSpacing,
-						contentScale: collectionView.separatorWidth,
+						contentScale: collectionView.pixelSize,
 						middleRowOrigin: bounds.midY + additionalOffset,
 						invalidAttributes: self.invalidLayoutAttributes,
 						numberOfMonthsToDisplay: self.numberOfMonthsToDisplay
@@ -426,7 +426,7 @@ private extension CPCCalendarView.Layout {
 			columnCount: self.columnCount,
 			contentGuide: self.contentGuide,
 			columnSpacing: self.columnSpacing,
-			contentScale: collectionView.separatorWidth,
+			contentScale: collectionView.pixelSize,
 			middleRowOrigin: .virtualOriginHeight,
 			invalidAttributes: self.invalidLayoutAttributes,
 			numberOfMonthsToDisplay: self.numberOfMonthsToDisplay

@@ -129,7 +129,7 @@ extension CPCCalendarView.DataSource: CPCCalendarViewLayoutDelegate {
 	}
 	
 	internal func collectionView (_ collectionView: UICollectionView, estimatedAspectRatioComponentsForItemAt indexPath: IndexPath) -> CPCMonthView.AspectRatio {
-		let partialAttributes = self.monthViewsManager.monthViewPartialLayoutAttributes (separatorWidth: collectionView.separatorWidth);
+		let partialAttributes = self.monthViewsManager.monthViewPartialLayoutAttributes (scale: collectionView.pixelSize);
 		if let month = self.cachedMonth (for: indexPath) {
 			return CPCMonthView.aspectRatioComponents (for: CPCMonthView.LayoutAttributes (month: month, partialAttributes: partialAttributes))!;
 		}

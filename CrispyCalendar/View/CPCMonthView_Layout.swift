@@ -24,8 +24,8 @@
 import UIKit
 
 /* internal */ extension UIView {
-	internal var separatorWidth: CGFloat {
-		return 1.0 / (self.window?.screen ?? .main).nativeScale;
+	internal var pixelSize: CGFloat {
+		return 1.0 / (self.window?.screen ?? .main).scale;
 	}
 }
 
@@ -41,6 +41,7 @@ import UIKit
 		internal let gridFrame: CGRect;
 		internal let cellFrames: ComputedCollection <CellIndex, CGRect, CellIndices>;
 		internal let separatorOrigins: SeparatorOrigins;
+		internal let scale: CGFloat
 		
 		internal var isContentsFlippedHorizontally: Bool {
 			return self.cellSize.width < 0.0;
@@ -51,7 +52,8 @@ import UIKit
 				return .null;
 			}
 			
-			let result = titleFrame.inset (by: self.titleMargins), scale = self.separatorWidth;
+			let result = titleFrame.inset(by: self.titleMargins)
+			
 			return CGRect (
 				origin: CGPoint (x: result.minX.rounded (.down, scale: scale), y: result.minY.rounded (.down, scale: scale)),
 				size: CGSize (width: result.width.rounded (.up, scale: scale), height: result.height.rounded (.up, scale: scale))
@@ -76,14 +78,15 @@ import UIKit
 				fatalError ("[CrispyCalendar] Sanity check failure: \(month) is not representable as a rectangular grid");
 			}
 			
-			let separatorWidth = view.separatorWidth;
+			let separatorWidth = view.separatorWidth
+			let scale = view.pixelSize
 			let titleMargins = view.effectiveTitleMargins;
 			let titleFrame: CGRect, gridFrame: CGRect;
 			if (view.titleStyle == .none) {
 				titleFrame = .null;
 				gridFrame = view.bounds;
 			} else {
-				let titleHeight = (titleMargins.top + view.effectiveTitleFont.lineHeight.rounded (.up, scale: separatorWidth) + titleMargins.bottom).rounded (.up, scale: separatorWidth);
+				let titleHeight = (titleMargins.top + view.effectiveTitleFont.lineHeight.rounded (.up, scale: scale) + titleMargins.bottom).rounded (.up, scale: scale);
 				(titleFrame, gridFrame) = view.bounds.divided (atDistance: titleHeight, from: .minYEdge);
 			}
 			let layoutTransform = view.isContentsFlippedHorizontally ? CGAffineTransform (a: -1.0, b: 0.0, c: 0.0, d: 1.0, tx: view.bounds.width, ty: 0.0) : .identity;
@@ -96,10 +99,11 @@ import UIKit
 			
 			let separatorIndices = (horizontal: 0 ... height + 1, vertical: 0 ... width + 1);
 			let separatorLocations = (
-				horizontal: separatorIndices.horizontal.map { fma (cellSize.height, CGFloat ($0), cellsOrigin.y - separatorWidth / 2.0).rounded (scale: separatorWidth) + separatorWidth / 2.0 },
-				vertical: separatorIndices.vertical.map { fma (cellSize.width, CGFloat ($0), cellsOrigin.x - separatorWidth / 2.0).rounded (scale: separatorWidth) + separatorWidth / 2.0 }
+				horizontal: separatorIndices.horizontal.map { fma (cellSize.height, CGFloat ($0), cellsOrigin.y - separatorWidth / 2.0).rounded (scale: scale) + separatorWidth / 2.0 },
+				vertical: separatorIndices.vertical.map { fma (cellSize.width, CGFloat ($0), cellsOrigin.x - separatorWidth / 2.0).rounded (scale: scale) + separatorWidth / 2.0 }
 			);
 			
+			self.scale = scale
 			self.month = month;
 			self.separatorWidth = separatorWidth;
 
@@ -125,13 +129,13 @@ import UIKit
 				return false;
 			}
 			
-			let separatorWidth = self.separatorWidth, viewBounds = view.bounds, viewSeparatorWidth = view.separatorWidth;
-			guard (separatorWidth - viewSeparatorWidth).magnitude < 1e-3 else {
+			let separatorWidth = self.separatorWidth, viewBounds = view.bounds, scale = view.pixelSize;
+			guard (separatorWidth - scale).magnitude < 1e-3 else {
 				return false;
 			}
 			
-			let titleMargins = self.titleMargins, titleHeight = self.titleFrame.map { ($0.height - titleMargins.top - titleMargins.bottom).rounded (.up, scale: separatorWidth) };
-			let viewTitleMargins = view.effectiveTitleMargins, viewTitleHeight = ((view.titleStyle == .none) ? nil : view.effectiveTitleFont.lineHeight.rounded (.up, scale: viewSeparatorWidth));
+			let titleMargins = self.titleMargins, titleHeight = self.titleFrame.map { ($0.height - titleMargins.top - titleMargins.bottom).rounded (.up, scale: scale) };
+			let viewTitleMargins = view.effectiveTitleMargins, viewTitleHeight = ((view.titleStyle == .none) ? nil : view.effectiveTitleFont.lineHeight.rounded (.up, scale: scale));
 			switch (titleHeight, viewTitleHeight) {
 			case (nil, nil):
 				break;
@@ -172,7 +176,7 @@ import UIKit
 		
 		private func cellCoordinate (at viewCoordinate: CGFloat, gridOrigin: CGFloat, cellSize: CGFloat, separatorOrigins: ComputedArray <Int, CGFloat>, treatSeparatorAsEarlierIndex: Bool) -> Int {
 			let result = ((viewCoordinate - gridOrigin) / cellSize).integerRounded (.towardZero);
-			return (treatSeparatorAsEarlierIndex && ((separatorOrigins [result] - viewCoordinate).magnitude < self.separatorWidth)) ? result - 1 : result;
+			return (treatSeparatorAsEarlierIndex && ((separatorOrigins [result] - viewCoordinate).magnitude < self.scale)) ? result - 1 : result;
 		}
 
 		private func isPointInsideGrid (_ point: CGPoint) -> Bool {

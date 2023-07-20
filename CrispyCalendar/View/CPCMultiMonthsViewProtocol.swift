@@ -112,8 +112,8 @@ internal final class CPCMonthViewsManager {
 }
 
 extension CPCMonthViewsManager: CPCViewProtocol {
-	internal func monthViewPartialLayoutAttributes (separatorWidth: CGFloat) -> CPCMonthView.PartialLayoutAttributes {
-		return CPCMonthView.PartialLayoutAttributes (separatorWidth: separatorWidth, titleFont: self.titleFont, titleMargins: self.titleMargins);
+	internal func monthViewPartialLayoutAttributes (scale: CGFloat) -> CPCMonthView.PartialLayoutAttributes {
+		return CPCMonthView.PartialLayoutAttributes (scale: scale, titleFont: self.titleFont, titleMargins: self.titleMargins);
 	}
 	
 	internal var titleFont: UIFont {
@@ -168,6 +168,14 @@ extension CPCMonthViewsManager: CPCViewProtocol {
 		get { return self.appearanceStorage.separatorColor }
 		set {
 			self.appearanceStorage.separatorColor = newValue;
+			self.updateManagedMonthViews { $0.gridAppearanceDidUpdate () };
+		}
+	}
+	
+	internal var separatorWidth: CGFloat {
+		get { return self.appearanceStorage.separatorWidth }
+		set {
+			self.appearanceStorage.separatorWidth = newValue;
 			self.updateManagedMonthViews { $0.gridAppearanceDidUpdate () };
 		}
 	}

@@ -107,6 +107,11 @@ open class CPCMultiMonthsView: UIView, CPCViewProtocol {
 		set { self.monthViewsManager.separatorColor = newValue }
 	}
 	
+	@IBInspectable open dynamic var separatorWidth: CGFloat {
+		get { return self.monthViewsManager.separatorWidth }
+		set { self.monthViewsManager.separatorWidth = newValue }
+	}
+	
 	open var cellRenderer: CPCDayCellRenderer {
 		get { return self.monthViewsManager.cellRenderer }
 		set { self.monthViewsManager.cellRenderer = newValue }
