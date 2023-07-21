@@ -511,10 +511,6 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 			return self.partialAttributes.titleHeight;
 		}
 		
-		fileprivate var separatorWidth: CGFloat {
-			.zero
-		}
-		
 		private let partialAttributes: PartialLayoutAttributes;
 
 		/// Initializes layout attributes to match currently use values in the specified view.
@@ -570,7 +566,7 @@ extension CPCMonthView: CPCFixedAspectRatioView {
 		/// let R = rowN / colN, then (gridH - sepW) / (gridW - sepW) = R <=> gridH - sepW = gridW * R - sepW * R <=> gridH = gridW * R + (1 - sepW) * R
 		/// View width is equal to grid width; view height = gridW + titleHeight.
 		let aspectRatio = CGFloat (attributes.weekCount) / CGFloat (attributes.weekLength);
-		return (multiplier: aspectRatio, constant: (1.0 - attributes.separatorWidth) * aspectRatio + attributes.titleHeight);
+		return (multiplier: aspectRatio, constant: (1.0 - attributes.roundingScale) * aspectRatio + attributes.titleHeight);
 	}
 	
 	/// Returns range of possible aspect ratio components that the month view may use for various months.
