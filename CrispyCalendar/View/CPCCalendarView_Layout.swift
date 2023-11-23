@@ -148,6 +148,13 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 				return nil;
 			}
 			
+			var rect = rect
+			
+			if rect.minY < 0 {
+				// SDK 17 negative minY fix
+				rect.origin.y = CGFloat(Int.max)
+			}
+			
 			storage.layoutElements (in: rect);
 			
 			while rect.minY < storage.minY {
@@ -162,13 +169,9 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 		internal override func invalidateLayout (with context: UICollectionViewLayoutInvalidationContext) {
 			let context = self.makeInvalidationContext (with: context);
 			let collectionView = guarantee (self.collectionView);
-			if (context.invalidateDataSourceCounts) {
-				self.referenceIndexPath = self.delegate?.referenceIndexPathForCollectionView (collectionView) ?? [];
-			}
-			if (context.invalidateEverything) {
-				self.storage = nil;
-				collectionView.contentCenterOffset.y = numberOfMonthsToDisplay == nil ? .virtualOriginHeight : 0
-			}
+			self.referenceIndexPath = self.delegate?.referenceIndexPathForCollectionView (collectionView) ?? [];
+			self.storage = nil;
+			collectionView.contentCenterOffset.y = numberOfMonthsToDisplay == nil ? .virtualOriginHeight : 0
 			
 			if let storage = self.storage {
 				if (context.invalidateAllRows) {
