@@ -144,8 +144,15 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 		}
 		
 		internal override func layoutAttributesForElements (in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
-			guard let storage = self.storage ?? self.makeInitialStorage (), rect.minY > 0 else {
+			guard let storage = self.storage ?? self.makeInitialStorage () else {
 				return nil;
+			}
+			
+			var rect = rect
+			
+			if rect.minY < 0 {
+				// SDK 17 negative minY fix
+				rect.origin.y = CGFloat(Int.max)
 			}
 			
 			storage.layoutElements (in: rect);
@@ -163,10 +170,8 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			let context = self.makeInvalidationContext (with: context);
 			let collectionView = guarantee (self.collectionView);
 			self.referenceIndexPath = self.delegate?.referenceIndexPathForCollectionView (collectionView) ?? [];
-			if (context.invalidateEverything) {
-				self.storage = nil;
-				collectionView.contentCenterOffset.y = numberOfMonthsToDisplay == nil ? .virtualOriginHeight : 0
-			}
+			self.storage = nil;
+			collectionView.contentCenterOffset.y = numberOfMonthsToDisplay == nil ? .virtualOriginHeight : 0
 			
 			if let storage = self.storage {
 				if (context.invalidateAllRows) {
