@@ -22,6 +22,7 @@
 		047D00AB2612123E00AC400C /* RoundRectCellModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047D00AA2612123E00AC400C /* RoundRectCellModel.swift */; };
 		047D00AE2612125F00AC400C /* RoundRectDotModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 047D00AD2612125F00AC400C /* RoundRectDotModel.swift */; };
 		04951B082611D82C00310951 /* RoundRectRenderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04951B072611D82C00310951 /* RoundRectRenderModel.swift */; };
+		049CD25A2B14D92A00630E11 /* CPCCollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 049CD2592B14D92A00630E11 /* CPCCollectionView.swift */; };
 		04A95432261F67E60031B341 /* CPCDay+Date.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04A95431261F67E60031B341 /* CPCDay+Date.swift */; };
 		04C704B02472AC5D00A2D88B /* TabBarVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C704AF2472AC5D00A2D88B /* TabBarVC.swift */; };
 		04C704B22472ADFF00A2D88B /* CPCDashboardVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04C704B12472ADFF00A2D88B /* CPCDashboardVC.swift */; };
@@ -131,6 +132,7 @@
 		047D00AA2612123E00AC400C /* RoundRectCellModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectCellModel.swift; sourceTree = "<group>"; };
 		047D00AD2612125F00AC400C /* RoundRectDotModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectDotModel.swift; sourceTree = "<group>"; };
 		04951B072611D82C00310951 /* RoundRectRenderModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundRectRenderModel.swift; sourceTree = "<group>"; };
+		049CD2592B14D92A00630E11 /* CPCCollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCCollectionView.swift; sourceTree = "<group>"; };
 		04A95431261F67E60031B341 /* CPCDay+Date.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CPCDay+Date.swift"; sourceTree = "<group>"; };
 		04C704AF2472AC5D00A2D88B /* TabBarVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarVC.swift; sourceTree = "<group>"; };
 		04C704B12472ADFF00A2D88B /* CPCDashboardVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPCDashboardVC.swift; sourceTree = "<group>"; };
@@ -468,6 +470,7 @@
 				43148834218764670028EE89 /* CPCCalendarView_Layout.swift */,
 				4377FEA9218839EE005BE22D /* CPCCalendarView_Layout_Storage.swift */,
 				438454D820D2A41A00CDC209 /* CPCCalendarViewController.swift */,
+				049CD2592B14D92A00630E11 /* CPCCollectionView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -694,6 +697,7 @@
 				434D8F0320B46061006B3BF6 /* SingleElementOperations.swift in Sources */,
 				4314537320B22B340019EB01 /* CPCViewContentAdjusting.swift in Sources */,
 				43689DBF20936F2600052C7A /* CPCMonthView.swift in Sources */,
+				049CD25A2B14D92A00630E11 /* CPCCollectionView.swift in Sources */,
 				438454D920D2A41B00CDC209 /* CPCCalendarViewController.swift in Sources */,
 				437D67032180A2AF0092A42B /* CPCCalendarUnitBacking.swift in Sources */,
 				43101B95209CFBB400904529 /* CPCMonthView_Layout.swift in Sources */,

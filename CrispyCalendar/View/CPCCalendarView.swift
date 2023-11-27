@@ -290,7 +290,7 @@ extension CPCCalendarView {
 		numberOfMonthsToDisplay: Int? = nil
 	) -> UICollectionView {
 		let layout = Layout(numberOfMonthsToDisplay: numberOfMonthsToDisplay)
-		let collectionView = UICollectionView(frame: frame.bounds, collectionViewLayout: layout)
+		let collectionView = CPCCollectionView(frame: frame.bounds, collectionViewLayout: layout)
 		
 		collectionView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
 		collectionView.allowsSelection = false
