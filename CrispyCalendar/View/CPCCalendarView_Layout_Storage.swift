@@ -438,8 +438,6 @@ import UIKit
 	}
 
 	internal func isStorageValid (forContentGuide contentGuide: Range <CGFloat>, columnSpacing: CGFloat) -> Bool {
-		print(contentGuide)
-		
 		return (
 			((self.contentGuide.lowerBound - contentGuide.lowerBound).magnitude < 1e-3) &&
 			((self.contentGuide.upperBound - contentGuide.upperBound).magnitude < 1e-3) &&
