@@ -176,8 +176,7 @@ import UIKit
 				contentsOf: rowData.makeAttributes(
 					startingAt: firstRowIndexPath,
 					row: newRowIndex,
-					drawCellSeparators: columnCount > 1,
-					visibleRowsRange: visibleRowsRange
+					drawCellSeparators: columnCount > 1
 				)
 			)
 			
@@ -196,8 +195,7 @@ import UIKit
 				contentsOf: rowData.makeAttributes(
 					startingAt: lastIndexPath,
 					row: newRowIndex,
-					drawCellSeparators: columnCount > 1,
-					visibleRowsRange: visibleRowsRange
+					drawCellSeparators: columnCount > 1
 				)
 			)
 			
@@ -307,6 +305,22 @@ import UIKit
 	
 	internal var maxY: CGFloat {
 		return self.lastAttributes.frame.maxY;
+	}
+	
+	internal var isUpperRowsLayoutCompleted: Bool {
+		guard let visibleRowsRange else {
+			return false
+		}
+		
+		return firstRow.index <= visibleRowsRange.lowerBound
+	}
+	
+	internal var isLowerRowsLayoutCompleted: Bool {
+		guard let visibleRowsRange else {
+			return false
+		}
+		
+		return lastRow.index >= visibleRowsRange.upperBound
 	}
 	
 	internal var firstRowIndex: Int {
@@ -651,8 +665,7 @@ extension UnsafeBufferRepresentable where Index: BinaryInteger, Element: Compara
 	fileprivate func makeAttributes (
 		startingAt indexPath: IndexPath,
 		row: Int,
-		drawCellSeparators: Bool,
-		visibleRowsRange: ClosedRange<Int>?
+		drawCellSeparators: Bool
 	) -> [Attributes] {
 		return self.enumerated ().map {
 			
@@ -670,12 +683,6 @@ extension UnsafeBufferRepresentable where Index: BinaryInteger, Element: Compara
 			result.aspectRatio = $0.element;
 			
 			(result.drawsLeadingSeparator, result.drawsTrailingSeparator) = (drawCellSeparators, drawCellSeparators)
-			
-			if let visibleRowsRange {
-				result.alpha = visibleRowsRange.contains(row) ? 1.0 : 0.0
-			} else {
-				result.alpha = 1.0
-			}
 			
 			return result;
 		};

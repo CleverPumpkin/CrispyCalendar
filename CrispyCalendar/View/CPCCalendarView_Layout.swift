@@ -157,12 +157,14 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			
 			storage.layoutElements (in: rect);
 			
-			while rect.minY < storage.minY {
+			while (rect.minY < storage.minY && !storage.isUpperRowsLayoutCompleted) {
 				storage.prependRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath), layoutImmediately: true);
 			}
-			while rect.maxY > storage.maxY {
+			
+			while (rect.maxY > storage.maxY && !storage.isLowerRowsLayoutCompleted) {
 				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath), layoutImmediately: true);
 			}
+			
 			return storage [rect];
 		}
 		
