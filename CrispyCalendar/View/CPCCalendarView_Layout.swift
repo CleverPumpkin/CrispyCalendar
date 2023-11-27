@@ -135,10 +135,10 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			guard let storage = self.storage ?? self.makeInitialStorage () else {
 				return nil;
 			}
-			while storage.lastIndexPath <= indexPath {
+			while (storage.lastIndexPath <= indexPath && !storage.isLowerRowsLayoutCompleted) {
 				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath));
 			}
-			while storage.firstIndexPath > indexPath {
+			while (storage.firstIndexPath > indexPath && !storage.isUpperRowsLayoutCompleted) {
 				storage.prependRow (self.estimateAspectRatios (forRowBefore: storage.firstIndexPath));
 			}
 			return storage [indexPath];
