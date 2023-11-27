@@ -90,6 +90,8 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			return CGSize(width: collectionView?.visibleContentBounds.width ?? 0.0, height: contentHeight)
 		}
 		
+		var invalidationContext: InvalidationContext?;
+		
 		internal let invalidLayoutAttributes = Attributes (forCellWith: IndexPath ());
 		
 		// MARK: - Private properties
@@ -111,7 +113,6 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 		private var storage: Storage?;
 		private var prevStorage: Storage?;
 		private var referenceIndexPath: IndexPath = [];
-		private var invalidationContext: InvalidationContext?;
 		private let numberOfMonthsToDisplay: Int?
 		
 		// MARK: - Initialization
@@ -172,8 +173,11 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			let context = self.makeInvalidationContext (with: context);
 			let collectionView = guarantee (self.collectionView);
 			self.referenceIndexPath = self.delegate?.referenceIndexPathForCollectionView (collectionView) ?? [];
-			self.storage = nil;
-			collectionView.contentCenterOffset.y = numberOfMonthsToDisplay == nil ? .virtualOriginHeight : 0
+			
+			if context.invalidateEverything {
+				self.storage = nil;
+				collectionView.contentCenterOffset.y = numberOfMonthsToDisplay == nil ? .virtualOriginHeight : 0
+			}
 			
 			if let storage = self.storage {
 				if (context.invalidateAllRows) {
@@ -349,8 +353,8 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 	}
 }
 
-private extension CPCCalendarView.Layout {
-	private final class InvalidationContext: UICollectionViewLayoutInvalidationContext {
+extension CPCCalendarView.Layout {
+	final class InvalidationContext: UICollectionViewLayoutInvalidationContext {
 		fileprivate var prevBounds: CGRect?;
 
 		fileprivate var updatedAspectRatios: [Storage.AttributesPosition: AspectRatio]?;
@@ -364,6 +368,12 @@ private extension CPCCalendarView.Layout {
 		fileprivate func invalidateRows <S> (_ rows: S) where S: Sequence, S.Element == Int {
 			let invalidatedRows = IndexSet (rows);
 			self.invalidatedRows = self.invalidatedRows.map { invalidatedRows.union ($0) } ?? invalidatedRows;
+		}
+		
+		var invalidateEverythingFlag = false
+		
+		override var invalidateEverything: Bool {
+			invalidateEverythingFlag
 		}
 		
 		internal override var description: String {
