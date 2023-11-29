@@ -37,6 +37,10 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 		
 		internal typealias ColumnContentInsetReference = CPCCalendarView.ColumnContentInsetReference;
 		
+		private enum Constants {
+			static let indexPathLayoutAttributesThreshold = 100
+		}
+		
 		// MARK: - Internal static properties
 		
 		internal override class var invalidationContextClass: AnyClass {
@@ -90,6 +94,8 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			return CGSize(width: collectionView?.visibleContentBounds.width ?? 0.0, height: contentHeight)
 		}
 		
+		var invalidationContext: InvalidationContext?;
+		
 		internal let invalidLayoutAttributes = Attributes (forCellWith: IndexPath ());
 		
 		// MARK: - Private properties
@@ -111,7 +117,6 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 		private var storage: Storage?;
 		private var prevStorage: Storage?;
 		private var referenceIndexPath: IndexPath = [];
-		private var invalidationContext: InvalidationContext?;
 		private let numberOfMonthsToDisplay: Int?
 		
 		// MARK: - Initialization
@@ -134,6 +139,16 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			guard let storage = self.storage ?? self.makeInitialStorage () else {
 				return nil;
 			}
+			
+			let maxDelta = Constants.indexPathLayoutAttributesThreshold
+			
+			let lastDelta = abs(indexPath.item - storage.lastIndexPath.item)
+			let firstDelta = abs(indexPath.item - storage.firstIndexPath.item)
+			
+			if firstDelta > maxDelta || lastDelta > maxDelta {
+				return nil
+			}
+			
 			while storage.lastIndexPath <= indexPath {
 				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath));
 			}
@@ -144,8 +159,15 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 		}
 		
 		internal override func layoutAttributesForElements (in rect: CGRect) -> [UICollectionViewLayoutAttributes]? {
-			guard let storage = self.storage ?? self.makeInitialStorage (), rect.minY > 0 else {
+			guard let storage = self.storage ?? self.makeInitialStorage () else {
 				return nil;
+			}
+			
+			var rect = rect
+			
+			if rect.minY < 0 {
+				// SDK 17 negative minY fix
+				rect.origin.y = CGFloat(Int.max)
 			}
 			
 			storage.layoutElements (in: rect);
@@ -163,7 +185,8 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			let context = self.makeInvalidationContext (with: context);
 			let collectionView = guarantee (self.collectionView);
 			self.referenceIndexPath = self.delegate?.referenceIndexPathForCollectionView (collectionView) ?? [];
-			if (context.invalidateEverything) {
+			
+			if context.invalidateEverything {
 				self.storage = nil;
 				collectionView.contentCenterOffset.y = numberOfMonthsToDisplay == nil ? .virtualOriginHeight : 0
 			}
@@ -342,8 +365,8 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 	}
 }
 
-private extension CPCCalendarView.Layout {
-	private final class InvalidationContext: UICollectionViewLayoutInvalidationContext {
+extension CPCCalendarView.Layout {
+	final class InvalidationContext: UICollectionViewLayoutInvalidationContext {
 		fileprivate var prevBounds: CGRect?;
 
 		fileprivate var updatedAspectRatios: [Storage.AttributesPosition: AspectRatio]?;
@@ -357,6 +380,12 @@ private extension CPCCalendarView.Layout {
 		fileprivate func invalidateRows <S> (_ rows: S) where S: Sequence, S.Element == Int {
 			let invalidatedRows = IndexSet (rows);
 			self.invalidatedRows = self.invalidatedRows.map { invalidatedRows.union ($0) } ?? invalidatedRows;
+		}
+		
+		var invalidateEverythingFlag = false
+		
+		override var invalidateEverything: Bool {
+			invalidateEverythingFlag
 		}
 		
 		internal override var description: String {
