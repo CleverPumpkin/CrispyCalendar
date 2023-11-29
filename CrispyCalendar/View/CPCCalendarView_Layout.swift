@@ -37,6 +37,10 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 		
 		internal typealias ColumnContentInsetReference = CPCCalendarView.ColumnContentInsetReference;
 		
+		private enum Constants {
+			static let indexPathLayoutAttributesThreshold = 100
+		}
+		
 		// MARK: - Internal static properties
 		
 		internal override class var invalidationContextClass: AnyClass {
@@ -135,6 +139,16 @@ internal protocol CPCCalendarViewLayoutDelegate: UICollectionViewDelegate {
 			guard let storage = self.storage ?? self.makeInitialStorage () else {
 				return nil;
 			}
+			
+			let maxDelta = Constants.indexPathLayoutAttributesThreshold
+			
+			let lastDelta = abs(indexPath.item - storage.lastIndexPath.item)
+			let firstDelta = abs(indexPath.item - storage.firstIndexPath.item)
+			
+			if firstDelta > maxDelta || lastDelta > maxDelta {
+				return nil
+			}
+			
 			while (storage.lastIndexPath <= indexPath && !storage.isLowerRowsLayoutCompleted) {
 				storage.appendRow (self.estimateAspectRatios (forRowAfter: storage.lastIndexPath));
 			}
