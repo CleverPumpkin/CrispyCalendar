@@ -210,7 +210,10 @@ open class CPCCalendarViewController: UIViewController {
 	
 	// MARK: - Initialization
 	
-	public init(dateRange: ClosedRange<Date>, calendar: Calendar = .current) {
+	public init(
+		dateRange: ClosedRange<Date>,
+		calendar: Calendar = .current
+	) {
 		
 		let maximumDay = CPCDay(containing: dateRange.upperBound, calendar: calendar)
 		let minimumDay = CPCDay(containing: dateRange.lowerBound, calendar: calendar)
@@ -228,6 +231,7 @@ open class CPCCalendarViewController: UIViewController {
 		}
 		
 		self.numberOfMonthsToDisplay = numberOfMonthsToDisplay
+		
 		self.startingDay = CPCDay(containing: dateRange.lowerBound, calendar: .current)
 		
 		super.init(nibName: nil, bundle: nil)
