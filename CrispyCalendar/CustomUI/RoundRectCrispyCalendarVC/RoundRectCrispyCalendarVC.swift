@@ -66,6 +66,22 @@ public class RoundRectCrispyCalendarVC: CPCCalendarViewController {
 		self.weekView = weekView
 	}
 	
+	public init(
+		renderModel: RoundRectRenderModel,
+		weekView: CPCWeekView,
+		calendar: Calendar
+	) {
+		self.renderModel = renderModel
+		self.calendar = calendar
+		
+		super.init(nibName: nil, bundle: nil)
+		
+		self.weekView = weekView
+		
+		calendarView.showsVerticalScrollIndicator = false
+		calendarView.showsHorizontalScrollIndicator = false
+	}
+	
 	required init?(coder aDecoder: NSCoder) {
 		self.renderModel = RoundRectRenderModel(
 			roundRectTitleModel: RoundRectTitleModel(
